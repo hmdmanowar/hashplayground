@@ -1,0 +1,44 @@
+.signup-page {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(90px);
+    z-index: -1;
+  }
+
+  &::before {
+    top: -12rem;
+    left: -8rem;
+    width: 28rem;
+    height: 28rem;
+    background: var(--color-primary-strong);
+    opacity: 0.28;
+  }
+
+  &::after {
+    bottom: -14rem;
+    right: -10rem;
+    width: 32rem;
+    height: 32rem;
+    background: var(--color-primary);
+    opacity: 0.22;
+  }
+}
+
+.signup-card {
+  position: relative;
+
+  input {
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+  }
+}

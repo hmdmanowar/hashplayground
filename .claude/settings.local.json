@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Test-NetConnection -ComputerName ep-steep-shape-ax5104oi.c-4.us-east-2.aws.neon.tech -Port 5432 -InformationLevel Detailed)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method Post -ContentType \"application/json\" -Body '{\"username\":\"admin\",\"password\":\"admin123\"}' -SessionVariable sess -ErrorAction Stop)",
+      "PowerShell(winget install --id PostgreSQL.PostgreSQL.17 --silent --accept-package-agreements --accept-source-agreements)"
+    ]
+  }
+}

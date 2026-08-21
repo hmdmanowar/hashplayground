@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Global brand palette - shared across light and dark themes */
+  --color-primary: #7091e6;
+  --color-primary-strong: #3d52a0;
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 15%, transparent);
+
+  /* Light theme surface colors */
+  --bg-panel: #ede8f5;
+  --bg-app: color-mix(in srgb, var(--bg-panel) 55%, white);
+  --text-app: #111827;
+  /* Darker than the dark-theme value on purpose - the original shared
+     #8697c4 read at ~2.5:1 contrast against this theme's near-white
+     background, well under WCAG AA for body-sized secondary text. Small
+     uppercase tracking-wide labels (Explorer/Changes/Files headers) need
+     more contrast than regular body text, hence the extra step down. */
+  --color-muted: #48567a;
+  --border-panel: #adbbda;
+  --hover-overlay: rgba(0, 0, 0, 0.05);
+
+  /* Active/selected accent - tuned per theme */
+  --color-accent: var(--color-primary-strong);
+  --color-accent-soft: var(--color-primary-soft);
+}
+
+/* Laptop screens (<=1280px): app-wide font sizes shift down ~2px from
+   Tailwind's defaults, except the Playground's code editor and file
+   explorer (opted back out via .font-scale-reset below) which keep their
+   own deliberate sizing. Unlayered (not @layer), so this wins over
+   Tailwind's own @theme-declared vars regardless of source order.
+   Line-height vars are untouched since they're unitless ratios and stay
+   correct at any font-size. */
+@media (max-width: 1280px) {
+  :root {
+    --text-xs: 0.625rem;
+    --text-sm: 0.75rem;
+    --text-base: 0.875rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.375rem;
+    --text-3xl: 1.75rem;
+    --text-4xl: 2.125rem;
+  }
+
+  .font-scale-reset {
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+  }
+}
+
+.dark {
+  --bg-app: #1e1e1e;
+  --text-app: #d4d4d4;
+  --bg-panel: #252526;
+  --color-muted: #8697c4;
+  --border-panel: #3c3c3c;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+
+  --color-accent: #818cf8;
+  --color-accent-soft: rgba(129, 140, 248, 0.15);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  color: var(--text-app);
+}
+
+/* Themed scrollbars - track stays transparent, thumb follows the current
+   theme's panel border/muted colors instead of the browser's default UA style. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-panel) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-panel);
+  border: 2px solid transparent;
+  border-radius: 9999px;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

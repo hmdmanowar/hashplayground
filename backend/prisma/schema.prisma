@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum FileType {
+  file
+  folder
+}
+
+enum NotificationKind {
+  message
+  alert
+  activity
+}
+
+model User {
+  // Username is the natural key used everywhere today (Project.ownerUsername,
+  // Notification.toUsername/fromUsername) and there is no rename-user feature,
+  // so it's used directly as the PK instead of adding a surrogate id + join.
+  username     String   @id
+  passwordHash String
+  role         Role     @default(user)
+  name         String?
+  email        String?
+  blocked      Boolean  @default(false)
+  joinedAt     DateTime @default(now())
+
+  projects Project[]
+  sessions Session[]
+
+  @@index([role, blocked])
+}
+
+// DB-backed session for the cookie-session auth model. Only a hash of the
+// raw token is stored here; the raw token lives only in the httpOnly cookie.
+model Session {
+  id        String   @id // sha256 hex of the raw cookie token
+  username  String
+  user      User     @relation(fields: [username], references: [username], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([username])
+  @@index([expiresAt])
+}
+
+model Project {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  // Free-form label ("Blank React + TypeScript"), not an enum — the template
+  // catalog is expected to grow and an enum would force a migration each time.
+  template      String
+  version       String   @default("0.0.0")
+  ownerUsername String
+  owner         User     @relation(fields: [ownerUsername], references: [username])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  files    ProjectFile[]
+  versions ProjectVersion[]
+  exports  ExportRecord[]
+
+  @@index([ownerUsername])
+}
+
+model ProjectFile {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  path      String
+  content   String   @default("")
+  type      FileType @default(file)
+
+  @@unique([projectId, path])
+  @@index([projectId])
+}
+
+model ProjectVersion {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version   String
+  createdAt DateTime @default(now())
+  // Denormalized full-content snapshot, shape-compatible with the frontend's
+  // Pick<ProjectFile,'id'|'name'|'path'|'content'|'type'>[] — nothing in the
+  // app ever queries a single file's history across versions, so a fully
+  // normalized per-file-per-version table would buy relational flexibility
+  // this app doesn't use, at real write/read cost.
+  files Json
+
+  @@index([projectId, createdAt])
+}
+
+model ExportRecord {
+  id            String   @id @default(uuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Plain string, not a FK to ProjectVersion — a zip can be exported before
+  // "Update Project" is ever clicked, i.e. before any ProjectVersion exists.
+  version       String
+  exportedAt    DateTime @default(now())
+  fileSizeBytes Int
+
+  @@index([projectId, exportedAt])
+}
+
+model Notification {
+  id           String           @id @default(uuid())
+  // Plain strings, not FKs to User: toUsername can be the sentinel "all"
+  // (no matching User row), and a deleted user's past notifications should
+  // keep showing as-is, matching today's behavior.
+  toUsername   String
+  fromUsername String
+  kind         NotificationKind
+  message      String
+  link         String?
+  createdAt    DateTime         @default(now())
+  readBy       String[]         @default([])
+
+  @@index([toUsername, createdAt])
+}
