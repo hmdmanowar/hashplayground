@@ -5,6 +5,7 @@ import { updateOwnProfile, changeOwnPassword } from "../../services/userService"
 import { PencilIcon } from "../../components/Icons/Icons";
 import ThemeToggle from "../../components/ThemeToggle/ThemeToggle";
 import { getProfileCompletionPercent } from "../../utils/profileCompletion";
+import { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } from "../../utils/password";
 
 interface EditableFieldProps {
   label: string
@@ -133,13 +134,18 @@ function Settings() {
     await refreshUser();
   }
 
+  async function handleSavePhone(value: string) {
+    await updateOwnProfile(currentUser.username, { phone: value });
+    await refreshUser();
+  }
+
   async function handleChangePassword(event: FormEvent) {
     event.preventDefault();
     setPasswordError("");
     setPasswordStatus("");
 
-    if (!newPassword || newPassword.length < 4) {
-      setPasswordError("New password must be at least 4 characters");
+    if (!STRONG_PASSWORD_REGEX.test(newPassword)) {
+      setPasswordError(STRONG_PASSWORD_MESSAGE);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -200,6 +206,13 @@ function Settings() {
             placeholder="Add your email"
             type="email"
             onSave={handleSaveEmail}
+          />
+          <EditableField
+            label="Phone"
+            value={user.phone ?? ""}
+            placeholder="Add your phone number"
+            type="tel"
+            onSave={handleSavePhone}
           />
         </div>
       </div>

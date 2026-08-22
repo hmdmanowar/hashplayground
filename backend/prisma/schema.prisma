@@ -32,13 +32,32 @@ model User {
   role         Role     @default(user)
   name         String?
   email        String?
+  // Optional alternate login identifier alongside username — login accepts
+  // either. Unique so at most one account can claim a given phone number.
+  phone        String?  @unique
   blocked      Boolean  @default(false)
   joinedAt     DateTime @default(now())
 
-  projects Project[]
-  sessions Session[]
+  projects            Project[]
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([role, blocked])
+}
+
+// Forgot-password flow: same hashed-token-in-DB pattern as Session (id = sha256
+// of the raw token emailed to the user; only the hash is ever stored). One row
+// per request — a fresh request doesn't invalidate an older still-valid one,
+// but each token is single-use (deleted on redemption) and short-lived.
+model PasswordResetToken {
+  id        String   @id
+  username  String
+  user      User     @relation(fields: [username], references: [username], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([username])
+  @@index([expiresAt])
 }
 
 // DB-backed session for the cookie-session auth model. Only a hash of the

@@ -9,6 +9,7 @@ export interface UserDetailDto {
   role: Role
   name?: string
   email?: string
+  phone?: string
   joinedAt: string
   blocked: boolean
   projectCount: number
@@ -20,6 +21,7 @@ function toUserDetail(user: User, projectCount: number): UserDetailDto {
     role: user.role,
     name: user.name ?? undefined,
     email: user.email ?? undefined,
+    phone: user.phone ?? undefined,
     joinedAt: user.joinedAt.toISOString(),
     blocked: user.blocked,
     projectCount,
@@ -45,8 +47,15 @@ export async function getUserDetail(username: string): Promise<UserDetailDto> {
 
 export async function updateOwnProfile(
   username: string,
-  changes: { name?: string; email?: string },
+  changes: { name?: string; email?: string; phone?: string },
 ): Promise<UserDetailDto> {
+  if (changes.phone) {
+    const existing = await prisma.user.findUnique({ where: { phone: changes.phone } })
+    if (existing && existing.username !== username) {
+      throw new ApiError(409, 'That phone number is already in use by another account')
+    }
+  }
+
   const user = await prisma.user.update({
     where: { username },
     data: changes,

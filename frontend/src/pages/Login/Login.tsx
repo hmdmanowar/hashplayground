@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { APP_NAME } from '../../config/appConfig'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
-import { GoogleIcon, GithubIcon, AppleIcon, FacebookIcon, EnvelopeIcon, PhoneIcon } from '../../components/Icons/Icons'
+import { GoogleIcon, GithubIcon, AppleIcon, FacebookIcon, EnvelopeIcon } from '../../components/Icons/Icons'
 import logoImage from '../../assets/logo.png'
 import './Login.scss'
 
@@ -112,10 +112,6 @@ function Login() {
               <EnvelopeIcon className="h-5 w-5" />
               Continue with Email
             </button>
-            <button type="button" className={optionButtonClass} onClick={() => showComingSoon('Phone')}>
-              <PhoneIcon className="h-5 w-5" />
-              Continue with Phone
-            </button>
 
             {notice && <p className="px-2 text-center text-xs text-[var(--color-muted)]">{notice}</p>}
 
@@ -129,7 +125,7 @@ function Login() {
             <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
               <input
                 className="rounded-full border border-[var(--border-panel)] bg-transparent px-5 py-3 text-sm transition-colors"
-                placeholder="Username"
+                placeholder="Username or phone number"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 autoFocus
@@ -141,6 +137,9 @@ function Login() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
+              <Link to="/forgot-password" className="-mt-1 self-end text-xs text-[var(--color-primary)] hover:underline">
+                Forgot password?
+              </Link>
               {error && <p className="px-2 text-sm text-red-500">{error}</p>}
               <button
                 className="mt-2 cursor-pointer rounded-full bg-[var(--color-primary-strong)] px-5 py-3 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"

@@ -3,8 +3,9 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { APP_NAME } from '../../config/appConfig'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
-import { GoogleIcon, GithubIcon, AppleIcon, FacebookIcon, EnvelopeIcon, PhoneIcon } from '../../components/Icons/Icons'
+import { GoogleIcon, GithubIcon, AppleIcon, FacebookIcon, EnvelopeIcon } from '../../components/Icons/Icons'
 import logoImage from '../../assets/logo.png'
+import { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } from '../../utils/password'
 import './Signup.scss'
 
 const optionButtonClass =
@@ -38,6 +39,10 @@ function Signup() {
 
     if (!username || !password) {
       setError('Please fill in all fields')
+      return
+    }
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      setError(STRONG_PASSWORD_MESSAGE)
       return
     }
     if (password !== confirmPassword) {
@@ -121,10 +126,6 @@ function Signup() {
               <EnvelopeIcon className="h-5 w-5" />
               Continue with Email
             </button>
-            <button type="button" className={optionButtonClass} onClick={() => showComingSoon('Phone')}>
-              <PhoneIcon className="h-5 w-5" />
-              Continue with Phone
-            </button>
 
             {notice && <p className="px-2 text-center text-xs text-[var(--color-muted)]">{notice}</p>}
 
@@ -150,6 +151,7 @@ function Signup() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
+              <p className="px-2 text-xs text-[var(--color-muted)]">{STRONG_PASSWORD_MESSAGE}</p>
               <input
                 className="rounded-full border border-[var(--border-panel)] bg-transparent px-5 py-3 text-sm transition-colors"
                 placeholder="Confirm password"

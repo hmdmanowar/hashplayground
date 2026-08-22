@@ -9,6 +9,7 @@ export interface AuthUser {
   role: Role
   name?: string
   email?: string
+  phone?: string
   joinedAt: string
 }
 
@@ -17,10 +18,13 @@ type AuthStatus = 'checking' | 'ready'
 interface AuthContextValue {
   user: AuthUser | null
   authStatus: AuthStatus
-  login: (username: string, password: string) => Promise<{ ok: true } | { ok: false; reason: 'blocked' | 'invalid' }>
+  // `identifier` may be a username or a phone number — the backend accepts either.
+  login: (identifier: string, password: string) => Promise<{ ok: true } | { ok: false; reason: 'blocked' | 'invalid' }>
   signup: (username: string, password: string) => Promise<{ ok: true } | { ok: false; message: string }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
+  requestPasswordReset: (email: string) => Promise<{ ok: true } | { ok: false; message: string }>
+  confirmPasswordReset: (token: string, newPassword: string) => Promise<{ ok: true } | { ok: false; message: string }>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -67,11 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [showToast])
 
-  async function login(username: string, password: string) {
+  async function login(identifier: string, password: string) {
     try {
       const { user: loggedInUser } = await request<{ user: AuthUser }>('/auth/login', {
         method: 'POST',
-        body: { username, password },
+        body: { identifier, password },
       })
       setUser(loggedInUser)
       return { ok: true } as const
@@ -109,8 +113,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function requestPasswordReset(email: string) {
+    try {
+      await request('/auth/forgot-password', { method: 'POST', body: { email } })
+      return { ok: true } as const
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : 'Could not send the reset email'
+      return { ok: false, message } as const
+    }
+  }
+
+  async function confirmPasswordReset(token: string, newPassword: string) {
+    try {
+      await request('/auth/reset-password', { method: 'POST', body: { token, newPassword } })
+      return { ok: true } as const
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : 'Could not reset your password'
+      return { ok: false, message } as const
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, authStatus, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user, authStatus, login, signup, logout, refreshUser, requestPasswordReset, confirmPasswordReset }}
+    >
       {children}
     </AuthContext.Provider>
   )

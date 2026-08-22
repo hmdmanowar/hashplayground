@@ -9,6 +9,7 @@ export interface UserSummary {
   projectCount: number
   name?: string
   email?: string
+  phone?: string
 }
 
 export async function listUsers(): Promise<UserSummary[]> {
@@ -19,7 +20,10 @@ export async function getUser(username: string): Promise<UserSummary> {
   return request<UserSummary>(`/users/${encodeURIComponent(username)}`)
 }
 
-export async function updateOwnProfile(username: string, changes: { name?: string; email?: string }): Promise<UserSummary> {
+export async function updateOwnProfile(
+  username: string,
+  changes: { name?: string; email?: string; phone?: string },
+): Promise<UserSummary> {
   return request<UserSummary>(`/users/${encodeURIComponent(username)}`, { method: 'PATCH', body: changes })
 }
 

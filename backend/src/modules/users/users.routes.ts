@@ -13,12 +13,14 @@ import {
 } from './users.service.js'
 import { requireAuth, requireAdmin } from '../../middleware/auth.js'
 import { ApiError } from '../../middleware/errorHandler.js'
+import { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } from '../../lib/password.js'
 
 const userDetailSchema = z.object({
   username: z.string(),
   role: z.enum(['admin', 'user']),
   name: z.string().optional(),
   email: z.string().optional(),
+  phone: z.string().optional(),
   joinedAt: z.string(),
   blocked: z.boolean(),
   projectCount: z.number(),
@@ -60,7 +62,11 @@ export const usersRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         params: usernameParamSchema,
-        body: z.object({ name: z.string().optional(), email: z.string().optional() }),
+        body: z.object({
+          name: z.string().optional(),
+          email: z.string().optional(),
+          phone: z.string().optional(),
+        }),
         response: { 200: userDetailSchema },
       },
     },
@@ -77,7 +83,10 @@ export const usersRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         params: usernameParamSchema,
-        body: z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(4) }),
+        body: z.object({
+          currentPassword: z.string().min(1),
+          newPassword: z.string().regex(STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE),
+        }),
       },
     },
     async (request, reply) => {
