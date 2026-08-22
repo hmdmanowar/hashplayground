@@ -121,7 +121,7 @@ function Settings() {
 
   async function handleLogout() {
     await logout();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   }
 
   async function handleSaveName(value: string) {

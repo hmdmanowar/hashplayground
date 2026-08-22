@@ -240,7 +240,7 @@ function AdminDashboard() {
           setDialog(null)
           if (isSelf) {
             await logout()
-            navigate('/login', { replace: true })
+            navigate('/', { replace: true })
           } else {
             await refreshUsers()
           }

@@ -45,11 +45,11 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
     // through the dashboard before the real logout finishes and kicks back
     // out to /login.
     await logout()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3">
+    <header className="flex items-center justify-between border-b border-[var(--border-panel)] px-4 py-3">
       <div className="flex items-center gap-2">
         {user && (
           <button
