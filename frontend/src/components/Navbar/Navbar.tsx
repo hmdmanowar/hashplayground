@@ -1,10 +1,14 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../Logo/Logo'
 import UserMenu from '../UserMenu/UserMenu'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import NotificationBell from '../NotificationBell/NotificationBell'
-import { MenuFoldIcon, MenuUnfoldIcon } from '../Icons/Icons'
+import FeedbackDialog from '../FeedbackDialog/FeedbackDialog'
+import { MenuFoldIcon, MenuUnfoldIcon, MegaphoneIcon } from '../Icons/Icons'
+import { listUsers, isTopAdmin, ADMIN_USERS_CACHE_KEY, type UserSummary } from '../../services/userService'
+import { getCached, setCached } from '../../lib/dataCache'
 
 interface NavbarProps {
   collapsed: boolean
@@ -14,9 +18,33 @@ interface NavbarProps {
 function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [isSuperiorAdmin, setIsSuperiorAdmin] = useState(false)
 
-  function handleLogout() {
-    logout()
+  useEffect(() => {
+    if (user?.role !== 'admin') {
+      setIsSuperiorAdmin(false)
+      return
+    }
+    const cached = getCached<UserSummary[]>(ADMIN_USERS_CACHE_KEY)
+    if (cached) {
+      setIsSuperiorAdmin(isTopAdmin(cached, user.username))
+      return
+    }
+    listUsers()
+      .then((users) => {
+        setCached(ADMIN_USERS_CACHE_KEY, users)
+        setIsSuperiorAdmin(isTopAdmin(users, user.username))
+      })
+      .catch(() => {})
+  }, [user?.role, user?.username])
+
+  async function handleLogout() {
+    // Must await — navigating before `user` is actually cleared lets Login's
+    // own `if (user) redirect to /dashboard` guard fire first, bouncing
+    // through the dashboard before the real logout finishes and kicks back
+    // out to /login.
+    await logout()
     navigate('/login', { replace: true })
   }
 
@@ -36,6 +64,17 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
         <Logo />
       </div>
       <div className="flex items-center gap-4">
+        {user && !isSuperiorAdmin && (
+          <button
+            type="button"
+            onClick={() => setFeedbackOpen(true)}
+            aria-label="Share feedback"
+            title="Share feedback"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] transition-colors hover:border-[var(--color-primary)]"
+          >
+            <MegaphoneIcon className="h-5 w-5" />
+          </button>
+        )}
         <ThemeToggle />
         {user && <NotificationBell />}
         {user ? (
@@ -57,6 +96,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
           </Link>
         )}
       </div>
+      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </header>
   )
 }

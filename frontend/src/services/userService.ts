@@ -1,6 +1,11 @@
 import { request } from '../lib/apiClient'
 import type { Role } from '../context/AuthContext'
 
+// Shared dataCache key for the admin users list — used by AdminDashboard
+// (which populates it) and anywhere else that needs to know the current
+// top-admin status (e.g. Navbar) without a redundant extra fetch.
+export const ADMIN_USERS_CACHE_KEY = 'adminUsers'
+
 export interface UserSummary {
   username: string
   role: Role

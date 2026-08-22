@@ -522,3 +522,22 @@ export function CollapseAllIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function MegaphoneIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10v4a1 1 0 0 0 1 1h2l1 5h2l-1-5h1l9 4V6l-9 4H4a1 1 0 0 0-1 1Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9.5a3 3 0 0 1 0 5" />
+    </svg>
+  )
+}
+
+export function ImageIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="1.5" />
+      <circle cx="8.5" cy="9" r="1.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.5 15.5 15 10l-3 3-2-2-6 6" />
+    </svg>
+  )
+}

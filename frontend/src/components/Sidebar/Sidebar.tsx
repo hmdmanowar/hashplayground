@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon } from '../Icons/Icons'
+import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon } from '../Icons/Icons'
 import './Sidebar.scss'
 
 interface SidebarProps {
@@ -40,7 +40,13 @@ function Sidebar({ collapsed }: SidebarProps) {
 
       <div className="mt-auto border-t border-[var(--border-panel)] pt-4 max-[1281px]:pt-3">
         {user.role === 'admin' && (
-          <NavLink to="/admin" title="Admin Dashboard" className={(state) => linkClass(state, true)}>
+          <NavLink to="/admin/feedback" title="Feedback" className={(state) => linkClass(state, true)}>
+            <ClipboardListIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
+            {!collapsed && <span className="min-w-0 flex-1 truncate">Feedback</span>}
+          </NavLink>
+        )}
+        {user.role === 'admin' && (
+          <NavLink to="/admin" end title="Admin Dashboard" className={(state) => linkClass(state, true)}>
             <ShieldIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
             {!collapsed && <span className="min-w-0 flex-1 truncate">Admin Dashboard</span>}
           </NavLink>

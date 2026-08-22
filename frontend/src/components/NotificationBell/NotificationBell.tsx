@@ -63,7 +63,7 @@ function NotificationBell() {
         type="button"
         onClick={handleToggle}
         aria-label="Notifications"
-        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded text-[var(--color-muted)] hover:bg-[var(--hover-overlay)] hover:text-[var(--color-primary)]"
+        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] transition-colors hover:border-[var(--color-primary)]"
       >
         <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
