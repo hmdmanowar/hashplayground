@@ -36,6 +36,10 @@ import RowActionsMenu, {
   menuItemDangerClass,
   menuIconClass,
 } from '../../components/RowActionsMenu/RowActionsMenu'
+import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
+import { getCached, setCached } from '../../lib/dataCache'
+
+const ADMIN_USERS_CACHE_KEY = 'adminUsers'
 
 type DialogRequest =
   | { kind: 'confirm'; title: string; message: string; onConfirm: () => void }
@@ -131,7 +135,7 @@ function NotificationHistoryDialog({ onClose }: { onClose: () => void }) {
 
         <div className="mt-4 max-h-96 overflow-y-auto rounded-lg border border-[var(--border-panel)]">
           {notifications === null ? (
-            <p className="px-3 py-4 text-sm text-[var(--color-muted)]">Loading…</p>
+            <LoadingOverlay compact />
           ) : (
             <table className="w-full text-left text-sm">
               <thead className="bg-[var(--bg-app)]">
@@ -191,8 +195,9 @@ function AdminDashboard() {
   const { user, logout, refreshUser } = useAuth()
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const [users, setUsers] = useState<UserSummary[]>([])
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const cachedUsers = getCached<UserSummary[]>(ADMIN_USERS_CACHE_KEY)
+  const [users, setUsers] = useState<UserSummary[]>(cachedUsers ?? [])
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(cachedUsers ? 'ready' : 'loading')
   const [dialog, setDialog] = useState<DialogRequest>(null)
 
   usePageHeaderActions(
@@ -220,7 +225,9 @@ function AdminDashboard() {
 
   async function refreshUsers() {
     try {
-      setUsers(await listUsers())
+      const data = await listUsers()
+      setCached(ADMIN_USERS_CACHE_KEY, data)
+      setUsers(data)
       setStatus('ready')
     } catch {
       setStatus('error')
@@ -232,7 +239,7 @@ function AdminDashboard() {
   }, [])
 
   if (!user) return null
-  if (status === 'loading') return <p className="text-sm text-[var(--color-muted)]">Loading…</p>
+  if (status === 'loading') return <LoadingOverlay />
   if (status === 'error') {
     return (
       <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-[var(--border-panel)] p-10 text-center">

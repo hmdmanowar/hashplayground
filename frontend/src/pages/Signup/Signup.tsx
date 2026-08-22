@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { APP_NAME } from '../../config/appConfig'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import { GoogleIcon, GithubIcon, AppleIcon, FacebookIcon, EnvelopeIcon, PhoneIcon } from '../../components/Icons/Icons'
+import logoImage from '../../assets/logo.png'
 import './Signup.scss'
 
 const optionButtonClass =
@@ -69,9 +70,7 @@ function Signup() {
 
       <div className="signup-card w-full max-w-sm rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-8 shadow-2xl">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary-strong)] text-xl font-bold text-white">
-            #
-          </span>
+          <img src={logoImage} alt="" className="h-12 w-12 rounded-full object-cover" />
           <div>
             <h1 className="text-2xl font-semibold">Create your {APP_NAME} account</h1>
             <p className="mt-1 text-sm text-[var(--color-muted)]">Choose how you'd like to continue</p>

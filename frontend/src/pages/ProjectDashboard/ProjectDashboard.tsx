@@ -26,6 +26,8 @@ import type { Project } from '../../types/project'
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
 import PromptDialog from '../../components/PromptDialog/PromptDialog'
 import Select from '../../components/Select/Select'
+import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
+import { getCached, setCached } from '../../lib/dataCache'
 
 const BASE_COLUMNS = [
   'Project Name',
@@ -57,8 +59,10 @@ function ProjectDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const [allProjects, setAllProjects] = useState<Project[]>([])
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const projectsCacheKey = user ? `projects:${user.username}` : null
+  const cachedProjects = projectsCacheKey ? getCached<Project[]>(projectsCacheKey) : undefined
+  const [allProjects, setAllProjects] = useState<Project[]>(cachedProjects ?? [])
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(cachedProjects ? 'ready' : 'loading')
   const [userOptions, setUserOptions] = useState<UserSummary[]>([])
   const [exportCountByProjectId, setExportCountByProjectId] = useState<Map<string, number>>(new Map())
   const [selectedUsername, setSelectedUsername] = useState(ALL_USERS_VALUE)
@@ -99,7 +103,9 @@ function ProjectDashboard() {
   async function refreshProjects() {
     if (!user) return
     try {
-      setAllProjects(await listVisibleProjects(user))
+      const data = await listVisibleProjects(user)
+      setCached(`projects:${user.username}`, data)
+      setAllProjects(data)
       setStatus('ready')
     } catch {
       setStatus('error')
@@ -377,7 +383,7 @@ function ProjectDashboard() {
       )}
 
       {status === 'loading' ? (
-        <p className="text-sm text-[var(--color-muted)]">Loading…</p>
+        <LoadingOverlay />
       ) : status === 'error' ? (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-[var(--border-panel)] p-10 text-center">
           <p className="text-sm text-[var(--color-muted)]">Couldn't load projects.</p>

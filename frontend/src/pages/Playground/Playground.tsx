@@ -60,6 +60,7 @@ import {
 } from "../../components/Icons/Icons";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import PromptDialog from "../../components/PromptDialog/PromptDialog";
+import LoadingOverlay from "../../components/LoadingOverlay/LoadingOverlay";
 import { diffTabId, isDiffTab, diffTabPath, type SidebarView } from "./playgroundUtils";
 import ActivityBar from "./components/ActivityBar";
 import Sidebar from "./components/Sidebar";
@@ -442,7 +443,7 @@ function Playground() {
   if (status === "loading" || !project) {
     return (
       <div className="flex h-full items-center justify-center">
-        <span className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-panel)] border-t-[var(--color-primary)]" />
+        <LoadingOverlay />
       </div>
     );
   }
@@ -979,9 +980,8 @@ function Playground() {
   return (
     <div className="relative flex h-full min-h-0 flex-col">
       {isUpdating && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 rounded-lg bg-black/50">
-          <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          <p className="text-sm font-medium text-white">Updating project…</p>
+        <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-black/50">
+          <LoadingOverlay compact label="Updating project…" labelClassName="text-sm font-medium text-white" />
         </div>
       )}
       {dialog?.kind === "prompt" && (
