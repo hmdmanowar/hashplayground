@@ -15,6 +15,7 @@ import { getLanguage, isDiffTab, diffTabPath } from "../playgroundUtils";
 import QuickOpenList from "./QuickOpenList";
 
 interface EditorPanelProps {
+  mobileHidden: boolean;
   openTabs: string[];
   files: ProjectFile[];
   activeFileId: string | null;
@@ -43,6 +44,7 @@ interface EditorPanelProps {
 // The main code editor area: open-tabs bar (with the maximize toggle),
 // breadcrumb + diff navigation, and the Editor / DiffEditor / empty-state body.
 function EditorPanel({
+  mobileHidden,
   openTabs,
   files,
   activeFileId,
@@ -68,7 +70,11 @@ function EditorPanel({
   onOpenFile,
 }: EditorPanelProps) {
   return (
-    <div className="font-scale-reset flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)]">
+    <div
+      className={`font-scale-reset min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] ${
+        mobileHidden ? "hidden" : "flex"
+      } lg:flex`}
+    >
       <div
         className="flex flex-wrap items-center gap-1 border-b border-[var(--border-panel)] p-1.5"
         style={{ height: "37px" }}

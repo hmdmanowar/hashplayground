@@ -11,6 +11,7 @@ import SourceControlView from "./SourceControlView";
 interface SidebarProps {
   sidebarView: SidebarView;
   width: number;
+  mobileHidden: boolean;
   projectName: string;
   tree: FileTreeNode[];
   filesTreeExpanded: boolean;
@@ -44,6 +45,7 @@ interface SidebarProps {
 function Sidebar({
   sidebarView,
   width,
+  mobileHidden,
   projectName,
   tree,
   filesTreeExpanded,
@@ -72,8 +74,8 @@ function Sidebar({
 }: SidebarProps) {
   return (
     <div
-      style={{ width, flexShrink: 0 }}
-      className="flex flex-col gap-2 overflow-y-auto rounded-r-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-3"
+      style={{ "--panel-width": `${width}px` } as React.CSSProperties}
+      className={`${mobileHidden ? "hidden" : "flex"} w-full flex-col gap-2 overflow-y-auto rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-3 lg:flex lg:w-[var(--panel-width)] lg:shrink-0 lg:rounded-l-none lg:rounded-r-lg`}
     >
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted)]">

@@ -38,7 +38,7 @@ function Breadcrumb() {
           )
         })}
       </nav>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-xl font-semibold">{title}</h1>
         {titleSuffix}
       </div>

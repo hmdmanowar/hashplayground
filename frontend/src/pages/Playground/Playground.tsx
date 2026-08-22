@@ -63,6 +63,7 @@ import PromptDialog from "../../components/PromptDialog/PromptDialog";
 import LoadingOverlay from "../../components/LoadingOverlay/LoadingOverlay";
 import { diffTabId, isDiffTab, diffTabPath, type SidebarView } from "./playgroundUtils";
 import ActivityBar from "./components/ActivityBar";
+import MobileTabBar from "./components/MobileTabBar";
 import Sidebar from "./components/Sidebar";
 import EditorPanel from "./components/EditorPanel";
 import PreviewPanel from "./components/PreviewPanel";
@@ -119,6 +120,7 @@ function Playground() {
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [quickOpenQuery, setQuickOpenQuery] = useState("");
   const [sidebarView, setSidebarView] = useState<SidebarView>("explorer");
+  const [mobilePanel, setMobilePanel] = useState<"sidebar" | "editor" | "preview">("sidebar");
   const [codeSearchQuery, setCodeSearchQuery] = useState("");
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
   const pendingRevealLineRef = useRef<number | null>(null);
@@ -360,8 +362,14 @@ function Playground() {
 
   function handleSelectSidebarView(view: SidebarView) {
     setSidebarView(view);
+    setMobilePanel("sidebar");
     if (view === "sourceControl") setChangesExpanded(true);
     if (sidebarCollapsed) setSidebarCollapsed(false);
+  }
+
+  function selectMobilePreview() {
+    setMobilePanel("preview");
+    setPreviewCollapsed(false);
   }
 
   usePageFullscreen(editorMaximized);
@@ -369,7 +377,7 @@ function Playground() {
   usePageTitle(
     project?.name ?? null,
     project ? (
-      <div className="ml-2 mt-1 flex items-center gap-2">
+      <div className="ml-2 mt-1 flex flex-wrap items-center gap-2">
         {user?.role === "admin" && project.ownerUsername !== user.username && (
           <button
             type="button"
@@ -403,7 +411,7 @@ function Playground() {
   );
   usePageHeaderActions(
     project ? (
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {hasUnpublishedChanges && (
           <span
             title={
@@ -514,6 +522,7 @@ function Playground() {
 
   function openFile(file: ProjectFile | FileTreeNode) {
     setActiveFileId(file.id);
+    setMobilePanel("editor");
     setOpenTabs((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
     setDrafts((prev) => {
       if (file.id in prev) return prev;
@@ -1059,6 +1068,21 @@ function Playground() {
         </div>
       )}
 
+      <MobileTabBar
+        sidebarView={sidebarView}
+        mobilePanel={mobilePanel}
+        changedFilesCount={changedFiles.length}
+        onSelectSidebarView={handleSelectSidebarView}
+        onSelectEditor={() => setMobilePanel("editor")}
+        onSelectPreview={selectMobilePreview}
+        saveMode={saveMode}
+        onSaveModeChange={handleSaveModeChange}
+        editorPrefs={editorPrefs}
+        onEditorPrefsChange={handleEditorPrefsChange}
+        panelResizeMode={panelResizeMode}
+        onPanelResizeModeChange={handlePanelResizeModeChange}
+      />
+
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <ActivityBar
           sidebarCollapsed={sidebarCollapsed}
@@ -1078,6 +1102,7 @@ function Playground() {
           <Sidebar
             sidebarView={sidebarView}
             width={panelSizes.sidebarWidth}
+            mobileHidden={mobilePanel !== "sidebar"}
             projectName={currentProject.name}
             tree={tree}
             filesTreeExpanded={filesTreeExpanded}
@@ -1112,12 +1137,14 @@ function Playground() {
             disabled={panelResizeMode !== "manual"}
             onResize={resizeSidebar}
             onResizeEnd={persistPanelSizes}
+            className="hidden lg:flex"
           />
         ) : (
-          <div className="w-3 shrink-0" />
+          <div className="hidden w-3 shrink-0 lg:block" />
         )}
 
         <EditorPanel
+          mobileHidden={mobilePanel !== "editor"}
           openTabs={openTabs}
           files={files}
           activeFileId={activeFileId}
@@ -1148,9 +1175,11 @@ function Playground() {
           disabled={previewCollapsed || panelResizeMode !== "manual"}
           onResize={resizePreview}
           onResizeEnd={persistPanelSizes}
+          className="hidden lg:flex"
         />
 
         <PreviewPanel
+          mobileHidden={mobilePanel !== "preview"}
           collapsed={previewCollapsed}
           onExpand={() => setPreviewCollapsed(false)}
           onCollapse={() => setPreviewCollapsed(true)}

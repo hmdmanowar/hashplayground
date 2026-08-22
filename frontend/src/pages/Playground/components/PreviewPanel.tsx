@@ -8,6 +8,7 @@ import {
 } from "../../../components/Icons/Icons";
 
 interface PreviewPanelProps {
+  mobileHidden: boolean;
   collapsed: boolean;
   onExpand: () => void;
   onCollapse: () => void;
@@ -23,6 +24,7 @@ interface PreviewPanelProps {
 // The live preview panel — collapsible, runs the compiled project in a
 // sandboxed iframe and surfaces compile/runtime errors inline.
 function PreviewPanel({
+  mobileHidden,
   collapsed,
   onExpand,
   onCollapse,
@@ -36,8 +38,8 @@ function PreviewPanel({
 }: PreviewPanelProps) {
   return (
     <div
-      style={{ width: collapsed ? 40 : width, flexShrink: 0 }}
-      className={`flex flex-col overflow-hidden rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] ${
+      style={{ "--panel-width": `${collapsed ? 40 : width}px` } as React.CSSProperties}
+      className={`${mobileHidden ? "hidden" : "flex"} w-full flex-col overflow-hidden rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] lg:flex lg:w-[var(--panel-width)] lg:shrink-0 ${
         collapsed ? "items-center p-1.5" : ""
       }`}
     >
@@ -70,7 +72,7 @@ function PreviewPanel({
                 type="button"
                 onClick={onCollapse}
                 aria-label="Collapse preview panel"
-                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+                className="hidden h-6 w-6 cursor-pointer items-center justify-center rounded text-[var(--color-muted)] hover:text-[var(--color-primary)] lg:flex"
               >
                 <MenuFoldIcon className="h-4 w-4" />
               </button>

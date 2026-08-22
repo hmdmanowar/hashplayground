@@ -3,6 +3,7 @@ interface ResizeHandleProps {
   disabled: boolean;
   onResize: (deltaPx: number) => void;
   onResizeEnd: () => void;
+  className?: string;
 }
 
 // A draggable divider between two panels. `orientation: "vertical"` is a
@@ -10,7 +11,7 @@ interface ResizeHandleProps {
 // horizontal bar dragged up/down to resize height. Always rendered (even
 // when `disabled`) so panel spacing stays identical between resize modes —
 // only the drag behavior and grip indicator toggle off.
-function ResizeHandle({ orientation, disabled, onResize, onResizeEnd }: ResizeHandleProps) {
+function ResizeHandle({ orientation, disabled, onResize, onResizeEnd, className = "" }: ResizeHandleProps) {
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (disabled) return;
     event.preventDefault();
@@ -36,7 +37,7 @@ function ResizeHandle({ orientation, disabled, onResize, onResizeEnd }: ResizeHa
       onPointerDown={handlePointerDown}
       className={`flex shrink-0 items-center justify-center ${
         orientation === "vertical" ? "w-3 cursor-col-resize" : "h-3 cursor-row-resize"
-      } ${disabled ? "" : "group"}`}
+      } ${disabled ? "" : "group"} ${className}`}
     >
       {!disabled && (
         <span
