@@ -113,3 +113,95 @@ body {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Homepage "built with" tech strip — the track holds the badge list twice
+   back-to-back, so translating exactly -50% loops seamlessly into what
+   looks like the same list starting over. */
+@keyframes tech-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.tech-marquee-track {
+  animation: tech-marquee 28s linear infinite;
+}
+
+.tech-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tech-marquee-track {
+    animation: none;
+  }
+}
+
+/* Homepage ambient background — scattered code punctuation, each blinking
+   on its own offset like a twinkling star field rather than in unison. */
+@keyframes code-symbol-blink {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.32;
+  }
+}
+
+.code-symbol {
+  animation-name: code-symbol-blink;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code-symbol {
+    animation: none;
+    opacity: 0.18;
+  }
+}
+
+/* Homepage background grid — soft glow that drifts across the grid lines,
+   brightening whichever cells it passes over. */
+@keyframes grid-glow-move {
+  0% {
+    transform: translate(-10%, -10%);
+  }
+  25% {
+    transform: translate(70%, 15%);
+  }
+  50% {
+    transform: translate(40%, 75%);
+  }
+  75% {
+    transform: translate(-15%, 45%);
+  }
+  100% {
+    transform: translate(-10%, -10%);
+  }
+}
+
+.grid-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50vmax;
+  height: 50vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 55%, transparent), transparent 70%);
+  mix-blend-mode: var(--grid-glow-blend, overlay);
+  filter: blur(20px);
+  animation: grid-glow-move 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-glow {
+    animation: none;
+    display: none;
+  }
+}
