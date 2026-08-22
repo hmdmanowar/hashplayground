@@ -410,6 +410,10 @@ function buildHtmlPreviewDocument(files: ProjectFile[], htmlFile: ProjectFile): 
     const file = src ? resolve(src) : undefined
     if (!file) return
     const inline = doc.createElement('script')
+    for (const attr of Array.from(script.attributes)) {
+      if (attr.name === 'src') continue
+      inline.setAttribute(attr.name, attr.value)
+    }
     inline.textContent = file.content
     script.replaceWith(inline)
   })
