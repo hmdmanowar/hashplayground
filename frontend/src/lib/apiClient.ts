@@ -9,6 +9,12 @@
 // already handles that cross-site case via secure + sameSite:'none'.
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
+// For the handful of auth flows that need a real top-level browser
+// navigation (Google OAuth) rather than a fetch — same base as `request()`.
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`
+}
+
 export class ApiError extends Error {
   status: number
   code?: string

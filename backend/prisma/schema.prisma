@@ -28,13 +28,23 @@ model User {
   // Notification.toUsername/fromUsername) and there is no rename-user feature,
   // so it's used directly as the PK instead of adding a surrogate id + join.
   username     String   @id
-  passwordHash String
+  // Nullable — an account created via "Continue with Google" has no password
+  // at all until they either set one (Settings) or use forgot-password.
+  // login() treats a null passwordHash as "password login unavailable".
+  passwordHash String?
   role         Role     @default(user)
   name         String?
   email        String?
   // Optional alternate login identifier alongside username — login accepts
   // either. Unique so at most one account can claim a given phone number.
   phone        String?  @unique
+  // Google's stable per-account id ("sub" claim). Set once a Google sign-in
+  // creates or links this account.
+  googleId     String?  @unique
+  // GitHub's stable numeric user id (stored as a string), same idea as googleId.
+  githubId     String?  @unique
+  // LinkedIn's stable per-account id ("sub" claim), same idea as googleId.
+  linkedinId   String?  @unique
   blocked      Boolean  @default(false)
   joinedAt     DateTime @default(now())
 

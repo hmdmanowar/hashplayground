@@ -6,6 +6,7 @@ import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import { GoogleIcon, GithubIcon, AppleIcon, LinkedInIcon, EnvelopeIcon } from '../../components/Icons/Icons'
 import logoImage from '../../assets/logo.png'
 import { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } from '../../utils/password'
+import { apiUrl } from '../../lib/apiClient'
 import './Signup.scss'
 
 const optionButtonClass =
@@ -84,7 +85,13 @@ function Signup() {
 
         {mode === 'options' ? (
           <div className="mt-8 flex flex-col gap-3">
-            <button type="button" className={optionButtonClass} onClick={() => showComingSoon('Google')}>
+            <button
+              type="button"
+              className={optionButtonClass}
+              onClick={() => {
+                window.location.href = apiUrl('/auth/google')
+              }}
+            >
               <GoogleIcon className="h-5 w-5" />
               Continue with Google
             </button>
@@ -94,7 +101,9 @@ function Signup() {
                 type="button"
                 aria-label="Continue with GitHub"
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] transition-colors hover:border-[var(--color-primary)]"
-                onClick={() => showComingSoon('GitHub')}
+                onClick={() => {
+                  window.location.href = apiUrl('/auth/github')
+                }}
               >
                 <GithubIcon className="h-5 w-5" />
               </button>
@@ -110,7 +119,9 @@ function Signup() {
                 type="button"
                 aria-label="Continue with LinkedIn"
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] transition-colors hover:border-[var(--color-primary)]"
-                onClick={() => showComingSoon('LinkedIn')}
+                onClick={() => {
+                  window.location.href = apiUrl('/auth/linkedin')
+                }}
               >
                 <LinkedInIcon className="h-5 w-5" />
               </button>

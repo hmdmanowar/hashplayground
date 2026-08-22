@@ -56,6 +56,17 @@ export async function updateOwnProfile(
     }
   }
 
+  // `email` has no @unique constraint at the DB level (unlike phone/googleId/
+  // etc.) since it's optional free-text, not itself a login credential — but
+  // OAuth login/signup relies on "one email → at most one account" to reject
+  // duplicates correctly, so it must be enforced here too.
+  if (changes.email) {
+    const existing = await prisma.user.findFirst({ where: { email: changes.email } })
+    if (existing && existing.username !== username) {
+      throw new ApiError(409, 'That email is already in use by another account')
+    }
+  }
+
   const user = await prisma.user.update({
     where: { username },
     data: changes,
@@ -71,6 +82,13 @@ export async function changeOwnPassword(
 ): Promise<void> {
   const user = await prisma.user.findUnique({ where: { username } })
   if (!user) throw new ApiError(404, 'User not found')
+
+  // A Google-only account has no existing password to verify against — use
+  // "forgot password" (which sets one directly, no current-password check)
+  // to add a password to this kind of account for the first time.
+  if (!user.passwordHash) {
+    throw new ApiError(400, 'This account signed up with Google and has no password yet — use "Forgot password?" to set one')
+  }
 
   const valid = await verifyPasswordHash(currentPassword, user.passwordHash)
   if (!valid) throw new ApiError(401, 'Current password is incorrect')

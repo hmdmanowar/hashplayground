@@ -1,11 +1,25 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { APP_NAME } from '../../config/appConfig'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
 import { GoogleIcon, GithubIcon, AppleIcon, LinkedInIcon, EnvelopeIcon } from '../../components/Icons/Icons'
+import { apiUrl } from '../../lib/apiClient'
 import logoImage from '../../assets/logo.png'
 import './Login.scss'
+
+const OAUTH_PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub', linkedin: 'LinkedIn' }
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = Object.fromEntries(
+  Object.entries(OAUTH_PROVIDER_LABELS).flatMap(([key, label]) => [
+    [`${key}_auth_failed`, `Something went wrong signing in with ${label} — please try again.`],
+    [`${key}_account_blocked`, 'This account has been blocked. Contact an admin for help.'],
+    [
+      `${key}_email_taken`,
+      `An account with this email already exists — log in using your original method instead of ${label}.`,
+    ],
+  ]),
+)
 
 const optionButtonClass =
   'flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] px-5 py-3 text-sm font-medium transition-colors hover:border-[var(--color-primary)]'
@@ -13,11 +27,15 @@ const optionButtonClass =
 function Login() {
   const { user, authStatus, login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [mode, setMode] = useState<'options' | 'email'>('options')
   const [notice, setNotice] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(() => {
+    const code = searchParams.get('error')
+    return code ? OAUTH_ERROR_MESSAGES[code] ?? '' : ''
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (authStatus === 'checking') return null
@@ -70,7 +88,13 @@ function Login() {
 
         {mode === 'options' ? (
           <div className="mt-8 flex flex-col gap-3">
-            <button type="button" className={optionButtonClass} onClick={() => showComingSoon('Google')}>
+            <button
+              type="button"
+              className={optionButtonClass}
+              onClick={() => {
+                window.location.href = apiUrl('/auth/google')
+              }}
+            >
               <GoogleIcon className="h-5 w-5" />
               Continue with Google
             </button>
@@ -80,7 +104,9 @@ function Login() {
                 type="button"
                 aria-label="Continue with GitHub"
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] transition-colors hover:border-[var(--color-primary)]"
-                onClick={() => showComingSoon('GitHub')}
+                onClick={() => {
+                  window.location.href = apiUrl('/auth/github')
+                }}
               >
                 <GithubIcon className="h-5 w-5" />
               </button>
@@ -96,7 +122,9 @@ function Login() {
                 type="button"
                 aria-label="Continue with LinkedIn"
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] transition-colors hover:border-[var(--color-primary)]"
-                onClick={() => showComingSoon('LinkedIn')}
+                onClick={() => {
+                  window.location.href = apiUrl('/auth/linkedin')
+                }}
               >
                 <LinkedInIcon className="h-5 w-5" />
               </button>
@@ -114,6 +142,7 @@ function Login() {
             </button>
 
             {notice && <p className="px-2 text-center text-xs text-[var(--color-muted)]">{notice}</p>}
+            {error && <p className="px-2 text-center text-sm text-red-500">{error}</p>}
 
             <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
               By continuing, you agree to our <span className="underline">Terms of Service</span> and{' '}
