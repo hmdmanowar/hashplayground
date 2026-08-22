@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { APP_NAME } from '../../config/appConfig'
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
-import { GoogleIcon, GithubIcon, AppleIcon, FacebookIcon, EnvelopeIcon } from '../../components/Icons/Icons'
+import { GoogleIcon, GithubIcon, AppleIcon, LinkedInIcon, EnvelopeIcon } from '../../components/Icons/Icons'
 import logoImage from '../../assets/logo.png'
 import { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } from '../../utils/password'
 import './Signup.scss'
@@ -108,11 +108,11 @@ function Signup() {
               </button>
               <button
                 type="button"
-                aria-label="Continue with Facebook"
+                aria-label="Continue with LinkedIn"
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] transition-colors hover:border-[var(--color-primary)]"
-                onClick={() => showComingSoon('Facebook')}
+                onClick={() => showComingSoon('LinkedIn')}
               >
-                <FacebookIcon className="h-5 w-5" />
+                <LinkedInIcon className="h-5 w-5" />
               </button>
             </div>
 

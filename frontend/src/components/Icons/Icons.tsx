@@ -299,11 +299,14 @@ export function AppleIcon({ className }: IconProps) {
   )
 }
 
-export function FacebookIcon({ className }: IconProps) {
+export function LinkedInIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className}>
-      <circle cx="12" cy="12" r="12" fill="#1877F2" />
-      <path fill="#fff" d="M13.5 12.9h2l.3-2.4h-2.3V9c0-.7.2-1.2 1.2-1.2h1.2V5.6c-.2 0-.9-.1-1.8-.1-1.8 0-3 1.1-3 3.1v1.9H9v2.4h2.1V19h2.4v-6.1Z" />
+      <rect width="24" height="24" rx="4" fill="#0A66C2" />
+      <path
+        fill="#fff"
+        d="M7.1 9.6H4.4V19h2.7V9.6ZM5.8 8.4a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2ZM19.6 19v-5.2c0-2.8-1.5-4.1-3.5-4.1-1.6 0-2.3.9-2.7 1.5V9.6H10.7c0 .1 0 6.7 0 9.4h2.7v-5.3c0-.3 0-.6.1-.8.2-.6.8-1.2 1.7-1.2 1.2 0 1.7.9 1.7 2.3V19h2.7Z"
+      />
     </svg>
   )
 }
