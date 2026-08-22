@@ -40,7 +40,8 @@ function WhatIsSection() {
           <h2 className="mt-3 text-2xl font-bold sm:text-3xl">A browser-based coding and learning platform</h2>
           <p className="mt-4 text-sm text-[var(--color-muted)]">
             No installs, no environment setup. Create a real React + TypeScript project, write code in a fast
-            in-browser editor, and run and preview it instantly &mdash; all from a single tab.
+            in-browser editor, and run and preview it instantly &mdash; all from a single tab. Every file, version,
+            and project is saved to your account, not just your browser, so it's there whenever you come back.
           </p>
         </div>
       </div>

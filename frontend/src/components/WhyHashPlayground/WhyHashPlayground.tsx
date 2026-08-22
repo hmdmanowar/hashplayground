@@ -2,9 +2,9 @@ import { CheckCircleIcon } from '../Icons/Icons'
 
 const REASONS = [
   'No installs, no config, no environment drift',
-  'Real React + TypeScript, not toy syntax',
-  'Learn by building actual projects',
-  'Everything you build stays yours',
+  'Real React + TypeScript, on the same engine as VS Code',
+  'Saved to your account — pick up on any device',
+  'Full version history with diffs, plus one-click export',
 ]
 
 function WhyHashPlayground() {

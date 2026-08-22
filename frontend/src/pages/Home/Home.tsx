@@ -4,7 +4,7 @@ import FeatureGrid from '../../components/FeatureGrid/FeatureGrid'
 import HowItWorks from '../../components/HowItWorks/HowItWorks'
 import WorkspacePreview from '../../components/WorkspacePreview/WorkspacePreview'
 import WhyHashPlayground from '../../components/WhyHashPlayground/WhyHashPlayground'
-import FutureAISection from '../../components/FutureAISection/FutureAISection'
+import RoadmapSection from '../../components/RoadmapSection/RoadmapSection'
 import LandingFooter from '../../components/LandingFooter/LandingFooter'
 
 const CODE_PATTERN = encodeURIComponent(`
@@ -18,22 +18,25 @@ const CODE_PATTERN = encodeURIComponent(`
 
 function Home() {
   return (
-    <div
-      className="min-h-full"
-      style={{
-        backgroundImage: `url("data:image/svg+xml,${CODE_PATTERN}")`,
-        backgroundSize: '160px 160px',
-        backgroundRepeat: 'repeat',
-      }}
-    >
-      <HeroSection />
-      <WhatIsSection />
-      <FeatureGrid />
-      <HowItWorks />
-      <WorkspacePreview />
-      <WhyHashPlayground />
-      <FutureAISection />
-      <LandingFooter />
+    <div className="min-h-full">
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,${CODE_PATTERN}")`,
+          backgroundSize: '160px 160px',
+          backgroundRepeat: 'repeat',
+        }}
+      />
+      <div className="relative" style={{ paddingInline: '10px' }}>
+        <HeroSection />
+        <WhatIsSection />
+        <FeatureGrid />
+        <HowItWorks />
+        <WorkspacePreview />
+        <WhyHashPlayground />
+        <RoadmapSection />
+        <LandingFooter />
+      </div>
     </div>
   )
 }

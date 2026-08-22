@@ -1,36 +1,35 @@
-import { CodeIcon, FolderIcon, MonitorIcon, PlugIcon, GraduationCapIcon, BotIcon } from '../Icons/Icons'
+import { CodeIcon, FolderIcon, MonitorIcon, GitBranchIcon, DownloadIcon, ShieldIcon } from '../Icons/Icons'
 
 const FEATURES = [
   {
     icon: CodeIcon,
-    title: 'Editor',
-    description: 'Write real React + TypeScript in a fast, in-browser editor.',
+    title: 'Real code editor',
+    description: 'Monaco — the exact editor behind VS Code — with multi-file tabs and full syntax support.',
   },
   {
     icon: FolderIcon,
-    title: 'Projects',
-    description: 'Create and organize real projects, not disposable snippets.',
+    title: 'File explorer',
+    description: 'A real project tree: create, rename, and organize files and folders, just like on your machine.',
   },
   {
     icon: MonitorIcon,
-    title: 'Preview',
-    description: 'See your changes render instantly, right next to your code.',
+    title: 'Live preview & run',
+    description: 'Compile and run your project in a sandboxed preview with real console output and error overlays.',
   },
   {
-    icon: PlugIcon,
-    title: 'APIs',
-    description: 'Work with real APIs and data, not contrived puzzles.',
+    icon: GitBranchIcon,
+    title: 'Version history & diffs',
+    description: 'Every update publishes a version with a Git-style diff view — review or discard, file by file.',
   },
   {
-    icon: GraduationCapIcon,
-    title: 'Learning mode',
-    description: 'Guided exercises that teach you by having you build.',
+    icon: DownloadIcon,
+    title: 'Export & import',
+    description: 'Export any project as a ready-to-run npm package, or import an existing .zip straight in.',
   },
   {
-    icon: BotIcon,
-    title: 'AI mentor',
-    description: "An AI that understands your project and helps you get better, not just one that writes the code for you.",
-    comingSoon: true,
+    icon: ShieldIcon,
+    title: 'Real accounts, saved for good',
+    description: 'Sign up once. Every project, file, and version lives in your account, not just your browser.',
   },
 ]
 
@@ -39,7 +38,7 @@ function FeatureGrid() {
     <div className="mx-auto max-w-6xl py-6">
       <div className="text-center">
         <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-primary)]">Core features</p>
-        <h2 className="mt-3 text-2xl font-bold sm:text-3xl">Everything you need to build, run, and learn</h2>
+        <h2 className="mt-3 text-2xl font-bold sm:text-3xl">Everything below already works</h2>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -48,16 +47,9 @@ function FeatureGrid() {
             key={feature.title}
             className="flex flex-col gap-3 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-5"
           >
-            <div className="flex items-center justify-between">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary-strong)] text-white">
-                <feature.icon className="h-5 w-5" />
-              </span>
-              {feature.comingSoon && (
-                <span className="rounded-full border border-[var(--border-panel)] px-2 py-0.5 text-xs text-[var(--color-muted)]">
-                  Coming soon
-                </span>
-              )}
-            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary-strong)] text-white">
+              <feature.icon className="h-5 w-5" />
+            </span>
             <div>
               <h3 className="font-medium">{feature.title}</h3>
               <p className="mt-1 text-sm text-[var(--color-muted)]">{feature.description}</p>

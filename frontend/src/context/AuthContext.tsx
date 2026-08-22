@@ -30,6 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('checking')
   const { showToast } = useToast()
   const mountedRef = useRef(true)
+  const userRef = useRef<AuthUser | null>(null)
+
+  useEffect(() => {
+    userRef.current = user
+  }, [user])
 
   useEffect(() => {
     mountedRef.current = true
@@ -50,8 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return onUnauthorized(() => {
+      // Only a real, previously-authenticated session dying mid-use deserves this
+      // toast — a routine boot-time /auth/me check (or any anonymous browsing)
+      // also gets a 401 through the exact same listener, and that's normal, not
+      // an expiry.
+      const wasLoggedIn = userRef.current !== null
       setUser(null)
-      showToast('Your session expired — please log in again.', { kind: 'error' })
+      if (wasLoggedIn) {
+        showToast('Your session expired — please log in again.', { kind: 'error' })
+      }
     })
   }, [showToast])
 
