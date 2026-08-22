@@ -3,7 +3,11 @@
 // library) — this app has no cross-component cache-sharing need beyond
 // NotificationBell's own bespoke poll, so a query library would just add a
 // second unfamiliar thing on top of the sync-to-async conversion itself.
-const API_BASE = '/api'
+// In dev, Vite's proxy forwards same-origin '/api' to the local backend.
+// In production the frontend and backend are on different Render domains,
+// so VITE_API_BASE_URL points straight at the backend — the cookie session
+// already handles that cross-site case via secure + sameSite:'none'.
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 export class ApiError extends Error {
   status: number
