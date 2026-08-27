@@ -2,10 +2,13 @@ import { request, ApiError } from '../lib/apiClient'
 import type { Project, ProjectFile } from '../types/project'
 import type { Role } from '../context/AuthContext'
 
+export type StyleTemplate = 'none' | 'bootstrap' | 'tailwind'
+
 export interface CreateProjectInput {
   name: string
   description?: string
   template: string
+  styleTemplate?: StyleTemplate
 }
 
 export interface ImportProjectInput {

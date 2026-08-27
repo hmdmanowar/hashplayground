@@ -73,7 +73,12 @@ export const projectsRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        body: z.object({ name: z.string().min(1), description: z.string().optional(), template: z.string().min(1) }),
+        body: z.object({
+          name: z.string().min(1),
+          description: z.string().optional(),
+          template: z.string().min(1),
+          styleTemplate: z.enum(['none', 'bootstrap', 'tailwind']).optional(),
+        }),
         response: { 201: z.object({ project: projectDtoSchema, files: z.array(projectFileDtoSchema) }) },
       },
     },

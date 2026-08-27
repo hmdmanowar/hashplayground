@@ -98,9 +98,20 @@ export async function changeOwnPassword(
 }
 
 // "Top admin": the earliest-joined active (non-blocked) admin. Only the top
-// admin may manage (block/demote/delete) another admin.
+// admin may manage (block/demote/delete) another admin — and only the top
+// admin can publish a version to a project they don't own directly; any
+// other admin has to request it and let the top admin approve (see
+// versions.service.ts's publishVersion/requestUpdate/resolveUpdateRequest).
 async function findTopAdmin(tx: Prisma.TransactionClient): Promise<User | null> {
   return tx.user.findFirst({ where: { role: 'admin', blocked: false }, orderBy: { joinedAt: 'asc' } })
+}
+
+// Non-transactional counterpart of findTopAdmin, for call sites (auth routes,
+// version publishing) that just need to know who the top admin currently is
+// rather than manage them inside a transaction.
+export async function getTopAdminUsername(): Promise<string | undefined> {
+  const topAdmin = await prisma.user.findFirst({ where: { role: 'admin', blocked: false }, orderBy: { joinedAt: 'asc' } })
+  return topAdmin?.username
 }
 
 async function assertCanManageOtherAdmin(tx: Prisma.TransactionClient, actingUsername: string): Promise<void> {

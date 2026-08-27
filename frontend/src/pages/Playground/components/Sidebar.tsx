@@ -1,7 +1,14 @@
 import type { ProjectFile } from "../../../types/project";
 import type { FileTreeNode } from "../../../utils/fileTree";
 import type { ChangedFile } from "../../../utils/diff";
-import { PlusIcon, FolderPlusIcon, RefreshIcon, CollapseAllIcon, UploadIcon } from "../../../components/Icons/Icons";
+import {
+  PlusIcon,
+  FolderPlusIcon,
+  RefreshIcon,
+  CollapseAllIcon,
+  UploadIcon,
+  PaletteIcon,
+} from "../../../components/Icons/Icons";
 import RowActionsMenu, { menuItemClass, menuIconClass } from "../../../components/RowActionsMenu/RowActionsMenu";
 import type { SidebarView } from "../playgroundUtils";
 import ExplorerView from "./ExplorerView";
@@ -23,6 +30,7 @@ interface SidebarProps {
   onNewFile: (parentPath: string) => void;
   onNewFolder: (parentPath: string) => void;
   onUploadImage: () => void;
+  onAddStyleTemplate: () => void;
   onRefreshExplorer: () => void;
   onCollapseFolders: () => void;
   onRename: (node: FileTreeNode) => void;
@@ -59,6 +67,7 @@ function Sidebar({
   onNewFile,
   onNewFolder,
   onUploadImage,
+  onAddStyleTemplate,
   onRefreshExplorer,
   onCollapseFolders,
   onRename,
@@ -115,6 +124,14 @@ function Sidebar({
               >
                 <UploadIcon className={menuIconClass} />
                 Upload Image
+              </button>
+              <button
+                type="button"
+                onClick={onAddStyleTemplate}
+                className={menuItemClass}
+              >
+                <PaletteIcon className={menuIconClass} />
+                Add Style Template
               </button>
               <button
                 type="button"

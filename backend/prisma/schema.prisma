@@ -34,6 +34,12 @@ enum FeedbackStatus {
   resolved
 }
 
+enum PendingUpdateStatus {
+  pending
+  approved
+  rejected
+}
+
 model User {
   // Username is the natural key used everywhere today (Project.ownerUsername,
   // Notification.toUsername/fromUsername) and there is no rename-user feature,
@@ -109,9 +115,10 @@ model Project {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  files    ProjectFile[]
-  versions ProjectVersion[]
-  exports  ExportRecord[]
+  files                 ProjectFile[]
+  versions              ProjectVersion[]
+  exports               ExportRecord[]
+  pendingUpdateRequests PendingUpdateRequest[]
 
   @@index([ownerUsername])
 }
@@ -190,6 +197,30 @@ model FeedbackStatusChange {
   changedByUser User?          @relation("FeedbackStatusChangeActor", fields: [changedBy], references: [username], onDelete: SetNull)
 
   @@index([feedbackId, changedAt])
+}
+
+// A lower-level admin's request to publish a version for a project they
+// don't own — the "pull request" half of the update flow (see
+// versions.service.ts's requestUpdate/resolveUpdateRequest). The top admin
+// reviews using the same diff already shown in Source Control (current
+// files vs. latest version — no separate snapshot stored here) and either
+// approves, which publishes the project's current files exactly like a
+// direct Update Project, or rejects. Only one request may be pending per
+// project at a time.
+model PendingUpdateRequest {
+  id                  String              @id @default(uuid())
+  projectId           String
+  project             Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Plain strings, not FKs to User — same reasoning as Notification's
+  // toUsername/fromUsername: a deleted user's past requests should keep
+  // showing as-is.
+  requestedByUsername String
+  status              PendingUpdateStatus @default(pending)
+  createdAt           DateTime            @default(now())
+  resolvedAt          DateTime?
+  resolvedByUsername  String?
+
+  @@index([projectId, status])
 }
 
 model Notification {

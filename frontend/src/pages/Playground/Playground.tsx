@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { Navigate, useBlocker, useNavigate, useParams } from "react-router-dom";
 import JSZip from "jszip";
 import type { MonacoDiffEditor } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import type { editor as MonacoEditorNS } from "monaco-editor";
 import { getScaffoldFiles } from "../../lib/exportScaffold";
 import { recordExport } from "../../services/exportService";
@@ -13,8 +14,16 @@ import { useToast } from "../../context/ToastContext";
 import { usePageHeaderActions } from "../../hooks/usePageHeaderActions";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { usePageFullscreen } from "../../hooks/usePageFullscreen";
+import { useIsTopAdmin } from "../../hooks/useIsTopAdmin";
 import { getProject, deleteProject } from "../../services/projectService";
-import { getLatestVersion, publishVersion } from "../../services/versionService";
+import {
+  getLatestVersion,
+  publishVersion,
+  getPendingUpdateRequest,
+  requestUpdate,
+  resolveUpdateRequest,
+  type PendingUpdateRequest,
+} from "../../services/versionService";
 import {
   getSaveMode,
   setSaveMode,
@@ -33,6 +42,8 @@ import {
   type PanelSizes,
 } from "../../services/playgroundSettingsService";
 import { compileProject, buildPreviewDocument, isImagePath } from "../../lib/runPreview";
+import { planStyleTemplate, detectAppliedStyleTemplate, type StyleTemplate } from "../../lib/styleTemplates";
+import { HTML_TEMPLATE } from "../../constants/projectTemplates";
 import {
   listFiles,
   createFile,
@@ -73,6 +84,9 @@ import ResizeHandle from "./components/ResizeHandle";
 import QuickOpenList from "./components/QuickOpenList";
 import OwnerDetailsDialog from "./components/OwnerDetailsDialog";
 import ErrorDialog from "./components/ErrorDialog";
+import StyleTemplateDialog from "./components/StyleTemplateDialog";
+import AdminUpdateConfirmDialog from "./components/AdminUpdateConfirmDialog";
+import PendingUpdateBanner from "./components/PendingUpdateBanner";
 
 type DialogRequest =
   | {
@@ -102,12 +116,19 @@ type LoadStatus = "loading" | "ready" | "not-found" | "error";
 
 const MAX_IMAGE_UPLOAD_BYTES = 3 * 1024 * 1024;
 
+function styleTemplateLabel(style: StyleTemplate): string {
+  if (style === "bootstrap") return "Bootstrap";
+  if (style === "tailwind") return "Tailwind CSS";
+  return "None";
+}
+
 function Playground() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const isTopAdmin = useIsTopAdmin();
 
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [project, setProject] = useState<Project | null>(null);
@@ -128,8 +149,23 @@ function Playground() {
   const [codeSearchQuery, setCodeSearchQuery] = useState("");
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
   const pendingRevealLineRef = useRef<number | null>(null);
+  // Per-file scroll/cursor position, scoped to this Playground mount (a
+  // plain ref, so it's naturally garbage-collected on unmount — a file
+  // always starts fresh the next time this project, or any project, is
+  // opened). See EditorPanel's saveViewState={false} for why this is
+  // managed by hand instead of relying on the library's own caching.
+  const viewStatesRef = useRef<Map<string, monaco.editor.ICodeEditorViewState>>(new Map());
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<ProjectFile | null>(null);
+  const [styleTemplateDialogOpen, setStyleTemplateDialogOpen] = useState(false);
+  // Which action the password-confirm dialog is currently gating — "publish"
+  // for the top admin directly updating another user's project, "approve"
+  // for the top admin approving a pending update request. null = closed.
+  const [passwordDialogPurpose, setPasswordDialogPurpose] = useState<"publish" | "approve" | null>(null);
+  const [adminUpdateSubmitting, setAdminUpdateSubmitting] = useState(false);
+  const [adminUpdateError, setAdminUpdateError] = useState("");
+  const [pendingUpdateRequest, setPendingUpdateRequest] = useState<PendingUpdateRequest | undefined>(undefined);
+  const [isResolvingRequest, setIsResolvingRequest] = useState(false);
   const [editorMaximized, setEditorMaximized] = useState(false);
   const [terminalLines, setTerminalLines] = useState<string[]>([
     "Hash Playground terminal — type a command and press Enter.",
@@ -191,13 +227,15 @@ function Playground() {
         setStatus("not-found");
         return;
       }
-      const [fetchedFiles, version] = await Promise.all([
+      const [fetchedFiles, version, pending] = await Promise.all([
         listFiles(projectId),
         getLatestVersion(projectId),
+        user?.role === "admin" ? getPendingUpdateRequest(projectId) : Promise.resolve(undefined),
       ]);
       setProject(found);
       setFiles(fetchedFiles);
       setLatestVersion(version);
+      setPendingUpdateRequest(pending);
       setExpandedPaths(new Set(allFolderPaths(fetchedFiles)));
       setLog([`Loaded project "${found.name}"`]);
       setStatus("ready");
@@ -209,6 +247,54 @@ function Playground() {
   useEffect(() => {
     loadProject();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  // While the admin who requested this update is sitting on this page
+  // waiting, poll for the top admin's decision so they don't have to do
+  // anything else — once it's resolved, refresh the whole page so they see
+  // the outcome (published files/version, or the request just clearing)
+  // immediately instead of finding out only from the notification bell.
+  useEffect(() => {
+    if (!projectId || !user || !pendingUpdateRequest) return;
+    if (pendingUpdateRequest.status !== "pending") return;
+    if (pendingUpdateRequest.requestedByUsername !== user.username) return;
+
+    const timer = setInterval(async () => {
+      try {
+        const stillPending = await getPendingUpdateRequest(projectId);
+        if (stillPending) return;
+
+        const updatedVersion = await getLatestVersion(projectId);
+        const wasApproved = updatedVersion?.version !== latestVersion?.version;
+        await loadProject();
+        showToast(
+          wasApproved
+            ? `Your update was approved and published as v${updatedVersion?.version}`
+            : "Your update request was rejected",
+          { kind: wasApproved ? "success" : "error" },
+        );
+      } catch {
+        // Transient network error — try again next tick.
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, user, pendingUpdateRequest]);
+
+  // EditorPanel's keepCurrentModel keeps each open file's Monaco model (and
+  // its scroll/cursor state) alive across tab switches *within* a visit, so
+  // returning to a file doesn't reset it to the top. That cache is keyed
+  // only by file path, not by project — without this, leaving the project
+  // (or switching to a different one) would leave stale models sitting
+  // around, at best wasting memory and at worst showing another project's
+  // last-scrolled position for a same-named file. Disposing them here means
+  // a file always starts fresh the next time this project — or any
+  // project — is opened, while same-visit tab switching still works.
+  useEffect(() => {
+    return () => {
+      monaco.editor.getModels().forEach((model) => model.dispose());
+    };
   }, [projectId]);
 
   useEffect(() => {
@@ -443,11 +529,11 @@ function Playground() {
         </button>
         <button
           type="button"
-          onClick={handleUpdateProject}
-          disabled={isUpdating}
+          onClick={handleUpdateProjectClick}
+          disabled={isUpdating || (Boolean(pendingUpdateRequest) && !isTopAdmin)}
           className="cursor-pointer rounded-full bg-[var(--color-primary-strong)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isUpdating ? "Updating…" : "Update Project"}
+          {isUpdating ? "Updating…" : pendingUpdateRequest && !isTopAdmin ? "Update requested" : "Update Project"}
         </button>
       </div>
     ) : null,
@@ -532,6 +618,23 @@ function Playground() {
     ]);
   }
 
+  // Captures the currently active file's scroll/cursor position before we
+  // switch away from it — must run synchronously before setActiveFileId,
+  // not in an effect, since by the time an effect for the new
+  // activeFileId runs, editorRef.current already points at the new file's
+  // (remounted) editor instance, not the outgoing one.
+  function captureActiveViewState() {
+    if (activeFileId && editorRef.current) {
+      const state = editorRef.current.saveViewState();
+      if (state) viewStatesRef.current.set(activeFileId, state);
+    }
+  }
+
+  function selectTab(fileId: string) {
+    captureActiveViewState();
+    setActiveFileId(fileId);
+  }
+
   function openFile(file: ProjectFile | FileTreeNode) {
     // Image files hold a data URL, not editable text — a Monaco tab would
     // just render that data URL as one giant line, so preview it instead.
@@ -541,6 +644,7 @@ function Playground() {
       return;
     }
 
+    captureActiveViewState();
     setActiveFileId(file.id);
     setMobilePanel("editor");
     setOpenTabs((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
@@ -570,9 +674,14 @@ function Playground() {
   function handleEditorMount(editorInstance: MonacoEditorNS.IStandaloneCodeEditor) {
     editorRef.current = editorInstance;
     if (pendingRevealLineRef.current !== null) {
+      // An explicit line to reveal (Quick Open / search jump) always wins
+      // over any remembered scroll position for this file.
       editorInstance.revealLineInCenter(pendingRevealLineRef.current);
       editorInstance.setPosition({ lineNumber: pendingRevealLineRef.current, column: 1 });
       pendingRevealLineRef.current = null;
+    } else if (activeFileId) {
+      const saved = viewStatesRef.current.get(activeFileId);
+      if (saved) editorInstance.restoreViewState(saved);
     }
   }
 
@@ -582,6 +691,7 @@ function Playground() {
 
   function openDiff(path: string) {
     const id = diffTabId(path);
+    captureActiveViewState();
     setOpenTabs((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setActiveFileId(id);
   }
@@ -831,6 +941,84 @@ function Playground() {
     }
   }
 
+  async function handleAddStyleTemplate(style: StyleTemplate) {
+    setStyleTemplateDialogOpen(false);
+    const plan = planStyleTemplate(files, currentProject.template === HTML_TEMPLATE, style);
+
+    if (!plan.ok) {
+      showToast(plan.message);
+      return;
+    }
+    if (plan.alreadyApplied) {
+      if (style === "none") {
+        showToast("This project doesn't have a style framework set up");
+      } else {
+        showToast(`This project already has ${styleTemplateLabel(style)} set up`);
+      }
+      return;
+    }
+
+    const previousStyle = detectAppliedStyleTemplate(files, currentProject.template === HTML_TEMPLATE);
+    const label = styleTemplateLabel(style);
+
+    try {
+      if (plan.deletes.length > 0) {
+        await Promise.all(plan.deletes.map((fileId) => deleteFile(currentProject.id, fileId)));
+      }
+      const createdFiles = await Promise.all(
+        plan.creates.map((entry) => createFile(currentProject.id, entry.name, entry.path)),
+      );
+      const contentByPath = new Map(plan.creates.map((entry) => [entry.path, entry.content]));
+      const batchEntries = [
+        ...plan.updates,
+        ...createdFiles.map((created) => ({ fileId: created.id, content: contentByPath.get(created.path) ?? "" })),
+      ];
+      const saved = await saveFilesBatch(currentProject.id, batchEntries);
+      const savedById = new Map(saved.map((file) => [file.id, file]));
+      const deletedIds = new Set(plan.deletes);
+
+      setFiles((prev) => {
+        const next = prev.filter((file) => !deletedIds.has(file.id)).map((file) => savedById.get(file.id) ?? file);
+        for (const created of createdFiles) {
+          if (!next.some((file) => file.id === created.id)) {
+            next.push(savedById.get(created.id) ?? created);
+          }
+        }
+        return next;
+      });
+      // If the file we just rewrote (main.tsx / index.html) is currently
+      // open, its draft is still the pre-switch content — without this, the
+      // editor would keep showing stale content, and the next auto-save
+      // would re-persist that stale draft, silently reverting this change.
+      setDrafts((prev) => {
+        const next = { ...prev };
+        for (const update of plan.updates) {
+          if (update.fileId in next) next[update.fileId] = update.content;
+        }
+        for (const id of deletedIds) delete next[id];
+        return next;
+      });
+      setOpenTabs((prev) => prev.filter((id) => !deletedIds.has(id)));
+      setActiveFileId((prev) => (prev && deletedIds.has(prev) ? null : prev));
+      setExpandedPaths((prev) => new Set(prev).add("src"));
+
+      if (style === "none") {
+        const previousLabel = previousStyle ? styleTemplateLabel(previousStyle) : "the style framework";
+        addLog(`Removed ${previousLabel} from the project`);
+        showToast(`Removed ${previousLabel}`, { kind: "success" });
+      } else if (previousStyle) {
+        const previousLabel = styleTemplateLabel(previousStyle);
+        addLog(`Switched from ${previousLabel} to ${label}`);
+        showToast(`Switched to ${label}`, { kind: "success" });
+      } else {
+        addLog(`Added ${label} to the project`);
+        showToast(`${label} added to your project`, { kind: "success" });
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Could not add this style template");
+    }
+  }
+
   function requestRename(node: FileTreeNode) {
     setDialog({
       kind: "prompt",
@@ -953,30 +1141,143 @@ function Playground() {
     }
   }
 
-  async function handleUpdateProject() {
-    setIsUpdating(true);
+  async function performUpdate(password?: string) {
     await persistDirtyFiles();
+    const result = await publishVersion(currentProject.id, password);
+    if (!result.changed) {
+      addLog("No changes to update — version unchanged");
+    } else {
+      const updatedVersion = await getLatestVersion(currentProject.id);
+      // Flush synchronously so the leave-blocker (which reads latestVersion)
+      // sees the just-recorded version before the navigate() below runs —
+      // otherwise it still thinks this project has never been updated and
+      // blocks its own post-update redirect.
+      flushSync(() => setLatestVersion(updatedVersion));
+      addLog(`Updated project to v${result.version}`);
+      showToast(`${currentProject.name} updated to v${result.version}`, { kind: "success" });
+    }
+    navigate("/dashboard");
+  }
 
-    try {
-      const result = await publishVersion(currentProject.id);
-      if (!result.changed) {
-        addLog("No changes to update — version unchanged");
+  // An admin can view/edit any project, but updating someone else's code
+  // needs a deliberate confirmation step first. The top admin confirms with
+  // just their own password (AdminUpdateConfirmDialog) and publishes
+  // immediately; any other admin can't publish directly at all anymore —
+  // they send a request instead and the top admin reviews/approves it (see
+  // PendingUpdateBanner).
+  function isAdminEditingOtherUsersProject(): boolean {
+    return user?.role === "admin" && currentProject.ownerUsername !== user.username;
+  }
+
+  async function handleUpdateProjectClick() {
+    if (isAdminEditingOtherUsersProject()) {
+      if (isTopAdmin) {
+        setAdminUpdateError("");
+        setPasswordDialogPurpose("publish");
       } else {
-        const updatedVersion = await getLatestVersion(currentProject.id);
-        // Flush synchronously so the leave-blocker (which reads latestVersion)
-        // sees the just-recorded version before the navigate() below runs —
-        // otherwise it still thinks this project has never been updated and
-        // blocks its own post-update redirect.
-        flushSync(() => setLatestVersion(updatedVersion));
-        addLog(`Updated project to v${result.version}`);
+        setDialog({
+          kind: "confirm",
+          title: "Request an update?",
+          message:
+            "You can't publish another user's project directly. The top admin will review your changes and, once approved, they're published automatically — you won't need to do anything else.",
+          confirmLabel: "Request update",
+          onConfirm: () => {
+            setDialog(null);
+            handleRequestUpdate();
+          },
+        });
       }
+      return;
+    }
 
-      navigate("/dashboard");
+    setIsUpdating(true);
+    try {
+      await performUpdate();
     } catch (error) {
       setIsUpdating(false);
       const message = error instanceof Error ? error.message : "Could not update this project.";
       setDialog({ kind: "error", title: "Update failed", message });
     }
+  }
+
+  async function handleRequestUpdate() {
+    try {
+      const created = await requestUpdate(currentProject.id);
+      setPendingUpdateRequest(created);
+      showToast("Update requested — the top admin will review it", { kind: "success" });
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Could not send this update request");
+    }
+  }
+
+  function handleReviewPendingRequest() {
+    setSidebarView("sourceControl");
+  }
+
+  async function handleRejectPendingRequest() {
+    if (!pendingUpdateRequest) return;
+    setDialog({
+      kind: "confirm",
+      title: "Reject this update request?",
+      message: `${pendingUpdateRequest.requestedByUsername} will be notified that their request wasn't approved. Nothing published.`,
+      confirmLabel: "Reject",
+      onConfirm: async () => {
+        setDialog(null);
+        setIsResolvingRequest(true);
+        try {
+          await resolveUpdateRequest(currentProject.id, pendingUpdateRequest.id, "rejected");
+          setPendingUpdateRequest(undefined);
+          showToast("Update request rejected", { kind: "success" });
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : "Could not reject this request");
+        } finally {
+          setIsResolvingRequest(false);
+        }
+      },
+    });
+  }
+
+  async function handlePasswordConfirm(password: string) {
+    if (passwordDialogPurpose === "approve") {
+      if (!pendingUpdateRequest) return;
+      setAdminUpdateSubmitting(true);
+      setAdminUpdateError("");
+      try {
+        const result = await resolveUpdateRequest(currentProject.id, pendingUpdateRequest.id, "approved", password);
+        setPasswordDialogPurpose(null);
+        setAdminUpdateSubmitting(false);
+        setPendingUpdateRequest(undefined);
+        if (result.changed) {
+          const updatedVersion = await getLatestVersion(currentProject.id);
+          setLatestVersion(updatedVersion);
+          addLog(`Approved ${pendingUpdateRequest.requestedByUsername}'s update — published as v${result.version}`);
+          showToast(`Approved and published as v${result.version}`, { kind: "success" });
+        } else {
+          addLog(`Approved ${pendingUpdateRequest.requestedByUsername}'s update — nothing new to publish`);
+          showToast("Approved — there was nothing new to publish", { kind: "success" });
+        }
+      } catch (error) {
+        setAdminUpdateSubmitting(false);
+        setAdminUpdateError(error instanceof Error ? error.message : "Could not approve this request.");
+      }
+      return;
+    }
+
+    setAdminUpdateSubmitting(true);
+    setAdminUpdateError("");
+    setIsUpdating(true);
+    try {
+      await performUpdate(password);
+    } catch (error) {
+      setIsUpdating(false);
+      setAdminUpdateSubmitting(false);
+      setAdminUpdateError(error instanceof Error ? error.message : "Could not update this project.");
+    }
+  }
+
+  function handleApprovePendingRequest() {
+    setAdminUpdateError("");
+    setPasswordDialogPurpose("approve");
   }
 
   async function handleExportProject() {
@@ -1085,6 +1386,18 @@ function Playground() {
           <LoadingOverlay compact label="Updating project…" labelClassName="text-sm font-medium text-white" />
         </div>
       )}
+      {pendingUpdateRequest && (
+        <div>
+          <PendingUpdateBanner
+            request={pendingUpdateRequest}
+            isTopAdmin={isTopAdmin}
+            isResolving={isResolvingRequest || adminUpdateSubmitting}
+            onReview={handleReviewPendingRequest}
+            onApprove={handleApprovePendingRequest}
+            onReject={handleRejectPendingRequest}
+          />
+        </div>
+      )}
       {dialog?.kind === "prompt" && (
         <PromptDialog
           open
@@ -1164,6 +1477,38 @@ function Playground() {
         </div>
       )}
 
+      {styleTemplateDialogOpen && (
+        <StyleTemplateDialog
+          appliedStyle={detectAppliedStyleTemplate(files, currentProject.template === HTML_TEMPLATE)}
+          onSelect={handleAddStyleTemplate}
+          onCancel={() => setStyleTemplateDialogOpen(false)}
+        />
+      )}
+
+      {passwordDialogPurpose === "publish" && (
+        <AdminUpdateConfirmDialog
+          title={`This is ${currentProject.owner.name ?? currentProject.owner.username}'s project`}
+          message="You're about to overwrite another user's code. Enter your own password to confirm."
+          confirmLabel="Confirm update"
+          isSubmitting={adminUpdateSubmitting}
+          error={adminUpdateError}
+          onConfirm={handlePasswordConfirm}
+          onCancel={() => setPasswordDialogPurpose(null)}
+        />
+      )}
+
+      {passwordDialogPurpose === "approve" && pendingUpdateRequest && (
+        <AdminUpdateConfirmDialog
+          title="Approve this update?"
+          message={`Enter your own password to approve ${pendingUpdateRequest.requestedByUsername}'s request and publish it immediately.`}
+          confirmLabel="Approve & publish"
+          isSubmitting={adminUpdateSubmitting}
+          error={adminUpdateError}
+          onConfirm={handlePasswordConfirm}
+          onCancel={() => setPasswordDialogPurpose(null)}
+        />
+      )}
+
       {quickOpenVisible && activeFileId !== null && (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-24"
@@ -1230,6 +1575,7 @@ function Playground() {
             onNewFile={(parentPath) => requestNewEntry("file", parentPath)}
             onNewFolder={(parentPath) => requestNewEntry("folder", parentPath)}
             onUploadImage={() => imageInputRef.current?.click()}
+            onAddStyleTemplate={() => setStyleTemplateDialogOpen(true)}
             onRefreshExplorer={() => listFiles(currentProject.id).then(setFiles)}
             onCollapseFolders={() => setExpandedPaths(new Set())}
             onRename={requestRename}
@@ -1267,7 +1613,7 @@ function Playground() {
           files={files}
           activeFileId={activeFileId}
           drafts={drafts}
-          onSelectTab={setActiveFileId}
+          onSelectTab={selectTab}
           onCloseTab={closeTab}
           editorMaximized={editorMaximized}
           onToggleMaximize={() => setEditorMaximized((prev) => !prev)}

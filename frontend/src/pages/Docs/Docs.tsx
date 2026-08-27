@@ -17,9 +17,11 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   CheckCircleIcon,
+  ImageIcon,
 } from '../../components/Icons/Icons'
 import Accordion from '../../components/Accordion/Accordion'
 import HeroCanvas from '../../components/HeroCanvas/HeroCanvas'
+import { BootstrapMark, TailwindMark, NoneMark } from '../../components/BrandMarks/BrandMarks'
 
 const SECTIONS = [
   { id: 'getting-started', label: 'Getting Started' },
@@ -84,8 +86,15 @@ const WORKSPACE_PANELS = [
   },
   {
     icon: TerminalIcon,
-    title: 'Log & Terminal',
-    description: 'A collapsible bottom panel that mirrors your preview’s console output alongside a lightweight terminal.',
+    title: 'Log, Debug Console & Terminal',
+    description:
+      'A collapsible bottom panel with three tabs: Log (Hash Playground’s own activity — saves, updates, exports), Debug Console (console.log/warn/error forwarded from your running preview), and a lightweight Terminal.',
+  },
+  {
+    icon: ImageIcon,
+    title: 'Image uploads',
+    description:
+      'Add an image from the Explorer’s + menu — it’s saved straight into src/icons/ and its path is copied to your clipboard automatically, ready to paste into an <img src>.',
   },
 ]
 
@@ -100,6 +109,12 @@ const TEMPLATES = [
     description:
       'A plain index.html, style.css, and script.js — no build step at all. Use <script type="module"> to import packages straight from a URL (esm.sh, unpkg, or similar).',
   },
+]
+
+const STYLE_TEMPLATES = [
+  { Mark: NoneMark, title: 'None', description: 'Skip a framework and write plain CSS.' },
+  { Mark: BootstrapMark, title: 'Bootstrap', description: 'Component classes, added via CDN — no install step.' },
+  { Mark: TailwindMark, title: 'Tailwind CSS', description: 'Utility-first classes, added via CDN — no install step.' },
 ]
 
 const ACCOUNT_ITEMS = [
@@ -134,7 +149,7 @@ const FAQ_ITEMS = [
   {
     question: 'Is my code private?',
     answer:
-      'Your projects live in your account and are only visible to you (and admins, for support purposes) unless you choose to export or share them yourself.',
+      'Your projects live in your account and are only visible to you unless you choose to export or share them yourself.',
   },
   {
     question: 'Can I use npm packages in my project?',
@@ -300,6 +315,24 @@ function Docs() {
             >
               <h3 className="font-medium">{template.title}</h3>
               <p className="mt-1 text-sm text-[var(--color-muted)]">{template.description}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3 className="mt-8 font-medium">Style templates</h3>
+        <p className="mt-1 text-sm text-[var(--color-muted)]">
+          Pick a CSS framework when you create a project, or add, switch, or remove one at any time afterward from
+          the Explorer’s + menu → Add Style Template.
+        </p>
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          {STYLE_TEMPLATES.map((style) => (
+            <div
+              key={style.title}
+              className="flex flex-col items-center gap-2 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-4 text-center"
+            >
+              <style.Mark />
+              <span className="text-xs font-medium">{style.title}</span>
+              <span className="text-[10px] text-[var(--color-muted)]">{style.description}</span>
             </div>
           ))}
         </div>

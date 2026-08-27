@@ -1,7 +1,7 @@
 import type { Project, User } from '@prisma/client'
 import { prisma } from '../../lib/prisma.js'
 import { ApiError } from '../../middleware/errorHandler.js'
-import { seedFilesForTemplate, REACT_TEMPLATE, HTML_TEMPLATE } from './seedFiles.js'
+import { seedFilesForTemplate, REACT_TEMPLATE, HTML_TEMPLATE, type StyleTemplate } from './seedFiles.js'
 import { notifyOtherAdmins } from '../../lib/notify.js'
 import type { AuthenticatedUser } from '../../middleware/authTypes.js'
 
@@ -94,9 +94,9 @@ export async function getProject(projectId: string, viewer: AuthenticatedUser): 
 
 export async function createProject(
   ownerUsername: string,
-  input: { name: string; description?: string; template: string },
+  input: { name: string; description?: string; template: string; styleTemplate?: StyleTemplate },
 ): Promise<{ project: ProjectDto; files: { id: string; name: string; path: string; content: string; type: string }[] }> {
-  const seedFiles = seedFilesForTemplate(input.template)
+  const seedFiles = seedFilesForTemplate(input.template, input.styleTemplate)
 
   const result = await prisma.$transaction(async (tx) => {
     const project = await tx.project.create({

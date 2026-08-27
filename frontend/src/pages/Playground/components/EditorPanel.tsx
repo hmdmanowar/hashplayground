@@ -232,6 +232,19 @@ function EditorPanel({
             theme={theme === "dark" ? "hash-dark" : "hash-light"}
             value={drafts[activeFile.id] ?? activeFile.content}
             onChange={(value) => onDraftChange(activeFile.id, value ?? "")}
+            // Each tab switch remounts this component (key={activeFile.id})
+            // so Quick Open / search-result jumps can reliably reveal a
+            // specific line via onMount. keepCurrentModel keeps each open
+            // file's model (and undo history) alive across those remounts
+            // instead of disposing it every time. Scroll/cursor position
+            // itself is restored manually in Playground's onEditorMount —
+            // saveViewState is off here because @monaco-editor/react's own
+            // built-in equivalent caches by path in a module-level map that
+            // outlives this component, so it wouldn't reset to the top the
+            // next time this project (or any project reusing a path like
+            // src/App.tsx) is opened fresh.
+            keepCurrentModel
+            saveViewState={false}
             options={{
               minimap: { enabled: editorPrefs.minimap },
               wordWrap: editorPrefs.wordWrap ? "on" : "off",

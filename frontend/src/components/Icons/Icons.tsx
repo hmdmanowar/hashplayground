@@ -541,6 +541,21 @@ export function EyeIcon({ className }: IconProps) {
   )
 }
 
+export function PaletteIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3a9 9 0 1 0 0 18c1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8h1.6c2 0 3.8-1.8 3.8-3.8C20 6.7 16.4 3 12 3Z"
+      />
+      <circle cx="7.5" cy="10.5" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="9.5" cy="7" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="14.5" cy="7" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function ImageIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>

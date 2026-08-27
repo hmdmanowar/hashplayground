@@ -342,6 +342,62 @@ window.addEventListener('resize', setSize)
   },
 ]
 
-export function seedFilesForTemplate(template: string): SeedFile[] {
-  return template === HTML_TEMPLATE ? DEFAULT_FILES_HTML : DEFAULT_FILES_REACT
+export type StyleTemplate = 'none' | 'bootstrap' | 'tailwind'
+
+const BOOTSTRAP_CSS_URL = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'
+const TAILWIND_CDN_URL = 'https://cdn.tailwindcss.com'
+
+// Applied by mutating a clone of the seed files' own content strings via
+// string replacement, rather than restructuring the seed arrays themselves —
+// keeps this independent of exactly how each template's welcome screen is
+// written.
+function applyReactStyleTemplate(files: SeedFile[], styleTemplate: StyleTemplate): SeedFile[] {
+  if (styleTemplate === 'none') return files
+  const mainFile = files.find((file) => file.path === 'src/main.tsx')
+  if (!mainFile) return files
+
+  if (styleTemplate === 'bootstrap') {
+    mainFile.content = mainFile.content.replace(
+      "import { createRoot } from 'react-dom/client'",
+      "import { createRoot } from 'react-dom/client'\nimport './styles.css'",
+    )
+    files.push({
+      name: 'styles.css',
+      path: 'src/styles.css',
+      content: `@import url("${BOOTSTRAP_CSS_URL}");\n`,
+    })
+  } else {
+    mainFile.content = mainFile.content.replace(
+      "createRoot(document.getElementById('root')!).render(<App />)",
+      `const tailwindScript = document.createElement('script')\ntailwindScript.src = '${TAILWIND_CDN_URL}'\ndocument.head.appendChild(tailwindScript)\n\ncreateRoot(document.getElementById('root')!).render(<App />)`,
+    )
+  }
+
+  return files
+}
+
+function applyHtmlStyleTemplate(files: SeedFile[], styleTemplate: StyleTemplate): SeedFile[] {
+  if (styleTemplate === 'none') return files
+  const htmlFile = files.find((file) => file.path === 'index.html')
+  if (!htmlFile) return files
+
+  const tag =
+    styleTemplate === 'bootstrap'
+      ? `<link href="${BOOTSTRAP_CSS_URL}" rel="stylesheet" />`
+      : `<script src="${TAILWIND_CDN_URL}"></script>`
+
+  htmlFile.content = htmlFile.content.replace(
+    '<link rel="stylesheet" href="style.css" />',
+    `${tag}\n    <link rel="stylesheet" href="style.css" />`,
+  )
+
+  return files
+}
+
+export function seedFilesForTemplate(template: string, styleTemplate: StyleTemplate = 'none'): SeedFile[] {
+  const base = template === HTML_TEMPLATE ? DEFAULT_FILES_HTML : DEFAULT_FILES_REACT
+  const files = base.map((file) => ({ ...file }))
+  return template === HTML_TEMPLATE
+    ? applyHtmlStyleTemplate(files, styleTemplate)
+    : applyReactStyleTemplate(files, styleTemplate)
 }
