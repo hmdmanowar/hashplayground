@@ -19,9 +19,11 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  // The global sidebar itself is hidden on the portfolio page (see
-  // Layout.tsx), so there's nothing left for this button to toggle.
-  const showSidebarToggle = pathname !== '/portfolio'
+  // The portfolio page is a standalone resume view — the global sidebar is
+  // already hidden there (see Layout.tsx), so there's nothing left for the
+  // sidebar-toggle button to do, and the product's own Documentation link
+  // doesn't belong on a page meant to be shared outside the app.
+  const isPortfolioPage = pathname === '/portfolio'
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [isSuperiorAdmin, setIsSuperiorAdmin] = useState(false)
 
@@ -55,7 +57,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   return (
     <header className="flex items-center justify-between border-b border-[var(--border-panel)] px-4 py-3">
       <div className="flex items-center gap-2">
-        {user && showSidebarToggle && (
+        {user && !isPortfolioPage && (
           <button
             type="button"
             onClick={onToggleSidebar}
@@ -68,12 +70,14 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
         <Logo />
       </div>
       <div className="flex items-center gap-4">
-        <NavLink
-          to="/docs"
-          className="text-sm font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
-        >
-          Documentation
-        </NavLink>
+        {!isPortfolioPage && (
+          <NavLink
+            to="/docs"
+            className="text-sm font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
+          >
+            Documentation
+          </NavLink>
+        )}
         {user && !isSuperiorAdmin && (
           <button
             type="button"
