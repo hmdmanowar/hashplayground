@@ -5,6 +5,16 @@ import type { ProjectFile } from '../types/project'
 const ENTRY_CANDIDATES = ['src/main.tsx', 'src/main.ts', 'src/index.tsx', 'src/index.ts', 'main.tsx', 'main.ts', 'index.tsx', 'index.ts']
 const HTML_ENTRY_PATH = 'index.html'
 
+// Uploaded assets are stored as a data URL in the file's own content (see
+// Sidebar's "Upload Image" action) — no real file server backs the preview,
+// so that data URL IS the file's only usable "src".
+export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico']
+
+export function isImagePath(path: string): boolean {
+  const lower = path.toLowerCase()
+  return IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext))
+}
+
 export type CompileResult =
   | { ok: true; kind: 'react'; entryPath: string; modules: Record<string, string> }
   | { ok: true; kind: 'html'; htmlFile: ProjectFile; files: ProjectFile[] }
@@ -31,6 +41,13 @@ function compileModule(file: ProjectFile): string {
 
   if (file.path.endsWith('.json')) {
     return `module.exports = ${file.content || '{}'};`
+  }
+
+  // Mirrors a real bundler's asset imports: `import logo from './logo.png'`
+  // resolves to a usable src string — here, the data URL the file was
+  // uploaded as.
+  if (isImagePath(file.path)) {
+    return `module.exports = ${JSON.stringify(file.content)};`
   }
 
   const isTSX = file.path.endsWith('.tsx')
@@ -416,6 +433,16 @@ function buildHtmlPreviewDocument(files: ProjectFile[], htmlFile: ProjectFile): 
     }
     inline.textContent = file.content
     script.replaceWith(inline)
+  })
+
+  // Uploaded images have no real file server behind this sandboxed iframe —
+  // rewrite any <img src="..."> pointing at a project file to its actual
+  // data URL content, same idea as the script/link inlining above.
+  doc.querySelectorAll('img[src]').forEach((img) => {
+    const src = img.getAttribute('src')
+    const file = src ? resolve(src) : undefined
+    if (!file) return
+    img.setAttribute('src', file.content)
   })
 
   const shim = doc.createElement('script')

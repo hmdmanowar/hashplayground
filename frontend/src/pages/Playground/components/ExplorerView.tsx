@@ -23,6 +23,7 @@ interface ExplorerViewProps {
   onCollapseFolders: () => void;
   onRename: (node: FileTreeNode) => void;
   onDelete: (node: FileTreeNode) => void;
+  onCopyPath: (node: FileTreeNode) => void;
 }
 
 // The Explorer's file tree — the root project row (with its hover toolbar)
@@ -42,6 +43,7 @@ function ExplorerView({
   onCollapseFolders,
   onRename,
   onDelete,
+  onCopyPath,
 }: ExplorerViewProps) {
   return (
     <div className="flex flex-col gap-1">
@@ -108,6 +110,7 @@ function ExplorerView({
               onNewFolder={onNewFolder}
               onRename={onRename}
               onDelete={onDelete}
+              onCopyPath={onCopyPath}
             />
           ))}
         </ul>

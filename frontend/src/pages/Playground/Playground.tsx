@@ -32,7 +32,7 @@ import {
   type PanelResizeMode,
   type PanelSizes,
 } from "../../services/playgroundSettingsService";
-import { compileProject, buildPreviewDocument } from "../../lib/runPreview";
+import { compileProject, buildPreviewDocument, isImagePath } from "../../lib/runPreview";
 import {
   listFiles,
   createFile,
@@ -57,6 +57,7 @@ import {
   ClockIcon,
   GitBranchIcon,
   AlertTriangleIcon,
+  CopyIcon,
 } from "../../components/Icons/Icons";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import PromptDialog from "../../components/PromptDialog/PromptDialog";
@@ -99,6 +100,8 @@ type DialogRequest =
 
 type LoadStatus = "loading" | "ready" | "not-found" | "error";
 
+const MAX_IMAGE_UPLOAD_BYTES = 3 * 1024 * 1024;
+
 function Playground() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -125,6 +128,8 @@ function Playground() {
   const [codeSearchQuery, setCodeSearchQuery] = useState("");
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
   const pendingRevealLineRef = useRef<number | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<ProjectFile | null>(null);
   const [editorMaximized, setEditorMaximized] = useState(false);
   const [terminalLines, setTerminalLines] = useState<string[]>([
     "Hash Playground terminal — type a command and press Enter.",
@@ -528,6 +533,14 @@ function Playground() {
   }
 
   function openFile(file: ProjectFile | FileTreeNode) {
+    // Image files hold a data URL, not editable text — a Monaco tab would
+    // just render that data URL as one giant line, so preview it instead.
+    if (isImagePath(file.path)) {
+      const record = files.find((f) => f.id === file.id);
+      if (record) setImagePreview(record);
+      return;
+    }
+
     setActiveFileId(file.id);
     setMobilePanel("editor");
     setOpenTabs((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
@@ -762,6 +775,62 @@ function Playground() {
     });
   }
 
+  // Stores the picked file's data URL directly as the new ProjectFile's
+  // content — there's no separate blob storage, so that data URL doubles as
+  // the image's only usable "src" both here and in the sandboxed preview
+  // (see isImagePath handling in runPreview.ts).
+  async function handleImageFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const picked = event.target.files?.[0];
+    event.target.value = "";
+    if (!picked) return;
+
+    if (!picked.type.startsWith("image/")) {
+      showToast("Please choose an image file");
+      return;
+    }
+    if (picked.size > MAX_IMAGE_UPLOAD_BYTES) {
+      showToast("Image is too large — please choose one under 3MB");
+      return;
+    }
+
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(picked);
+    });
+
+    const safeName = picked.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
+    const existingPaths = new Set(files.map((f) => f.path));
+    const dotIndex = safeName.lastIndexOf(".");
+    const base = dotIndex > 0 ? safeName.slice(0, dotIndex) : safeName;
+    const ext = dotIndex > 0 ? safeName.slice(dotIndex) : "";
+
+    let targetName = safeName;
+    let targetPath = `src/icons/${targetName}`;
+    for (let suffix = 1; existingPaths.has(targetPath); suffix++) {
+      targetName = `${base}-${suffix}${ext}`;
+      targetPath = `src/icons/${targetName}`;
+    }
+
+    try {
+      const created = await createFile(currentProject.id, targetName, targetPath);
+      const [saved] = await saveFilesBatch(currentProject.id, [{ fileId: created.id, content: dataUrl }]);
+      setFiles((prev) => [...prev, saved ?? created]);
+      setExpandedPaths((prev) => new Set(prev).add("src").add("src/icons"));
+      addLog(`Uploaded ${targetPath}`);
+
+      try {
+        await navigator.clipboard.writeText(targetPath);
+        showToast(`Uploaded to ${targetPath} — path copied to clipboard`, { kind: "success" });
+      } catch {
+        showToast(`Uploaded to ${targetPath}`, { kind: "success" });
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Could not upload this image");
+    }
+  }
+
   function requestRename(node: FileTreeNode) {
     setDialog({
       kind: "prompt",
@@ -837,6 +906,15 @@ function Playground() {
         setDialog(null);
       },
     });
+  }
+
+  async function copyPathToClipboard(path: string) {
+    try {
+      await navigator.clipboard.writeText(path);
+      showToast(`Copied "${path}"`, { kind: "success" });
+    } catch {
+      showToast("Could not copy path — your browser blocked clipboard access");
+    }
   }
 
   async function persistDirtyFiles(): Promise<boolean> {
@@ -995,6 +1073,13 @@ function Playground() {
 
   return (
     <div className="relative flex h-full min-h-0 flex-col">
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageFileSelected}
+      />
       {isUpdating && (
         <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-black/50">
           <LoadingOverlay compact label="Updating project…" labelClassName="text-sm font-medium text-white" />
@@ -1053,6 +1138,30 @@ function Playground() {
           rows={ownerDetailRows}
           onClose={() => setShowOwnerDetails(false)}
         />
+      )}
+
+      {imagePreview && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/70 px-4"
+          onClick={() => setImagePreview(null)}
+        >
+          <img
+            src={imagePreview.content}
+            alt={imagePreview.name}
+            className="max-h-[75vh] max-w-full rounded-lg"
+          />
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              copyPathToClipboard(imagePreview.path);
+            }}
+            className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 font-mono text-xs text-white transition-colors hover:bg-black/80"
+          >
+            <CopyIcon className="h-3.5 w-3.5" />
+            {imagePreview.path}
+          </button>
+        </div>
       )}
 
       {quickOpenVisible && activeFileId !== null && (
@@ -1120,10 +1229,12 @@ function Playground() {
             onOpenFile={openFile}
             onNewFile={(parentPath) => requestNewEntry("file", parentPath)}
             onNewFolder={(parentPath) => requestNewEntry("folder", parentPath)}
+            onUploadImage={() => imageInputRef.current?.click()}
             onRefreshExplorer={() => listFiles(currentProject.id).then(setFiles)}
             onCollapseFolders={() => setExpandedPaths(new Set())}
             onRename={requestRename}
             onDelete={requestDelete}
+            onCopyPath={(node) => copyPathToClipboard(node.path)}
             files={files}
             codeSearchQuery={codeSearchQuery}
             onCodeSearchQueryChange={setCodeSearchQuery}

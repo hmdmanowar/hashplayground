@@ -1,7 +1,7 @@
 import type { ProjectFile } from "../../../types/project";
 import type { FileTreeNode } from "../../../utils/fileTree";
 import type { ChangedFile } from "../../../utils/diff";
-import { PlusIcon, FolderPlusIcon, RefreshIcon, CollapseAllIcon } from "../../../components/Icons/Icons";
+import { PlusIcon, FolderPlusIcon, RefreshIcon, CollapseAllIcon, UploadIcon } from "../../../components/Icons/Icons";
 import RowActionsMenu, { menuItemClass, menuIconClass } from "../../../components/RowActionsMenu/RowActionsMenu";
 import type { SidebarView } from "../playgroundUtils";
 import ExplorerView from "./ExplorerView";
@@ -22,10 +22,12 @@ interface SidebarProps {
   onOpenFile: (node: FileTreeNode) => void;
   onNewFile: (parentPath: string) => void;
   onNewFolder: (parentPath: string) => void;
+  onUploadImage: () => void;
   onRefreshExplorer: () => void;
   onCollapseFolders: () => void;
   onRename: (node: FileTreeNode) => void;
   onDelete: (node: FileTreeNode) => void;
+  onCopyPath: (node: FileTreeNode) => void;
   files: ProjectFile[];
   codeSearchQuery: string;
   onCodeSearchQueryChange: (query: string) => void;
@@ -56,10 +58,12 @@ function Sidebar({
   onOpenFile,
   onNewFile,
   onNewFolder,
+  onUploadImage,
   onRefreshExplorer,
   onCollapseFolders,
   onRename,
   onDelete,
+  onCopyPath,
   files,
   codeSearchQuery,
   onCodeSearchQueryChange,
@@ -103,6 +107,14 @@ function Sidebar({
               >
                 <FolderPlusIcon className={menuIconClass} />
                 New Folder
+              </button>
+              <button
+                type="button"
+                onClick={onUploadImage}
+                className={menuItemClass}
+              >
+                <UploadIcon className={menuIconClass} />
+                Upload Image
               </button>
               <button
                 type="button"
@@ -158,6 +170,7 @@ function Sidebar({
           onCollapseFolders={onCollapseFolders}
           onRename={onRename}
           onDelete={onDelete}
+          onCopyPath={onCopyPath}
         />
       )}
     </div>

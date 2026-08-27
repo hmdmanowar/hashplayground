@@ -7,6 +7,7 @@ import {
   FolderPlusIcon,
   PencilIcon,
   TrashIcon,
+  CopyIcon,
 } from "../../../components/Icons/Icons";
 import { getFileIconColor } from "../playgroundUtils";
 
@@ -21,6 +22,7 @@ interface FileTreeRowProps {
   onNewFolder: (parentPath: string) => void;
   onRename: (node: FileTreeNode) => void;
   onDelete: (node: FileTreeNode) => void;
+  onCopyPath: (node: FileTreeNode) => void;
 }
 
 function FileTreeRow({
@@ -34,6 +36,7 @@ function FileTreeRow({
   onNewFolder,
   onRename,
   onDelete,
+  onCopyPath,
 }: FileTreeRowProps) {
   const isFolder = node.type === "folder";
   const expanded = expandedPaths.has(node.path);
@@ -98,6 +101,15 @@ function FileTreeRow({
           )}
           <button
             type="button"
+            onClick={() => onCopyPath(node)}
+            aria-label={`Copy path of ${node.name}`}
+            title="Copy path"
+            className="flex h-5 w-5 max-[1281px]:h-4 max-[1281px]:w-4 cursor-pointer items-center justify-center rounded hover:text-[var(--color-primary)]"
+          >
+            <CopyIcon className="h-3.5 w-3.5 max-[1281px]:h-3 max-[1281px]:w-3" />
+          </button>
+          <button
+            type="button"
             onClick={() => onRename(node)}
             aria-label={`Rename ${node.name}`}
             className="flex h-5 w-5 max-[1281px]:h-4 max-[1281px]:w-4 cursor-pointer items-center justify-center rounded hover:text-[var(--color-primary)]"
@@ -130,6 +142,7 @@ function FileTreeRow({
               onNewFolder={onNewFolder}
               onRename={onRename}
               onDelete={onDelete}
+              onCopyPath={onCopyPath}
             />
           ))}
         </ul>

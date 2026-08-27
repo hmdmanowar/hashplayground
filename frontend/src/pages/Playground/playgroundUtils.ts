@@ -1,4 +1,5 @@
 import type { ProjectFile } from "../../types/project";
+import { isImagePath } from "../../lib/runPreview";
 
 const DIFF_TAB_PREFIX = "diff::";
 
@@ -17,7 +18,9 @@ export function searchFilesForText(files: ProjectFile[], query: string): CodeSea
   const matches: CodeSearchMatch[] = [];
 
   for (const file of files) {
-    if (file.type !== "file") continue;
+    // Image content is a single data-URL "line" of base64 noise, not
+    // searchable text.
+    if (file.type !== "file" || isImagePath(file.path)) continue;
     const lines = file.content.split("\n");
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].toLowerCase().includes(needle)) {

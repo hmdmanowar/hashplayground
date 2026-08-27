@@ -78,6 +78,9 @@ export const filesRoutes: FastifyPluginAsync = async (fastify) => {
         body: z.object({ files: z.array(z.object({ fileId: z.string(), content: z.string() })) }),
         response: { 200: z.array(fileDtoSchema) },
       },
+      // Default Fastify bodyLimit (1MB) is too small once an uploaded image's
+      // base64 content is included — raised only for this route.
+      bodyLimit: 6_000_000,
     },
     async (request, reply) => {
       reply.send(await saveFilesBatch(request.params.id, request.authUser!, request.body.files))
