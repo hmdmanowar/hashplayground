@@ -24,7 +24,7 @@ function Sidebar({ collapsed }: SidebarProps) {
 
   return (
     <aside
-      className={`flex h-full shrink-0 flex-col border-r border-[var(--border-panel)] bg-[var(--bg-panel)] py-4 max-[1281px]:py-3 transition-[width] duration-300 ${
+      className={`flex h-full shrink-0 flex-col border-r border-[var(--border-panel)] py-4 max-[1281px]:py-3 transition-[width] duration-300 ${
         collapsed ? 'w-16 px-2 max-[1281px]:w-14' : 'w-60 px-4 max-[1281px]:w-48 max-[1281px]:px-3'
       }`}
     >
