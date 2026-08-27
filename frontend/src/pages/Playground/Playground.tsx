@@ -115,8 +115,9 @@ function Playground() {
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [log, setLog] = useState<string[]>([]);
-  const [bottomPanelTab, setBottomPanelTab] = useState<"log" | "terminal">("log");
-  const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(true);
+  const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
+  const [bottomPanelTab, setBottomPanelTab] = useState<"log" | "console" | "terminal">("log");
+  const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(false);
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [quickOpenQuery, setQuickOpenQuery] = useState("");
   const [sidebarView, setSidebarView] = useState<SidebarView>("explorer");
@@ -239,7 +240,8 @@ function Playground() {
   }, [drafts, saveMode]);
 
   // Forwards console.log/warn/error and runtime errors from the sandboxed
-  // preview iframe into the Console strip below the editor.
+  // preview iframe into the Debug Console tab below the editor — kept
+  // separate from the app's own activity Log.
   useEffect(() => {
     function handlePreviewMessage(event: MessageEvent) {
       const data = event.data;
@@ -248,7 +250,7 @@ function Playground() {
       const text = Array.isArray(data.args)
         ? data.args.join(" ")
         : String(data.args);
-      addLog(`[preview:${data.type}] ${text}`);
+      addConsoleOutput(`[${data.type}] ${text}`);
       if (data.type === "crash") {
         // First crash in a run wins — React often retries after an error and
         // the retry's failure is a generic, less useful "Script error."
@@ -496,6 +498,11 @@ function Playground() {
   function addLog(message: string) {
     const time = new Date().toLocaleTimeString();
     setLog((prev) => [...prev, `[${time}] ${message}`]);
+  }
+
+  function addConsoleOutput(message: string) {
+    const time = new Date().toLocaleTimeString();
+    setConsoleOutput((prev) => [...prev, `[${time}] ${message}`]);
   }
 
   // Terminal is UI-only for now — it echoes commands back rather than running
@@ -1207,6 +1214,7 @@ function Playground() {
         activeTab={bottomPanelTab}
         onTabChange={setBottomPanelTab}
         log={log}
+        consoleOutput={consoleOutput}
         terminalLines={terminalLines}
         terminalPrompt={terminalPrompt}
         terminalInput={terminalInput}

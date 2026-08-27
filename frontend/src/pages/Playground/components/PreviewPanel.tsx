@@ -58,15 +58,16 @@ function PreviewPanel({
             <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted)]">
               Preview
             </p>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={onRun}
                 aria-label="Run"
                 title="Run"
-                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+                className="flex cursor-pointer items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-500 transition-colors hover:bg-emerald-500/25"
               >
-                <PlayIcon className="h-4 w-4" />
+                <PlayIcon className="h-3.5 w-3.5" />
+                Run
               </button>
               <button
                 type="button"
