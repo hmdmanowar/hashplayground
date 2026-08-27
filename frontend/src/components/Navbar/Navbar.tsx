@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../Logo/Logo'
 import UserMenu from '../UserMenu/UserMenu'
@@ -18,6 +18,10 @@ interface NavbarProps {
 function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  // The global sidebar itself is hidden on the portfolio page (see
+  // Layout.tsx), so there's nothing left for this button to toggle.
+  const showSidebarToggle = pathname !== '/portfolio'
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [isSuperiorAdmin, setIsSuperiorAdmin] = useState(false)
 
@@ -51,7 +55,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   return (
     <header className="flex items-center justify-between border-b border-[var(--border-panel)] px-4 py-3">
       <div className="flex items-center gap-2">
-        {user && (
+        {user && showSidebarToggle && (
           <button
             type="button"
             onClick={onToggleSidebar}
