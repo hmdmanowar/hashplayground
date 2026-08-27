@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../Logo/Logo'
 import UserMenu from '../UserMenu/UserMenu'
@@ -36,7 +36,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
         setCached(ADMIN_USERS_CACHE_KEY, users)
         setIsSuperiorAdmin(isTopAdmin(users, user.username))
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [user?.role, user?.username])
 
   async function handleLogout() {
@@ -64,6 +64,12 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
         <Logo />
       </div>
       <div className="flex items-center gap-4">
+        <NavLink
+          to="/docs"
+          className="text-sm font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
+        >
+          Documentation
+        </NavLink>
         {user && !isSuperiorAdmin && (
           <button
             type="button"

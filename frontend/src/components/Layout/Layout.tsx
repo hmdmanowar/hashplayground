@@ -11,7 +11,7 @@ function isPlaygroundPath(path: string): boolean {
 
 function LayoutContent() {
   const { pathname } = useLocation()
-  const isHome = pathname === '/'
+  const isFullBleed = pathname === '/' || pathname === '/docs'
   const fullscreen = usePageFullscreenValue()
 
   // The global nav sidebar auto-collapses once, on the moment of entering the
@@ -44,7 +44,7 @@ function LayoutContent() {
         {!fullscreen && <Sidebar collapsed={collapsed} />}
         <main
           className={`mx-auto flex min-w-0 flex-1 flex-col ${
-            fullscreen ? '' : isHome ? '' : 'px-3 py-3'
+            fullscreen ? '' : isFullBleed ? '' : 'px-3 py-3'
           }`}
         >
           {!fullscreen && <Header />}
