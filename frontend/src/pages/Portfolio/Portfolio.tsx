@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   EnvelopeIcon,
   LinkedInIcon,
@@ -9,6 +10,35 @@ import {
   ExternalLinkIcon,
 } from "../../components/Icons/Icons";
 import HeroCanvas from "../../components/HeroCanvas/HeroCanvas";
+
+// Structured data (schema.org Person) — lets search engines understand this
+// page as a person's profile rather than generic app content, which is what
+// powers a knowledge-panel-style rich result. Injected on mount rather than
+// living in index.html since it's specific to this one route.
+const PERSON_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Md Manowar Hashmi",
+  jobTitle: "UI / Frontend Developer",
+  url: "https://hashplayground.in/portfolio",
+  email: "mailto:hmdmanowar@gmail.com",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Bengaluru",
+    addressRegion: "Karnataka",
+    addressCountry: "IN",
+  },
+  worksFor: {
+    "@type": "Organization",
+    name: "Alphastream.Ai",
+  },
+  alumniOf: {
+    "@type": "CollegeOrUniversity",
+    name: "R.V.S. College of Engineering and Technology, Jamshedpur",
+  },
+  knowsAbout: ["React", "TypeScript", "JavaScript", "React Native", "HTML5", "CSS3", "REST APIs"],
+  sameAs: ["https://www.linkedin.com/in/md-manowar-hashmi-3a395815a/"],
+};
 
 const SECTIONS = [
   { id: "about", label: "About" },
@@ -107,6 +137,16 @@ function Tag({ label, strong = false }: { label: string; strong?: boolean }) {
 }
 
 function Portfolio() {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(PERSON_JSON_LD);
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   return (
     <div className="relative min-h-full">
       <div className="fixed inset-0 -z-10">
