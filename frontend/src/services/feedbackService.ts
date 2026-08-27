@@ -3,6 +3,13 @@ import { request } from '../lib/apiClient'
 export type FeedbackType = 'bug' | 'feature'
 export type FeedbackStatus = 'open' | 'in_progress' | 'resolved'
 
+export interface FeedbackStatusChange {
+  status: FeedbackStatus
+  changedAt: string
+  changedByUsername?: string
+  changedByName?: string
+}
+
 export interface FeedbackRecord {
   id: string
   type: FeedbackType
@@ -12,6 +19,8 @@ export interface FeedbackRecord {
   username: string
   name?: string
   createdAt: string
+  statusUpdatedAt: string
+  statusHistory: FeedbackStatusChange[]
 }
 
 export interface SubmitFeedbackInput {

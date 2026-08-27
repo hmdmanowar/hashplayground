@@ -63,6 +63,7 @@ model User {
   sessions            Session[]
   passwordResetTokens PasswordResetToken[]
   feedback            Feedback[]
+  feedbackStatusChanges FeedbackStatusChange[] @relation("FeedbackStatusChangeActor")
 
   @@index([role, blocked])
 }
@@ -163,16 +164,32 @@ model ExportRecord {
 // app has no blob storage set up, and feedback volume/size is expected to
 // stay low. Capped client- and server-side (~3MB raw) to keep that reasonable.
 model Feedback {
-  id        String         @id @default(uuid())
-  type      FeedbackType
-  message   String
-  imageData String?
-  status    FeedbackStatus @default(open)
-  username  String
-  user      User           @relation(fields: [username], references: [username], onDelete: Cascade)
-  createdAt DateTime       @default(now())
+  id            String                 @id @default(uuid())
+  type          FeedbackType
+  message       String
+  imageData     String?
+  status        FeedbackStatus         @default(open)
+  username      String
+  user          User                   @relation(fields: [username], references: [username], onDelete: Cascade)
+  createdAt     DateTime               @default(now())
+  statusHistory FeedbackStatusChange[]
 
   @@index([createdAt])
+}
+
+// One row per status transition (seeded with an initial "open" row at
+// submission time), so the admin table can show a full timeline instead of
+// just the current status — see AdminFeedback's timeline modal.
+model FeedbackStatusChange {
+  id            String         @id @default(uuid())
+  feedbackId    String
+  feedback      Feedback       @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  status        FeedbackStatus
+  changedAt     DateTime       @default(now())
+  changedBy     String?
+  changedByUser User?          @relation("FeedbackStatusChangeActor", fields: [changedBy], references: [username], onDelete: SetNull)
+
+  @@index([feedbackId, changedAt])
 }
 
 model Notification {

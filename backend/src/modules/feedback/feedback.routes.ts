@@ -9,6 +9,13 @@ import { requireAuth, requireAdmin } from '../../middleware/auth.js'
 // anything that could be used to bloat the database with huge uploads.
 const MAX_IMAGE_DATA_URL_LENGTH = 4_500_000
 
+const feedbackStatusChangeSchema = z.object({
+  status: z.enum(['open', 'in_progress', 'resolved']),
+  changedAt: z.string(),
+  changedByUsername: z.string().optional(),
+  changedByName: z.string().optional(),
+})
+
 const feedbackDtoSchema = z.object({
   id: z.string(),
   type: z.enum(['bug', 'feature']),
@@ -18,6 +25,8 @@ const feedbackDtoSchema = z.object({
   username: z.string(),
   name: z.string().optional(),
   createdAt: z.string(),
+  statusUpdatedAt: z.string(),
+  statusHistory: z.array(feedbackStatusChangeSchema),
 })
 
 export const feedbackRoutes: FastifyPluginAsync = async (fastify) => {
