@@ -223,6 +223,19 @@ model PendingUpdateRequest {
   @@index([projectId, status])
 }
 
+// Singleton row (id is always 1) holding the entire portfolio page's content
+// as JSON, editable by the top admin via the /api/portfolio endpoints. A
+// single blob rather than a normalized per-section schema — this content has
+// exactly one owner and no relational query needs, so separate tables per
+// section would be pure overhead. Falls back to the frontend's hardcoded
+// defaults when this row doesn't exist yet.
+model PortfolioContent {
+  id        Int      @id @default(1)
+  data      Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
 model Notification {
   id           String           @id @default(uuid())
   // Plain strings, not FKs to User: toUsername can be the sentinel "all"

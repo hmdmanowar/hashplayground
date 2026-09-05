@@ -27,6 +27,14 @@
   --border-panel: #adbbda;
   --hover-overlay: rgba(0, 0, 0, 0.05);
 
+  /* Neutral chip/tag fill — deliberately its own token rather than reusing
+     --bg-app: --bg-app sits *lighter* than --bg-panel in light theme but
+     *darker* than --bg-panel in dark theme, so a chip inside a --bg-panel
+     card would look inverted (recessed, near-invisible) in dark mode if it
+     just reused --bg-app. This stays lighter than --bg-panel in both themes. */
+  --chip-bg: var(--bg-app);
+  --chip-border: var(--border-panel);
+
   /* Active/selected accent - tuned per theme */
   --color-accent: var(--color-primary-strong);
   --color-accent-soft: var(--color-primary-soft);
@@ -70,6 +78,9 @@
   --color-muted: #8697c4;
   --border-panel: #3c3c3c;
   --hover-overlay: rgba(255, 255, 255, 0.06);
+
+  --chip-bg: #333336;
+  --chip-border: #4b4b52;
 
   --color-accent: #818cf8;
   --color-accent-soft: rgba(129, 140, 248, 0.15);

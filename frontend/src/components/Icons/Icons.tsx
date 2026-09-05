@@ -2,6 +2,16 @@ interface IconProps {
   className?: string
 }
 
+export function BuildingIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 20.5V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v15.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10h4a1 1 0 0 1 1 1v9.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.5 20.5h-17M7.5 7.5h2M7.5 11h2M7.5 14.5h2M15 14h1.5M15 17.5h1.5" />
+    </svg>
+  )
+}
+
 export function UploadIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>

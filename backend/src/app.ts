@@ -14,6 +14,7 @@ import { versionsRoutes } from './modules/versions/versions.routes.js'
 import { exportsRoutes } from './modules/exports/exports.routes.js'
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js'
 import { feedbackRoutes } from './modules/feedback/feedback.routes.js'
+import { portfolioRoutes } from './modules/portfolio/portfolio.routes.js'
 
 export async function buildApp() {
   const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>()
@@ -39,6 +40,7 @@ export async function buildApp() {
   await app.register(exportsRoutes, { prefix: '/api/projects' })
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
   await app.register(feedbackRoutes, { prefix: '/api/feedback' })
+  await app.register(portfolioRoutes, { prefix: '/api/portfolio' })
 
   return app
 }

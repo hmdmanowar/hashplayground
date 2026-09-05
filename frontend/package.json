@@ -13,6 +13,7 @@
     "@babel/standalone": "^7.29.8",
     "@monaco-editor/react": "^4.7.0",
     "emmet-monaco-es": "^5.7.0",
+    "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "monaco-editor": "^0.50.0",
     "react": "^18.3.1",
