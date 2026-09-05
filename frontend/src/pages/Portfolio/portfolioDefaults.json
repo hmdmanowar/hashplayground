@@ -8,7 +8,11 @@
     "linkedin": "https://www.linkedin.com/in/md-manowar-hashmi-3a395815a/",
     "website": "https://hashplayground.in",
     "statusLabel": "Open to good frontend work",
-    "techHighlights": ["React", "TypeScript", "React Native"],
+    "techHighlights": [
+      "React",
+      "TypeScript",
+      "React Native"
+    ],
     "yearsLabel": "8+ yrs"
   },
   "summaryParagraphs": [
@@ -30,7 +34,14 @@
         "Improved initial page load and Core Web Vitals by 25% through dynamic code-splitting, lazy loading, and asset optimization in Vite.",
         "Collaborated with cross-functional product, UX, and QA teams to translate Figma wireframes into accessible, production-ready design system components."
       ],
-      "tags": ["React", "TypeScript", "JavaScript", "SCSS", "REST APIs", "Data Grids"]
+      "tags": [
+        "React",
+        "TypeScript",
+        "JavaScript",
+        "SCSS",
+        "REST APIs",
+        "Data Grids"
+      ]
     },
     {
       "role": "Sr. Web Developer",
@@ -46,7 +57,13 @@
         "Delivered 100+ client websites, applying on-page SEO and keyword optimization to improve search rankings.",
         "Improved existing applications for usability, responsiveness, and performance."
       ],
-      "tags": ["JavaScript", "Bootstrap", "MVC", "API Integration", "SEO"]
+      "tags": [
+        "JavaScript",
+        "Bootstrap",
+        "MVC",
+        "API Integration",
+        "SEO"
+      ]
     },
     {
       "role": "Web Developer",
@@ -61,7 +78,12 @@
         "Focused on responsive layouts, usability, and cross-browser compatibility.",
         "Translated client requirements and designs into functional interfaces."
       ],
-      "tags": ["HTML", "CSS", "JavaScript", "Bootstrap"]
+      "tags": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "Bootstrap"
+      ]
     }
   ],
   "project": {
@@ -77,7 +99,16 @@
       "Google, GitHub & LinkedIn OAuth, plus email/phone auth with strict duplicate-account checks",
       "Role-based admin tools, including a request-and-approve workflow for admin-assisted updates"
     ],
-    "stack": ["React 18", "TypeScript", "Vite", "Monaco Editor", "Fastify", "Prisma", "PostgreSQL", "Render"]
+    "stack": [
+      "React 18",
+      "TypeScript",
+      "Vite",
+      "Monaco Editor",
+      "Fastify",
+      "Prisma",
+      "PostgreSQL",
+      "Render"
+    ]
   },
   "education": [
     {
@@ -87,8 +118,23 @@
     }
   ],
   "skillGroups": [
-    { "label": "Core Languages", "skills": ["JavaScript (ES6+)", "TypeScript", "HTML5", "CSS3 / SCSS"] },
-    { "label": "Frameworks & Libraries", "skills": ["React.js", "React Native", "Bootstrap"] },
+    {
+      "label": "Core Languages",
+      "skills": [
+        "JavaScript (ES6+)",
+        "TypeScript",
+        "HTML5",
+        "CSS3 / SCSS"
+      ]
+    },
+    {
+      "label": "Frameworks & Libraries",
+      "skills": [
+        "React.js",
+        "React Native",
+        "Bootstrap"
+      ]
+    },
     {
       "label": "Practices & Focus",
       "skills": [
@@ -105,7 +151,14 @@
     },
     {
       "label": "Testing & Tooling",
-      "skills": ["Jest", "React Testing Library", "Git / GitHub", "Vite", "Jira", "Figma"]
+      "skills": [
+        "Jest",
+        "React Testing Library",
+        "Git / GitHub",
+        "Vite",
+        "Jira",
+        "Figma"
+      ]
     }
   ]
 }
