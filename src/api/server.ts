@@ -18,7 +18,7 @@ const config = loadConfig()
 const jarvis = new Jarvis(new OllamaModel(config.ollamaHost, config.model), {
   assistantName: config.assistantName,
   longTermMemory: new LongTermMemory(config.memoryDbPath),
-  toolRegistry: new ToolRegistry(config.workspaceRoot),
+  toolRegistry: new ToolRegistry(config.workspaceRoot, config.repoRoot),
   permissionEngine: new PermissionEngine(config.auditLogPath),
   maxAgentSteps: config.maxAgentSteps,
   // Phase 5: a separate multimodal model, used only for a turn that

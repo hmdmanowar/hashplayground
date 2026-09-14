@@ -34,6 +34,12 @@ export interface JarvisConfig {
   // default for plain text since a coding-focused model is generally
   // better at that than a vision-capable one.
   visionModel: string
+  // Phase 6: the real git repository the repo_* tools (RepoTools.ts,
+  // GitTools.ts, DevTools.ts) operate on — deliberately separate from
+  // workspaceRoot, which stays a disposable sandbox. Defaults to the
+  // process's cwd, which is correct as long as `npm run chat`/`npm run api`
+  // are launched from the repo root (the normal case).
+  repoRoot: string
 }
 
 export function loadConfig(): JarvisConfig {
@@ -48,5 +54,6 @@ export function loadConfig(): JarvisConfig {
     maxAgentSteps: Number(process.env.JARVIS_MAX_AGENT_STEPS ?? 5),
     conversationsDbPath: process.env.JARVIS_CONVERSATIONS_DB ?? '.jarvis/conversations.sqlite',
     visionModel: process.env.JARVIS_VISION_MODEL ?? 'llava',
+    repoRoot: process.env.JARVIS_REPO_ROOT ?? process.cwd(),
   }
 }

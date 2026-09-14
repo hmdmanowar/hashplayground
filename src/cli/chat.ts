@@ -16,7 +16,7 @@ async function main() {
   const jarvis = new Jarvis(new OllamaModel(config.ollamaHost, config.model), {
     assistantName: config.assistantName,
     longTermMemory: new LongTermMemory(config.memoryDbPath),
-    toolRegistry: new ToolRegistry(config.workspaceRoot),
+    toolRegistry: new ToolRegistry(config.workspaceRoot, config.repoRoot),
     permissionEngine: new PermissionEngine(config.auditLogPath),
     maxAgentSteps: config.maxAgentSteps,
     visionModel: new OllamaModel(config.ollamaHost, config.visionModel),
@@ -25,6 +25,7 @@ async function main() {
 
   console.log(`${jarvis.getAssistantName()} v0.1 — model: ${config.model} (${config.ollamaHost})`)
   console.log(`Sandboxed workspace: ${config.workspaceRoot}`)
+  console.log(`Repo tools target: ${config.repoRoot}`)
   console.log("Type a message and press Enter. Ctrl+C to quit.")
   console.log("Commands: /remember <text>, /memories, /forget <id>, /approve, /deny, /image <path>\n")
 

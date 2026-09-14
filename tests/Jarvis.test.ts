@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, mkdirSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Jarvis } from '../src/core/Jarvis.js'
@@ -44,9 +45,17 @@ function makeSandbox() {
   const parent = mkdtempSync(join(tmpdir(), 'jarvis-tools-test-'))
   const workspaceRoot = join(parent, 'workspace')
   const auditLogPath = join(parent, 'audit.log')
+
+  // ToolRegistry now also requires a real git repo for its repo_* tools
+  // (Phase 6) — a bare `git init` is enough to satisfy that check here,
+  // since these Jarvis-core tests never exercise the repo_* tools directly.
+  const repoRoot = join(parent, 'repo')
+  mkdirSync(repoRoot, { recursive: true })
+  execSync('git init', { cwd: repoRoot })
+
   return {
     workspaceRoot,
-    toolRegistry: new ToolRegistry(workspaceRoot),
+    toolRegistry: new ToolRegistry(workspaceRoot, repoRoot),
     permissionEngine: new PermissionEngine(auditLogPath),
     cleanup: () => rmSync(parent, { recursive: true, force: true }),
   }

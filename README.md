@@ -4,7 +4,7 @@ An independent, model-agnostic AI agent runtime. Jarvis is a standalone product 
 
 This repo has no dependency on, and must never import from, the Hash Playground codebase.
 
-## Status: v0.1 (Foundation + Brain) + Phase 2 (Memory) + Phase 3 (Tools) + Phase 4 (Agent) + Phase 5 (Vision) + a full web UI
+## Status: v0.1 (Foundation + Brain) + Phase 2 (Memory) + Phase 3 (Tools) + Phase 4 (Agent) + Phase 5 (Vision) + Phase 6 (Autonomous Developer) + a full web UI
 
 Done:
 - Standalone TypeScript project, own git repo
@@ -19,8 +19,9 @@ Done:
 - Persistent configuration via `.env` (`src/config/config.ts`)
 - Tests (using a mock model, no Ollama dependency) and a CLI to try it for real (`/image <path>` attaches an image to your next message)
 - A local HTTP API (`src/api/server.ts`, 127.0.0.1 only, no auth) and a full React web UI (`web/`) — multi-conversation history, message timestamps/copy/share/edit, image attachments, and a voice assistant (speech-to-text with auto-submit, auto-speak replies, a "Hey `<assistant name>`" wake word, barge-in on "stop", and hands-free multi-turn conversation until a goodbye phrase) built entirely on free browser Speech APIs — no external voice service. A small client-side command matcher also lets phrases like "delete this conversation" or "disable voice assistant" act on the UI directly rather than going through the model.
+- **Autonomous Developer** (`src/tools/RepoTools.ts`, `GitTools.ts`, `DevTools.ts`) — a second tool root, `repoRoot` (defaults to the process's cwd, override via `JARVIS_REPO_ROOT`), separate from the disposable `workspaceRoot` sandbox: Jarvis can inspect, edit, branch, checkpoint, and test its own real repository. `repo_read_file`/`repo_list_directory`/`repo_search_code`/`repo_status`/`repo_log`/`repo_diff`/`repo_run_tests` are low risk (automatic); `repo_write_file`/`repo_create_branch`/`repo_checkout_branch`/`repo_commit`/`repo_run_build` are medium (also automatic, reviewable afterward via `repo_diff`/`repo_status`/`.jarvis/audit.log`); `repo_reset` (hard reset to a ref — the one destructive, history-discarding op) is high risk and always requires `/approve`. Git tool calls spawn `git` with an argv array rather than a shell string, and branch names/refs are validated against a safe pattern, so there's no way for a value to be reinterpreted as a flag or shell syntax. `ToolRegistry` now takes `(workspaceRoot, repoRoot)` and fails fast if `repoRoot` isn't a git repository.
 
-Not started yet (later phases, in the order planned): multi-agent roles, autonomous developer mode (branches/builds/self-review), and 24/7 autonomous operation (Phase 8).
+Not started yet (later phases, in the order planned): multi-agent roles and 24/7 autonomous operation (Phase 8).
 
 ## Setup
 
@@ -74,8 +75,9 @@ src/
   config/       persistent configuration (.env)
   models/       AIModel interface + provider implementations (Ollama today; OpenAI/Claude/Gemini later)
   memory/       short-term (in-process) history + long-term (SQLite) memory
-  tools/        concrete, sandboxed tools (filesystem, search, terminal) + the registry that
-                describes them to the model
+  tools/        concrete, sandboxed tools (filesystem, search, terminal) scoped to workspaceRoot,
+                plus repo-scoped tools (file/git/build-test) scoped to repoRoot, + the registry
+                that describes them all to the model
   permissions/  PermissionEngine — risk classification, auto-approve policy, and the
                 append-only audit log
   core/         Jarvis orchestrator — wires config + model + memory + tools; handleInput() is
