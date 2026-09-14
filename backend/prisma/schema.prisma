@@ -70,6 +70,8 @@ model User {
   passwordResetTokens PasswordResetToken[]
   feedback            Feedback[]
   feedbackStatusChanges FeedbackStatusChange[] @relation("FeedbackStatusChangeActor")
+  jarvisConversations  JarvisConversation[]
+  jarvisWorkspaceFiles JarvisWorkspaceFile[]
 
   @@index([role, blocked])
 }
@@ -234,6 +236,64 @@ model PortfolioContent {
   data      Json
   updatedAt DateTime @updatedAt
   updatedBy String?
+}
+
+// The personal Jarvis assistant page (/jarvis) — one user's saved chat, not
+// tied to any Project. Mirrors Project/ProjectFile's ownership shape, scoped
+// by ownerUsername instead of projectId.
+model JarvisConversation {
+  id            String   @id @default(uuid())
+  ownerUsername String
+  owner         User     @relation(fields: [ownerUsername], references: [username], onDelete: Cascade)
+  title         String   @default("New chat")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  messages JarvisMessage[]
+
+  @@index([ownerUsername])
+}
+
+model JarvisMessage {
+  id             String             @id @default(uuid())
+  conversationId String
+  conversation   JarvisConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  // string[] of base64 data URLs, matching Jarvis's existing image-attachment support.
+  images         Json?
+  createdAt      DateTime           @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+// A personal scratch workspace the assistant's file tools read/write —
+// per-user, not per-project, since this page isn't tied to any one Playground
+// project. Same shape as ProjectFile, just scoped by ownerUsername.
+model JarvisWorkspaceFile {
+  id            String   @id @default(uuid())
+  ownerUsername String
+  owner         User     @relation(fields: [ownerUsername], references: [username], onDelete: Cascade)
+  path          String
+  content       String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([ownerUsername, path])
+  @@index([ownerUsername])
+}
+
+// Tracks how many free messages an anonymous (not-logged-in) visitor has sent
+// to the chat-only /jarvis demo, keyed by a random id stored in a first-party
+// cookie (see lib/anonymousSession.ts) — not tied to a User row at all, since
+// the whole point is this happens before an account exists. Enforced
+// server-side (not just trusted from the client) so clearing localStorage
+// doesn't reset it; clearing cookies does, same as any anonymous-session
+// scheme.
+model AnonymousChatUsage {
+  id        String   @id
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
 }
 
 model Notification {

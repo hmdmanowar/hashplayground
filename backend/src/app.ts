@@ -15,6 +15,8 @@ import { exportsRoutes } from './modules/exports/exports.routes.js'
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js'
 import { feedbackRoutes } from './modules/feedback/feedback.routes.js'
 import { portfolioRoutes } from './modules/portfolio/portfolio.routes.js'
+import { jarvisAssistantRoutes } from './modules/jarvisAssistant/jarvisAssistant.routes.js'
+import { projectAssistantRoutes } from './modules/projectAssistant/projectAssistant.routes.js'
 
 export async function buildApp() {
   const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>()
@@ -38,9 +40,11 @@ export async function buildApp() {
   await app.register(filesRoutes, { prefix: '/api/projects' })
   await app.register(versionsRoutes, { prefix: '/api/projects' })
   await app.register(exportsRoutes, { prefix: '/api/projects' })
+  await app.register(projectAssistantRoutes, { prefix: '/api/projects' })
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
   await app.register(feedbackRoutes, { prefix: '/api/feedback' })
   await app.register(portfolioRoutes, { prefix: '/api/portfolio' })
+  await app.register(jarvisAssistantRoutes, { prefix: '/api/assistant' })
 
   return app
 }
