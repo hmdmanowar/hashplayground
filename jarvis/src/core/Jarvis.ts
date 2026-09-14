@@ -208,6 +208,15 @@ export class Jarvis {
     return this.pendingToolCall !== undefined
   }
 
+  // Enough for a UI to render a real "Approve/Deny: <tool>(<args>)" card,
+  // instead of parsing it back out of the plain-text sentence chat() already
+  // returns when a call is pending.
+  getPendingToolCall(): { tool: string; args: Record<string, unknown>; risk: RiskLevel } | undefined {
+    if (!this.pendingToolCall) return undefined
+    const { tool, args, risk } = this.pendingToolCall
+    return { tool, args, risk }
+  }
+
   // The steps taken during the most recently completed (or in-progress)
   // turn — cleared at the start of every fresh chat() call, not on a
   // resume after approval, so it reflects the whole turn once it finishes.

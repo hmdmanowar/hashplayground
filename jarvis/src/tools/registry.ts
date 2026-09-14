@@ -40,6 +40,17 @@ export class ToolRegistry {
     for (const tool of allTools) this.tools.set(tool.name, tool)
   }
 
+  // A second construction path for consumers that bring their own tools
+  // entirely (e.g. a host application scoping Jarvis to its own data model
+  // instead of a real filesystem) and want none of the built-in fs/git/shell
+  // tools or the workspaceRoot/repoRoot wiring above. Bypasses the
+  // constructor via Object.create so no mkdirSync/git-repo check ever runs.
+  static fromTools(tools: Tool[]): ToolRegistry {
+    const registry: ToolRegistry = Object.create(ToolRegistry.prototype)
+    ;(registry as unknown as { tools: Map<string, Tool> }).tools = new Map(tools.map((tool) => [tool.name, tool]))
+    return registry
+  }
+
   get(name: string): Tool | undefined {
     return this.tools.get(name)
   }
