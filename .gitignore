@@ -31,3 +31,7 @@ npm-debug.log*
 
 # Prisma
 backend/prisma/dev.db
+
+# Jarvis's local runtime/audit-log data
+jarvis/.jarvis/
+backend/data/audit-logs/

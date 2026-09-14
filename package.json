@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "jarvis"
   ],
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
