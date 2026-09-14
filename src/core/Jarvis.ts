@@ -8,8 +8,17 @@ import { PermissionEngine, type RiskLevel } from '../permissions/PermissionEngin
 const DEFAULT_ASSISTANT_NAME = 'Jarvis'
 const DEFAULT_MAX_AGENT_STEPS = 5
 
-function buildSystemPrompt(assistantName: string, relevantMemories: MemoryRecord[], toolRegistry?: ToolRegistry): string {
+function buildSystemPrompt(
+  assistantName: string,
+  relevantMemories: MemoryRecord[],
+  toolRegistry?: ToolRegistry,
+  extraContext?: string,
+): string {
   let prompt = `You are ${assistantName}, a helpful AI assistant. Keep answers clear and concise.`
+
+  if (extraContext) {
+    prompt += `\n\n${extraContext}`
+  }
 
   if (relevantMemories.length > 0) {
     const bullets = relevantMemories.map((memory) => `- (${memory.type}) ${memory.content}`).join('\n')
@@ -139,6 +148,11 @@ export interface JarvisOptions {
   // Optional: when omitted, an image-bearing turn just falls back to `model`
   // as-is (it will likely ignore or error on the images field).
   visionModel?: AIModel
+  // Free-form extra situational context appended to the system prompt —
+  // e.g. a consumer embedding Jarvis somewhere specific (a public demo, a
+  // different product) explaining that context to the model, without
+  // Jarvis's core needing to know anything about who's hosting it.
+  extraContext?: string
 }
 
 // The orchestrator: wires a model provider, short-term memory, long-term
@@ -166,6 +180,7 @@ export class Jarvis {
   private lastToolCallSignature?: string
 
   private readonly visionModel?: AIModel
+  private readonly extraContext?: string
 
   constructor(
     private readonly model: AIModel,
@@ -178,6 +193,7 @@ export class Jarvis {
     this.maxAgentSteps = options.maxAgentSteps ?? DEFAULT_MAX_AGENT_STEPS
     this.assistantName = options.assistantName ?? DEFAULT_ASSISTANT_NAME
     this.visionModel = options.visionModel
+    this.extraContext = options.extraContext
   }
 
   getAssistantName(): string {
@@ -254,7 +270,7 @@ export class Jarvis {
       return `I've taken ${stepsUsed} action${stepsUsed === 1 ? '' : 's'} but haven't finished yet. Let me know if you'd like me to keep going.`
     }
 
-    const systemPrompt = buildSystemPrompt(this.assistantName, relevantMemories, this.toolRegistry)
+    const systemPrompt = buildSystemPrompt(this.assistantName, relevantMemories, this.toolRegistry, this.extraContext)
     const response = await model.generate({
       messages: [{ role: 'system', content: systemPrompt }, ...this.historyFor(model)],
     })
