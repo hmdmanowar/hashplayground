@@ -1,0 +1,548 @@
+import { describe, it, expect } from 'vitest'
+import { mkdtempSync, rmSync, mkdirSync } from 'node:fs'
+import { execSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { Jarvis } from '../src/core/Jarvis.js'
+import { LongTermMemory } from '../src/memory/LongTermMemory.js'
+import { ToolRegistry } from '../src/tools/registry.js'
+import { PermissionEngine } from '../src/permissions/PermissionEngine.js'
+import type { AIModel, ModelRequest, ModelResponse } from '../src/models/AIModel.js'
+
+// Never depends on Ollama actually running — Jarvis's core only knows about
+// the AIModel interface, so a fake implementation is enough to test it.
+class MockModel implements AIModel {
+  public receivedRequests: ModelRequest[] = []
+
+  async generate(request: ModelRequest): Promise<ModelResponse> {
+    this.receivedRequests.push(request)
+    const lastUserMessage = [...request.messages].reverse().find((m) => m.role === 'user')
+    return { content: `echo: ${lastUserMessage?.content ?? ''}` }
+  }
+}
+
+// Returns each response in `script` in order, then repeats the last one —
+// used to simulate a model that first requests a tool, then (once it sees
+// the tool result in the next request) gives a final plain-text answer.
+class ScriptedModel implements AIModel {
+  public receivedRequests: ModelRequest[] = []
+  private step = 0
+
+  constructor(private readonly script: string[]) {}
+
+  async generate(request: ModelRequest): Promise<ModelResponse> {
+    this.receivedRequests.push(request)
+    const content = this.script[Math.min(this.step, this.script.length - 1)]
+    this.step += 1
+    return { content }
+  }
+}
+
+function makeSandbox() {
+  // A parent temp dir holding both the tool sandbox and the audit log, kept
+  // separate so the audit log itself never shows up inside list_directory
+  // results from the tests below.
+  const parent = mkdtempSync(join(tmpdir(), 'jarvis-tools-test-'))
+  const workspaceRoot = join(parent, 'workspace')
+  const auditLogPath = join(parent, 'audit.log')
+
+  // ToolRegistry now also requires a real git repo for its repo_* tools
+  // (Phase 6) — a bare `git init` is enough to satisfy that check here,
+  // since these Jarvis-core tests never exercise the repo_* tools directly.
+  const repoRoot = join(parent, 'repo')
+  mkdirSync(repoRoot, { recursive: true })
+  execSync('git init', { cwd: repoRoot })
+
+  return {
+    workspaceRoot,
+    toolRegistry: new ToolRegistry(workspaceRoot, repoRoot),
+    permissionEngine: new PermissionEngine(auditLogPath),
+    cleanup: () => rmSync(parent, { recursive: true, force: true }),
+  }
+}
+
+describe('Jarvis', () => {
+  it('returns the model response', async () => {
+    const jarvis = new Jarvis(new MockModel())
+    const reply = await jarvis.chat('hello')
+    expect(reply).toBe('echo: hello')
+  })
+
+  it('carries prior turns into later requests (short-term memory)', async () => {
+    const model = new MockModel()
+    const jarvis = new Jarvis(model)
+
+    await jarvis.chat('my name is Sam')
+    await jarvis.chat('what is my name?')
+
+    const secondRequest = model.receivedRequests[1]
+    const contents = secondRequest.messages.map((m) => m.content)
+    expect(contents).toContain('my name is Sam')
+    expect(contents).toContain('what is my name?')
+  })
+
+  it('reset() clears memory so a new conversation starts fresh', async () => {
+    const model = new MockModel()
+    const jarvis = new Jarvis(model)
+
+    await jarvis.chat('first turn')
+    jarvis.reset()
+    await jarvis.chat('second turn')
+
+    const requestAfterReset = model.receivedRequests[1]
+    const userMessages = requestAfterReset.messages.filter((m) => m.role === 'user')
+    expect(userMessages).toEqual([{ role: 'user', content: 'second turn' }])
+  })
+
+  it('injects relevant long-term memory into the system prompt', async () => {
+    const model = new MockModel()
+    const longTermMemory = new LongTermMemory(':memory:')
+    longTermMemory.remember('preference', 'The user prefers TypeScript over JavaScript')
+    const jarvis = new Jarvis(model, { longTermMemory })
+
+    await jarvis.chat('Should I use TypeScript or JavaScript?')
+
+    const systemMessage = model.receivedRequests[0].messages.find((m) => m.role === 'system')
+    expect(systemMessage?.content).toContain('TypeScript')
+  })
+
+  it('does not touch long-term memory when none is configured', async () => {
+    const jarvis = new Jarvis(new MockModel())
+    await expect(jarvis.chat('hello')).resolves.toBe('echo: hello')
+    expect(() => jarvis.remember('x')).toThrow('Long-term memory is not configured')
+  })
+
+  describe('loadHistory', () => {
+    it('replays the given messages into memory, feeding them into the next model request', async () => {
+      const model = new MockModel()
+      const jarvis = new Jarvis(model)
+
+      jarvis.loadHistory([
+        { role: 'user', content: 'earlier question' },
+        { role: 'assistant', content: 'earlier answer' },
+      ])
+      await jarvis.chat('follow-up')
+
+      const contents = model.receivedRequests[0].messages.map((m) => m.content)
+      expect(contents).toEqual(
+        expect.arrayContaining(['earlier question', 'earlier answer', 'follow-up']),
+      )
+    })
+
+    it('clears any pending tool call and trace, like reset()', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel(['TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}'])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        await jarvis.chat('run echo hi')
+        expect(jarvis.hasPendingToolCall()).toBe(true)
+
+        jarvis.loadHistory([])
+
+        expect(jarvis.hasPendingToolCall()).toBe(false)
+        expect(jarvis.getLastTrace()).toEqual([])
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+  })
+
+  describe('handleInput', () => {
+    it('/remember stores a fact and confirms it', async () => {
+      const jarvis = new Jarvis(new MockModel(), { longTermMemory: new LongTermMemory(':memory:') })
+      const reply = await jarvis.handleInput('/remember I prefer dark mode')
+      expect(reply).toContain('Remembered')
+      expect(reply).toContain('I prefer dark mode')
+    })
+
+    it('/memories lists what has been remembered', async () => {
+      const jarvis = new Jarvis(new MockModel(), { longTermMemory: new LongTermMemory(':memory:') })
+      await jarvis.handleInput('/remember I prefer dark mode')
+      const reply = await jarvis.handleInput('/memories')
+      expect(reply).toContain('I prefer dark mode')
+    })
+
+    it('/forget removes a memory by id', async () => {
+      const jarvis = new Jarvis(new MockModel(), { longTermMemory: new LongTermMemory(':memory:') })
+      const confirmation = await jarvis.handleInput('/remember I prefer dark mode')
+      const id = confirmation.match(/#(\d+)/)?.[1]
+
+      const forgetReply = await jarvis.handleInput(`/forget ${id}`)
+      expect(forgetReply).toContain('Forgot')
+
+      const listReply = await jarvis.handleInput('/memories')
+      expect(listReply).toBe('No memories stored yet.')
+    })
+
+    it('falls through to a normal chat turn for anything else', async () => {
+      const jarvis = new Jarvis(new MockModel())
+      const reply = await jarvis.handleInput('just a regular message')
+      expect(reply).toBe('echo: just a regular message')
+    })
+
+    it('/approve with nothing pending is recognized as a command, not sent to the model', async () => {
+      const model = new MockModel()
+      const jarvis = new Jarvis(model)
+      const reply = await jarvis.handleInput('/approve')
+      expect(reply).toBe('No pending action to approve.')
+      expect(model.receivedRequests).toHaveLength(0)
+    })
+
+    it('/deny with nothing pending is recognized as a command, not sent to the model', async () => {
+      const model = new MockModel()
+      const jarvis = new Jarvis(model)
+      const reply = await jarvis.handleInput('/deny')
+      expect(reply).toBe('No pending action to approve.')
+      expect(model.receivedRequests).toHaveLength(0)
+    })
+  })
+
+  describe('tool calls', () => {
+    it('executes a low-risk tool automatically and returns the follow-up answer', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'The workspace is empty.',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        const reply = await jarvis.chat('What files are in the workspace?')
+
+        expect(reply).toBe('The workspace is empty.')
+        expect(model.receivedRequests).toHaveLength(2)
+        expect(jarvis.hasPendingToolCall()).toBe(false)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('feeds the tool result back to the model for the follow-up turn', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'ok',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        await jarvis.chat('list files')
+
+        const followUp = model.receivedRequests[1].messages.map((m) => m.content).join('\n')
+        expect(followUp).toContain('tool result: list_directory')
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('does not request a tool call at all when no tool registry is configured', async () => {
+      // MockModel just echoes — this confirms the base "no tools" behavior
+      // from before Phase 3 is unaffected when toolRegistry is omitted.
+      const jarvis = new Jarvis(new MockModel())
+      const reply = await jarvis.chat('list files')
+      expect(reply).toBe('echo: list files')
+    })
+
+    it('a high-risk tool call is held for approval instead of executing immediately', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel(['TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}'])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        const reply = await jarvis.chat('run echo hi')
+
+        expect(reply).toContain('run_command')
+        expect(reply).toContain('/approve')
+        expect(jarvis.hasPendingToolCall()).toBe(true)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('/approve runs the pending high-risk tool and returns the follow-up answer', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}',
+          'Done — it printed hi.',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        await jarvis.chat('run echo hi')
+        const reply = await jarvis.handleInput('/approve')
+
+        expect(reply).toBe('Done — it printed hi.')
+        expect(jarvis.hasPendingToolCall()).toBe(false)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('/deny cancels the pending tool call without executing it', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel(['TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}'])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        await jarvis.chat('run echo hi')
+        const reply = await jarvis.handleInput('/deny')
+
+        expect(reply).toContain("won't run")
+        expect(jarvis.hasPendingToolCall()).toBe(false)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('blocks unrelated input while an approval is pending, with a reminder', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel(['TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}'])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        await jarvis.chat('run echo hi')
+        const reply = await jarvis.handleInput('never mind, something else')
+
+        expect(reply).toContain('/approve')
+        expect(reply).toContain('/deny')
+        expect(jarvis.hasPendingToolCall()).toBe(true)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+  })
+
+  describe('agent loop (Phase 4: multi-step)', () => {
+    it('chains two auto-approved tool calls in a single turn', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'TOOL_CALL: {"tool": "search_code", "args": {"query": "hello"}}',
+          'The workspace is empty and nothing matched "hello".',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        const reply = await jarvis.chat('Look around the workspace for anything about hello.')
+
+        expect(reply).toBe('The workspace is empty and nothing matched "hello".')
+        expect(model.receivedRequests).toHaveLength(3)
+        expect(jarvis.getLastTrace()).toEqual([
+          { tool: 'list_directory', outcome: 'success' },
+          { tool: 'search_code', outcome: 'success' },
+        ])
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('stops at maxAgentSteps and reports back instead of looping forever', async () => {
+      const sandbox = makeSandbox()
+      try {
+        // Three distinct calls (not identical — that would trip the stuck-loop
+        // guard tested separately below) — without a cap this would never terminate.
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'TOOL_CALL: {"tool": "search_code", "args": {"query": "a"}}',
+          'TOOL_CALL: {"tool": "search_code", "args": {"query": "b"}}',
+        ])
+        const jarvis = new Jarvis(model, {
+          toolRegistry: sandbox.toolRegistry,
+          permissionEngine: sandbox.permissionEngine,
+          maxAgentSteps: 3,
+        })
+
+        const reply = await jarvis.chat('keep looking')
+
+        expect(reply).toContain("haven't finished")
+        expect(jarvis.getLastTrace()).toHaveLength(3)
+        expect(model.receivedRequests).toHaveLength(3)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('stops early when the model repeats the exact same tool call instead of making progress', async () => {
+      const sandbox = makeSandbox()
+      try {
+        // Always requests the identical call — mirrors what a weaker local
+        // model did for a plain essay-writing request that needed no tool at
+        // all: it kept calling search_code/write_file with the same args
+        // instead of just answering in text.
+        const model = new ScriptedModel(['TOOL_CALL: {"tool": "search_code", "args": {"query": "india essay prompt"}}'])
+        const jarvis = new Jarvis(model, {
+          toolRegistry: sandbox.toolRegistry,
+          permissionEngine: sandbox.permissionEngine,
+          maxAgentSteps: 10,
+        })
+
+        const reply = await jarvis.chat('write an essay about India')
+
+        expect(reply).toContain('repeat the exact same')
+        expect(jarvis.getLastTrace()).toEqual([{ tool: 'search_code', outcome: 'success' }])
+        expect(model.receivedRequests).toHaveLength(2)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('a high-risk step mid-plan pauses, and /approve resumes and finishes the remaining steps', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}',
+          'TOOL_CALL: {"tool": "search_code", "args": {"query": "hi"}}',
+          'All done — found nothing.',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        const pausedReply = await jarvis.chat('do a full sweep')
+        expect(pausedReply).toContain('/approve')
+        expect(jarvis.hasPendingToolCall()).toBe(true)
+
+        const finalReply = await jarvis.handleInput('/approve')
+
+        expect(finalReply).toBe('All done — found nothing.')
+        expect(jarvis.hasPendingToolCall()).toBe(false)
+        expect(jarvis.getLastTrace()).toEqual([
+          { tool: 'list_directory', outcome: 'success' },
+          { tool: 'run_command', outcome: 'success' },
+          { tool: 'search_code', outcome: 'success' },
+        ])
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('/deny on a mid-plan high-risk step still cancels the whole turn', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'TOOL_CALL: {"tool": "run_command", "args": {"command": "echo hi"}}',
+          'TOOL_CALL: {"tool": "search_code", "args": {"query": "hi"}}',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        await jarvis.chat('do a full sweep')
+        const reply = await jarvis.handleInput('/deny')
+
+        expect(reply).toContain("won't run")
+        expect(jarvis.hasPendingToolCall()).toBe(false)
+        // Only the first (auto) step actually ran — denying the second never
+        // let the third (search_code) get requested at all.
+        expect(model.receivedRequests).toHaveLength(2)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('extracts only the first tool call when the model hallucinates extra calls or fake results after it', async () => {
+      // Live testing against a real local model showed it can string
+      // several TOOL_CALL lines together in one reply and even fabricate
+      // fake "results" in trailing text, instead of stopping after one call
+      // as instructed. The loop must still execute exactly the first real
+      // call and ignore the rest, rather than treating the whole noisy
+      // reply as an unparseable final answer.
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}\n' +
+            'TOOL_CALL: {"tool": "read_file", "args": {"path": "hello.txt"}}\n' +
+            '```\nhello.txt: "Hello, world!"\n```',
+          'Confirmed from the real result.',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        const reply = await jarvis.chat('list files, then read hello.txt')
+
+        expect(reply).toBe('Confirmed from the real result.')
+        expect(jarvis.getLastTrace()).toEqual([{ tool: 'list_directory', outcome: 'success' }])
+        expect(model.receivedRequests).toHaveLength(2)
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+
+    it('a tool error mid-plan does not abort the loop — the next step still runs', async () => {
+      const sandbox = makeSandbox()
+      try {
+        const model = new ScriptedModel([
+          'TOOL_CALL: {"tool": "read_file", "args": {"path": "does-not-exist.txt"}}',
+          'TOOL_CALL: {"tool": "list_directory", "args": {}}',
+          'That file does not exist, but the workspace is empty anyway.',
+        ])
+        const jarvis = new Jarvis(model, { toolRegistry: sandbox.toolRegistry, permissionEngine: sandbox.permissionEngine })
+
+        const reply = await jarvis.chat('read does-not-exist.txt, and if that fails just list the workspace')
+
+        expect(reply).toBe('That file does not exist, but the workspace is empty anyway.')
+        expect(jarvis.getLastTrace()).toEqual([
+          { tool: 'read_file', outcome: 'error' },
+          { tool: 'list_directory', outcome: 'success' },
+        ])
+      } finally {
+        sandbox.cleanup()
+      }
+    })
+  })
+
+  describe('vision (Phase 5)', () => {
+    it('routes a turn with images to the vision model, not the default one', async () => {
+      const textModel = new MockModel()
+      const visionModel = new MockModel()
+      const jarvis = new Jarvis(textModel, { visionModel })
+
+      await jarvis.chat('what is in this photo?', ['base64-image-data'])
+
+      expect(visionModel.receivedRequests).toHaveLength(1)
+      expect(textModel.receivedRequests).toHaveLength(0)
+      const sentMessages = visionModel.receivedRequests[0].messages
+      const userMessage = sentMessages.find((m) => m.role === 'user')
+      expect(userMessage?.images).toEqual(['base64-image-data'])
+    })
+
+    it('routes a plain text turn to the default model, not the vision model', async () => {
+      const textModel = new MockModel()
+      const visionModel = new MockModel()
+      const jarvis = new Jarvis(textModel, { visionModel })
+
+      await jarvis.chat('hello')
+
+      expect(textModel.receivedRequests).toHaveLength(1)
+      expect(visionModel.receivedRequests).toHaveLength(0)
+    })
+
+    it('strips images from history before sending a later text-only turn to the non-vision model', async () => {
+      // Regression test: live testing showed Ollama hard-errors on ANY
+      // request carrying an `images` field for a model that doesn't
+      // support it — not just ignoring it — so once an image had ever
+      // been sent, every later plain-text turn broke for good unless
+      // history is sanitized per-model.
+      const textModel = new MockModel()
+      const visionModel = new MockModel()
+      const jarvis = new Jarvis(textModel, { visionModel })
+
+      await jarvis.chat('what is in this photo?', ['base64-image-data'])
+      await jarvis.chat('thanks, unrelated: what is 2+2?')
+
+      const secondRequest = textModel.receivedRequests[0].messages
+      expect(secondRequest.some((m) => m.images !== undefined)).toBe(false)
+      // Content survives the strip — only the images field is dropped.
+      const oldUserMessage = secondRequest.find((m) => m.content === 'what is in this photo?')
+      expect(oldUserMessage).toBeDefined()
+    })
+
+    it('falls back to the default model for images when no vision model is configured', async () => {
+      const textModel = new MockModel()
+      const jarvis = new Jarvis(textModel)
+
+      const reply = await jarvis.chat('what is this?', ['base64-image-data'])
+
+      expect(textModel.receivedRequests).toHaveLength(1)
+      expect(reply).toBe('echo: what is this?')
+    })
+  })
+})
