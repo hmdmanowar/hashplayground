@@ -6,9 +6,10 @@ import UserMenu from '../UserMenu/UserMenu'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import NotificationBell from '../NotificationBell/NotificationBell'
 import FeedbackDialog from '../FeedbackDialog/FeedbackDialog'
-import { MenuFoldIcon, MenuUnfoldIcon, MegaphoneIcon } from '../Icons/Icons'
+import { MenuFoldIcon, MenuUnfoldIcon, MegaphoneIcon, BotIcon } from '../Icons/Icons'
 import { listUsers, isTopAdmin, ADMIN_USERS_CACHE_KEY, type UserSummary } from '../../services/userService'
 import { getCached, setCached } from '../../lib/dataCache'
+import { usePageJarvisToggleValue } from '../../context/PageHeaderContext'
 
 interface NavbarProps {
   collapsed: boolean
@@ -19,11 +20,18 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  // Set only while Playground is mounted (see usePageJarvisToggle) — lets
+  // the Jarvis button open that project's own panel instead of navigating
+  // away to the standalone page.
+  const jarvisToggle = usePageJarvisToggleValue()
   // The portfolio page is a standalone resume view — the global sidebar is
   // already hidden there (see Layout.tsx), so there's nothing left for the
   // sidebar-toggle button to do, and the product's own Documentation link
   // doesn't belong on a page meant to be shared outside the app.
   const isPortfolioPage = pathname === '/portfolio'
+  // Jarvis has its own conversation sidebar and hides the global one too
+  // (see Layout.tsx) — same reasoning as Portfolio for the toggle button.
+  const isJarvisPage = pathname === '/jarvis'
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [isSuperiorAdmin, setIsSuperiorAdmin] = useState(false)
 
@@ -57,7 +65,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   return (
     <header className="flex items-center justify-between border-b border-[var(--border-panel)] px-4 py-3">
       <div className="flex items-center gap-2">
-        {user && !isPortfolioPage && (
+        {user && !isPortfolioPage && !isJarvisPage && (
           <button
             type="button"
             onClick={onToggleSidebar}
@@ -78,6 +86,27 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
             Documentation
           </NavLink>
         )}
+        {!isPortfolioPage &&
+          (jarvisToggle ? (
+            <button
+              type="button"
+              onClick={jarvisToggle}
+              title="Jarvis"
+              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border-panel)] px-3 text-sm font-medium text-[var(--color-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            >
+              <BotIcon className="h-5 w-5" />
+              Jarvis
+            </button>
+          ) : (
+            <NavLink
+              to="/jarvis"
+              title="Jarvis"
+              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border-panel)] px-3 text-sm font-medium text-[var(--color-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            >
+              <BotIcon className="h-5 w-5" />
+              Jarvis
+            </NavLink>
+          ))}
         {user && !isSuperiorAdmin && (
           <button
             type="button"

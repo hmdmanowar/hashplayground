@@ -6,7 +6,8 @@ function Breadcrumb() {
   const location = useLocation()
   const titleOverride = usePageTitleValue()
   const titleSuffix = usePageTitleSuffixValue()
-  if (location.pathname === '/' || location.pathname === '/docs' || location.pathname === '/portfolio') return null
+  if (location.pathname === '/' || location.pathname === '/docs' || location.pathname === '/portfolio' || location.pathname === '/jarvis')
+    return null
 
   const crumbs = getCrumbs(location.pathname)
   const displayCrumbs = titleOverride ? [...crumbs, { label: titleOverride }] : crumbs

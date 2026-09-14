@@ -14,6 +14,7 @@ import { useToast } from "../../context/ToastContext";
 import { usePageHeaderActions } from "../../hooks/usePageHeaderActions";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { usePageFullscreen } from "../../hooks/usePageFullscreen";
+import { usePageJarvisToggle } from "../../hooks/usePageJarvisToggle";
 import { useIsTopAdmin } from "../../hooks/useIsTopAdmin";
 import { getProject, deleteProject } from "../../services/projectService";
 import {
@@ -79,6 +80,7 @@ import MobileTabBar from "./components/MobileTabBar";
 import Sidebar from "./components/Sidebar";
 import EditorPanel from "./components/EditorPanel";
 import PreviewPanel from "./components/PreviewPanel";
+import AssistantPanel from "./components/AssistantPanel";
 import LogTerminalPanel from "./components/LogTerminalPanel";
 import ResizeHandle from "./components/ResizeHandle";
 import QuickOpenList from "./components/QuickOpenList";
@@ -141,11 +143,14 @@ function Playground() {
   const [log, setLog] = useState<string[]>([]);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const [bottomPanelTab, setBottomPanelTab] = useState<"log" | "console" | "terminal">("log");
-  const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(false);
+  // Terminal and Preview both start collapsed — most of a session is spent
+  // editing, not running/inspecting output, so they open on demand instead
+  // of eating panel space by default.
+  const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(true);
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [quickOpenQuery, setQuickOpenQuery] = useState("");
   const [sidebarView, setSidebarView] = useState<SidebarView>("explorer");
-  const [mobilePanel, setMobilePanel] = useState<"sidebar" | "editor" | "preview">("sidebar");
+  const [mobilePanel, setMobilePanel] = useState<"sidebar" | "editor" | "preview" | "assistant">("sidebar");
   const [codeSearchQuery, setCodeSearchQuery] = useState("");
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
   const pendingRevealLineRef = useRef<number | null>(null);
@@ -175,7 +180,8 @@ function Playground() {
   const [changesExpanded, setChangesExpanded] = useState(true);
   const [filesTreeExpanded, setFilesTreeExpanded] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [previewCollapsed, setPreviewCollapsed] = useState(true);
+  const [assistantCollapsed, setAssistantCollapsed] = useState(true);
   const [lastSynced, setLastSynced] = useState<{
     name: string;
     time: Date;
@@ -436,6 +442,13 @@ function Playground() {
     }));
   }
 
+  function resizeAssistant(deltaPx: number) {
+    setPanelSizesState((prev) => ({
+      ...prev,
+      assistantWidth: Math.min(560, Math.max(260, prev.assistantWidth - deltaPx)),
+    }));
+  }
+
   function resizeBottomPanel(deltaPx: number) {
     setPanelSizesState((prev) => ({
       ...prev,
@@ -465,7 +478,19 @@ function Playground() {
     setPreviewCollapsed(false);
   }
 
+  function selectMobileAssistant() {
+    setMobilePanel("assistant");
+    setAssistantCollapsed(false);
+  }
+
   usePageFullscreen(editorMaximized);
+
+  // Lets the Navbar's Jarvis button open/close this project's own panel
+  // instead of navigating to the standalone /jarvis page while this is mounted.
+  usePageJarvisToggle(() => {
+    setAssistantCollapsed((prev) => !prev);
+    setMobilePanel("assistant");
+  });
 
   usePageTitle(
     project?.name ?? null,
@@ -1536,6 +1561,7 @@ function Playground() {
         onSelectSidebarView={handleSelectSidebarView}
         onSelectEditor={() => setMobilePanel("editor")}
         onSelectPreview={selectMobilePreview}
+        onSelectAssistant={selectMobileAssistant}
         saveMode={saveMode}
         onSaveModeChange={handleSaveModeChange}
         editorPrefs={editorPrefs}
@@ -1654,6 +1680,23 @@ function Playground() {
           previewDoc={previewDoc}
           previewRunKey={previewRunKey}
           lastSynced={lastSynced}
+        />
+
+        <ResizeHandle
+          orientation="vertical"
+          disabled={assistantCollapsed || panelResizeMode !== "manual"}
+          onResize={resizeAssistant}
+          onResizeEnd={persistPanelSizes}
+          className="hidden lg:flex"
+        />
+
+        <AssistantPanel
+          mobileHidden={mobilePanel !== "assistant"}
+          collapsed={assistantCollapsed}
+          onExpand={() => setAssistantCollapsed(false)}
+          onCollapse={() => setAssistantCollapsed(true)}
+          width={panelSizes.assistantWidth}
+          projectId={projectId}
         />
       </div>
 

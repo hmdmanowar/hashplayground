@@ -62,10 +62,11 @@ export interface PanelSizes {
   sidebarWidth: number
   previewWidth: number
   bottomPanelHeight: number
+  assistantWidth: number
 }
 
 const PANEL_SIZES_KEY = 'hash_playground_panel_sizes'
-export const DEFAULT_PANEL_SIZES: PanelSizes = { sidebarWidth: 220, previewWidth: 360, bottomPanelHeight: 160 }
+export const DEFAULT_PANEL_SIZES: PanelSizes = { sidebarWidth: 220, previewWidth: 360, bottomPanelHeight: 160, assistantWidth: 320 }
 
 export function getPanelSizes(): PanelSizes {
   const raw = localStorage.getItem(PANEL_SIZES_KEY)

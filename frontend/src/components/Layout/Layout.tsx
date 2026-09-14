@@ -11,7 +11,10 @@ function isPlaygroundPath(path: string): boolean {
 
 function LayoutContent() {
   const { pathname } = useLocation()
-  const isFullBleed = pathname === '/' || pathname === '/docs' || pathname === '/portfolio'
+  const isFullBleed = pathname === '/' || pathname === '/docs' || pathname === '/portfolio' || pathname === '/jarvis'
+  // Jarvis has its own conversation sidebar (like Portfolio's standalone
+  // layout) — the global nav sidebar would just be a second, redundant one.
+  const hideSidebar = pathname === '/portfolio' || pathname === '/jarvis'
   const fullscreen = usePageFullscreenValue()
 
   // The global nav sidebar auto-collapses once, on the moment of entering the
@@ -41,7 +44,7 @@ function LayoutContent() {
         <Navbar collapsed={collapsed} onToggleSidebar={() => setCollapsed((prev) => !prev)} />
       )}
       <div className="flex flex-1 overflow-hidden">
-        {!fullscreen && pathname !== '/portfolio' && <Sidebar collapsed={collapsed} />}
+        {!fullscreen && !hideSidebar && <Sidebar collapsed={collapsed} />}
         <main
           className={`mx-auto flex min-w-0 flex-1 flex-col ${
             fullscreen ? '' : isFullBleed ? '' : 'px-3 py-3'

@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Home from "./pages/Home/Home";
 import Docs from "./pages/Docs/Docs";
 import Portfolio from "./pages/Portfolio/Portfolio";
+import JarvisChat from "./pages/JarvisChat/JarvisChat";
 import Login from "./pages/Login/Login";
 import Signup from "./pages/Signup/Signup";
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
@@ -32,6 +33,7 @@ const router = createBrowserRouter(
         <Route path="/" element={<Home />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/jarvis" element={<JarvisChat />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<ProjectDashboard />} />
           <Route path="/projects/new" element={<CreateProject />} />

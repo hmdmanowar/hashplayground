@@ -4,6 +4,7 @@ import {
   GitBranchIcon,
   CodeIcon,
   MonitorIcon,
+  BotIcon,
 } from "../../../components/Icons/Icons";
 import {
   type SaveMode,
@@ -13,7 +14,7 @@ import {
 import type { SidebarView } from "../playgroundUtils";
 import PlaygroundSettingsMenu from "./PlaygroundSettingsMenu";
 
-type MobilePanel = "sidebar" | "editor" | "preview";
+type MobilePanel = "sidebar" | "editor" | "preview" | "assistant";
 
 interface MobileTabBarProps {
   sidebarView: SidebarView;
@@ -22,6 +23,7 @@ interface MobileTabBarProps {
   onSelectSidebarView: (view: SidebarView) => void;
   onSelectEditor: () => void;
   onSelectPreview: () => void;
+  onSelectAssistant: () => void;
   saveMode: SaveMode;
   onSaveModeChange: (mode: SaveMode) => void;
   editorPrefs: EditorPrefs;
@@ -41,6 +43,7 @@ function MobileTabBar({
   onSelectSidebarView,
   onSelectEditor,
   onSelectPreview,
+  onSelectAssistant,
   saveMode,
   onSaveModeChange,
   editorPrefs,
@@ -95,6 +98,10 @@ function MobileTabBar({
       <button type="button" onClick={onSelectPreview} className={tabClass(mobilePanel === "preview")}>
         <MonitorIcon className="h-4 w-4" />
         Preview
+      </button>
+      <button type="button" onClick={onSelectAssistant} className={tabClass(mobilePanel === "assistant")}>
+        <BotIcon className="h-4 w-4" />
+        Jarvis
       </button>
       <PlaygroundSettingsMenu
         variant="header"
