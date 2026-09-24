@@ -95,7 +95,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
               className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border-panel)] px-3 text-sm font-medium text-[var(--color-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
               <BotIcon className="h-5 w-5" />
-              Jarvis
+              AI Assistant
             </button>
           ) : (
             <NavLink
@@ -104,7 +104,7 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
               className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border-panel)] px-3 text-sm font-medium text-[var(--color-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
               <BotIcon className="h-5 w-5" />
-              Jarvis
+              AI Assistant
             </NavLink>
           ))}
         {user && !isSuperiorAdmin && (
