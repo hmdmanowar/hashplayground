@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
@@ -13,9 +13,11 @@ import type { AIModel, ModelRequest, ModelResponse } from '../src/models/AIModel
 // — same pattern tests/Jarvis.test.ts uses to simulate a model that
 // requests a tool then (once it sees the result) gives a final answer.
 class ScriptedModel implements AIModel {
+  public receivedRequests: ModelRequest[] = []
   private step = 0
   constructor(private readonly script: string[]) {}
-  async generate(_request: ModelRequest): Promise<ModelResponse> {
+  async generate(request: ModelRequest): Promise<ModelResponse> {
+    this.receivedRequests.push(request)
     const content = this.script[Math.min(this.step, this.script.length - 1)]
     this.step += 1
     return { content }
@@ -289,5 +291,82 @@ describe('AutonomousWorker with repoScopePath (Jarvis inside a bigger repo)', ()
     expect(otherContent).toBe('original\n')
     const workingTreeContent = readFileSync(join(fixture.otherDir, 'existing.txt'), 'utf8')
     expect(workingTreeContent).toBe('modified by someone else\n')
+  })
+})
+
+describe('AutonomousWorker with a task', () => {
+  let fixture: ReturnType<typeof makeFixture>
+
+  beforeEach(() => {
+    fixture = makeFixture()
+  })
+
+  afterEach(() => {
+    fixture.cleanup()
+  })
+
+  it('uses the task-specific prompt instead of the generic exploratory one, and carries the taskId onto the result', async () => {
+    const model = new ScriptedModel(['Renamed the thing as asked.'])
+    const jarvis = makeJarvis(fixture, model)
+
+    const result = await runCycle(optionsFor(fixture, jarvis), 1, { id: 'task-1', description: 'Rename foo to bar' })
+
+    expect(result.taskId).toBe('task-1')
+    const sentMessages = model.receivedRequests[0].messages.map((m) => m.content).join('\n')
+    expect(sentMessages).toContain('Rename foo to bar')
+    expect(sentMessages).not.toContain('Look for ONE concrete')
+  })
+})
+
+describe('AutonomousWorker with a control plane', () => {
+  let fixture: ReturnType<typeof makeFixture>
+  let fetchMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    fixture = makeFixture()
+    fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    fixture.cleanup()
+  })
+
+  it('skips a cycle (never touching the repo) when the control plane reports disabled', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ enabled: false, task: null }) })
+    const mainHeadBefore = execSync('git rev-parse main', { cwd: fixture.repoRoot }).toString().trim()
+    const model = new ScriptedModel(['should never be called'])
+    const jarvis = makeJarvis(fixture, model)
+
+    await runAutonomousLoop({
+      ...optionsFor(fixture, jarvis),
+      controlPlane: { baseUrl: 'http://control-plane.test', token: 'secret' },
+      onCycleSkipped: () => process.emit('SIGINT'),
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://control-plane.test/api/autonomous-worker/poll',
+      expect.objectContaining({ headers: { 'x-worker-token': 'secret' } }),
+    )
+    expect(model.receivedRequests).toHaveLength(0)
+    const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: fixture.repoRoot }).toString().trim()
+    expect(currentBranch).toBe('main')
+    const mainHeadAfter = execSync('git rev-parse main', { cwd: fixture.repoRoot }).toString().trim()
+    expect(mainHeadAfter).toBe(mainHeadBefore)
+  })
+
+  it('treats a poll failure the same as disabled, rather than running anyway', async () => {
+    fetchMock.mockRejectedValue(new Error('network down'))
+    const model = new ScriptedModel(['should never be called'])
+    const jarvis = makeJarvis(fixture, model)
+
+    await runAutonomousLoop({
+      ...optionsFor(fixture, jarvis),
+      controlPlane: { baseUrl: 'http://control-plane.test', token: 'secret' },
+      onCycleSkipped: () => process.emit('SIGINT'),
+    })
+
+    expect(model.receivedRequests).toHaveLength(0)
   })
 })

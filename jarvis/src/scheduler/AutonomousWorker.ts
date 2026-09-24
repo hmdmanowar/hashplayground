@@ -9,12 +9,20 @@ const MAX_OUTPUT_CHARS = 8000
 
 const PROTECTED_BRANCHES = new Set(['main', 'master'])
 
-// What Jarvis is told at the start of every unattended cycle. Deliberately
-// narrow: the model's job is to find and make ONE safe, verifiable
-// improvement using its repo_* tools — everything else (branch hygiene,
-// committing, testing, pushing) is handled deterministically by this file,
-// not left to the model to remember correctly every cycle.
+// What Jarvis is told at the start of every unattended exploratory cycle
+// (no specific task queued). Deliberately narrow: the model's job is to
+// find and make ONE safe, verifiable improvement using its repo_* tools —
+// everything else (branch hygiene, committing, testing, pushing) is handled
+// deterministically by this file, not left to the model to remember
+// correctly every cycle.
 export const CYCLE_PROMPT = `You are running autonomously and unattended on your own codebase (this repo), on a dedicated branch that has already been checked out for you — nothing you do here touches main. Look for ONE concrete, safe, well-scoped improvement (a failing test, a clear bug, dead code, a rough edge you notice via repo_search_code/repo_read_file) and make it using your repo_* tools. Prefer small, verifiable changes over large speculative ones — if you're not confident something is safe and correct, do nothing. Never use repo_reset. When you're done (or if there's nothing worth doing this cycle), reply with ONE short sentence summarizing what you did or why you're skipping — that sentence becomes the commit message, so make it read like one.`
+
+// Used instead of CYCLE_PROMPT when the control plane (see below) has a
+// specific task queued for this cycle — one cycle per task, same bounded
+// turn as the exploratory prompt.
+function taskCyclePrompt(description: string): string {
+  return `You are running autonomously and unattended on your own codebase (this repo), on a dedicated branch that has already been checked out for you — nothing you do here touches main. A user has queued this specific task for you to work on: "${description}". Complete it using your repo_* tools, within this one turn. Never use repo_reset. Reply with ONE short sentence summarizing what you did (or why you couldn't complete it) — that sentence becomes the commit message, so make it read like one.`
+}
 
 export interface CycleResult {
   cycleNumber: number
@@ -25,6 +33,17 @@ export interface CycleResult {
   outcome: 'pushed' | 'reverted' | 'no-changes' | 'error'
   commitHash?: string
   detail?: string
+  taskId?: string
+}
+
+// Lets an admin panel (or anything else) steer this worker without the
+// process itself being reachable from outside — the worker polls for
+// desired state instead of being started/stopped directly. See Hash
+// Playground's backend/src/modules/autonomousWorker for the other end of
+// this contract.
+export interface ControlPlane {
+  baseUrl: string
+  token: string
 }
 
 export interface AutonomousWorkerOptions {
@@ -41,7 +60,10 @@ export interface AutonomousWorkerOptions {
   // own repoScopePath confines the model's repo_* tools. Omit it and the
   // worker operates on the whole of repoRoot, same as before.
   repoScopePath?: string
+  // Omit entirely for the original always-on, locally-reported behavior.
+  controlPlane?: ControlPlane
   onCycleComplete?: (result: CycleResult) => void
+  onCycleSkipped?: (reason: string) => void
 }
 
 function sleep(ms: number): Promise<void> {
@@ -123,6 +145,42 @@ async function commitAndPush(repoRoot: string, branch: string, summary: string, 
   return hash.stdout.trim()
 }
 
+interface PollResponse {
+  enabled: boolean
+  task: { id: string; description: string } | null
+}
+
+// Fails closed: a poll failure (control plane unreachable, misconfigured
+// token, etc.) is treated the same as enabled:false — an autonomous worker
+// that can't confirm the kill switch is off should not keep pushing
+// changes, network blip or not.
+async function pollControlPlane(controlPlane: ControlPlane): Promise<PollResponse> {
+  try {
+    const response = await fetch(`${controlPlane.baseUrl}/api/autonomous-worker/poll`, {
+      headers: { 'x-worker-token': controlPlane.token },
+    })
+    if (!response.ok) throw new Error(`poll failed: ${response.status}`)
+    return (await response.json()) as PollResponse
+  } catch {
+    return { enabled: false, task: null }
+  }
+}
+
+// Best-effort — the local markdown report (appendReport) is always written
+// regardless, so a control-plane outage never loses the record of what
+// happened, just the admin panel's visibility into it until it's back.
+async function reportToControlPlane(controlPlane: ControlPlane, result: CycleResult): Promise<void> {
+  try {
+    await fetch(`${controlPlane.baseUrl}/api/autonomous-worker/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-worker-token': controlPlane.token },
+      body: JSON.stringify(result),
+    })
+  } catch {
+    // Nothing more to do — see comment above.
+  }
+}
+
 function appendReport(reportPath: string, result: CycleResult): void {
   mkdirSync(dirname(reportPath), { recursive: true })
   const lines = [
@@ -143,10 +201,18 @@ function appendReport(reportPath: string, result: CycleResult): void {
 
 // Runs exactly one observe -> act -> evaluate -> (commit+push | revert)
 // cycle and returns what happened. Exported separately from the loop below
-// so it can be tested (and reasoned about) one cycle at a time.
-export async function runCycle(options: AutonomousWorkerOptions, cycleNumber: number): Promise<CycleResult> {
+// so it can be tested (and reasoned about) one cycle at a time. `task`
+// (from the control plane's /poll) swaps in a task-specific prompt instead
+// of the generic exploratory one; its id is carried onto the result so the
+// caller can report completion back against that specific task.
+export async function runCycle(
+  options: AutonomousWorkerOptions,
+  cycleNumber: number,
+  task?: { id: string; description: string } | null,
+): Promise<CycleResult> {
   const { jarvis, repoRoot, branch, repoScopePath } = options
   const timestamp = new Date().toISOString()
+  const taskId = task?.id
 
   await ensureAutonomyBranch(repoRoot, branch)
 
@@ -154,7 +220,7 @@ export async function runCycle(options: AutonomousWorkerOptions, cycleNumber: nu
   // still carries across cycles, so Jarvis can recall past decisions
   // without every cycle's conversation growing unbounded.
   jarvis.reset()
-  let summary = await jarvis.handleInput(CYCLE_PROMPT)
+  let summary = await jarvis.handleInput(task ? taskCyclePrompt(task.description) : CYCLE_PROMPT)
 
   let detail: string | undefined
   if (jarvis.hasPendingToolCall()) {
@@ -168,7 +234,7 @@ export async function runCycle(options: AutonomousWorkerOptions, cycleNumber: nu
 
   const files = await changedFiles(repoRoot, repoScopePath)
   if (files.length === 0) {
-    return { cycleNumber, timestamp, summary, filesChanged: [], testResult: 'skipped', outcome: 'no-changes', detail }
+    return { cycleNumber, timestamp, summary, filesChanged: [], testResult: 'skipped', outcome: 'no-changes', detail, taskId }
   }
 
   const testsPassed = await runCheck(repoRoot, repoScopePath, 'npm test')
@@ -184,11 +250,12 @@ export async function runCycle(options: AutonomousWorkerOptions, cycleNumber: nu
       testResult: 'failed',
       outcome: 'reverted',
       detail: detail ?? 'Changes were made but did not pass tests/build, so they were reverted.',
+      taskId,
     }
   }
 
   const commitHash = await commitAndPush(repoRoot, branch, summary, repoScopePath)
-  return { cycleNumber, timestamp, summary, filesChanged: files, testResult: 'passed', outcome: 'pushed', commitHash, detail }
+  return { cycleNumber, timestamp, summary, filesChanged: files, testResult: 'passed', outcome: 'pushed', commitHash, detail, taskId }
 }
 
 // Runs cycles forever at `intervalMs` apart until SIGINT/SIGTERM, always
@@ -210,13 +277,27 @@ export async function runAutonomousLoop(options: AutonomousWorkerOptions): Promi
   let cycleNumber = 0
   try {
     while (running) {
+      let task: { id: string; description: string } | null = null
+
+      if (options.controlPlane) {
+        const poll = await pollControlPlane(options.controlPlane)
+        if (!poll.enabled) {
+          options.onCycleSkipped?.('disabled from the control plane (or it was unreachable)')
+          if (!running) break
+          await sleep(options.intervalMs)
+          continue
+        }
+        task = poll.task
+      }
+
       cycleNumber += 1
       try {
-        const result = await runCycle(options, cycleNumber)
+        const result = await runCycle(options, cycleNumber, task)
         appendReport(options.reportPath, result)
         options.onCycleComplete?.(result)
+        if (options.controlPlane) await reportToControlPlane(options.controlPlane, result)
       } catch (error) {
-        appendReport(options.reportPath, {
+        const errorResult: CycleResult = {
           cycleNumber,
           timestamp: new Date().toISOString(),
           summary: 'Cycle failed with an error.',
@@ -224,7 +305,10 @@ export async function runAutonomousLoop(options: AutonomousWorkerOptions): Promi
           testResult: 'skipped',
           outcome: 'error',
           detail: error instanceof Error ? error.message : String(error),
-        })
+          taskId: task?.id,
+        }
+        appendReport(options.reportPath, errorResult)
+        if (options.controlPlane) await reportToControlPlane(options.controlPlane, errorResult)
       }
       if (!running) break
       await sleep(options.intervalMs)
