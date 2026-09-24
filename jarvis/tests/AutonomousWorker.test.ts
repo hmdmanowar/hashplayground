@@ -61,7 +61,10 @@ function makeFixture() {
     workspaceRoot,
     reportPath,
     permissionEngine: new PermissionEngine(auditLogPath),
-    cleanup: () => rmSync(parent, { recursive: true, force: true }),
+    // On Windows, a just-exited git/npm child process can hold the temp
+    // dir's handle open for a moment after returning — maxRetries/retryDelay
+    // is Node's own documented fix for the resulting transient EBUSY/ENOTEMPTY.
+    cleanup: () => rmSync(parent, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }),
   }
 }
 
@@ -143,7 +146,10 @@ describe('AutonomousWorker', () => {
 
     const originLog = execSync('git log jarvis-auto --oneline', { cwd: fixture.repoRoot }).toString()
     expect(originLog).toContain('Added a new file')
-  })
+    // Real `npm test` + `npm run build` subprocess spawns (each spawning its
+    // own node process) routinely exceed Vitest's 5s default, especially on
+    // Windows — well within normal, not a hang.
+  }, 30_000)
 
   it('skips a cycle with no resulting changes and pushes nothing', async () => {
     const jarvis = makeJarvis(fixture, new ScriptedModel(['Nothing worth changing right now.']))
@@ -214,7 +220,7 @@ function makeMonorepoFixture() {
     workspaceRoot,
     reportPath,
     permissionEngine: new PermissionEngine(auditLogPath),
-    cleanup: () => rmSync(parent, { recursive: true, force: true }),
+    cleanup: () => rmSync(parent, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }),
   }
 }
 
@@ -269,7 +275,7 @@ describe('AutonomousWorker with repoScopePath (Jarvis inside a bigger repo)', ()
     // uncommitted, exactly as it was — never staged or reverted.
     const status = execSync('git status --porcelain', { cwd: fixture.repoRoot }).toString()
     expect(status).toContain('other/existing.txt')
-  })
+  }, 30_000)
 
   it('reverts only jarvis/ on a failing cycle, never touching the sibling directory', async () => {
     writeFileSync(join(fixture.jarvisDir, 'SHOULD_FAIL'), '')

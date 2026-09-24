@@ -11,6 +11,12 @@ import { runAutonomousLoop, type CycleResult, type ControlPlane } from '../sched
 // to Ollama Cloud does. Unset locally, exactly like the interactive CLI.
 const ollamaApiKey = process.env.OLLAMA_API_KEY
 
+// No UI is waiting on any single call here, so a slower response is just a
+// slower cycle, not a hung request — worth a much longer budget than the
+// interactive default, especially against a local Ollama sharing the
+// machine with whatever else is running.
+const ollamaTimeoutMs = Number(process.env.JARVIS_AUTONOMY_OLLAMA_TIMEOUT_MS ?? 180_000)
+
 // Both must be set for the worker to be steered by the admin panel — see
 // backend/src/modules/autonomousWorker. Omit either and this behaves
 // exactly like the original always-on, locally-reported worker.
@@ -26,7 +32,7 @@ async function main() {
   // JARVIS_REPO_SCOPE (e.g. to "" to allow the whole repoRoot) — see
   // config.ts's repoScopePath and ToolRegistry's repoScopePath param.
   const repoScopePath = config.repoScopePath ?? 'jarvis'
-  const jarvis = new Jarvis(new OllamaModel(config.ollamaHost, config.model, ollamaApiKey), {
+  const jarvis = new Jarvis(new OllamaModel(config.ollamaHost, config.model, ollamaApiKey, ollamaTimeoutMs), {
     assistantName: config.assistantName,
     longTermMemory: new LongTermMemory(config.memoryDbPath),
     toolRegistry: new ToolRegistry(config.workspaceRoot, config.repoRoot, repoScopePath),

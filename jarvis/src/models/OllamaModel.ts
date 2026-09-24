@@ -30,18 +30,23 @@ function extractBalancedJson(text: string, from: number): string | null {
 // testing saw a single call take over 5 minutes. Left unbounded, that hangs
 // an entire HTTP request (and the UI waiting on it) for just as long with no
 // feedback. Fail fast instead with a clear, catchable error.
-const REQUEST_TIMEOUT_MS = 45_000
+const DEFAULT_REQUEST_TIMEOUT_MS = 45_000
 
 export class OllamaModel implements AIModel {
   constructor(
     private readonly host: string,
     private readonly model: string,
     private readonly apiKey?: string,
+    // Callers with no UI waiting on the response (the autonomous worker,
+    // notably) can pass a longer budget — a background retry costs nothing,
+    // where an interactive request left unbounded can hang the caller for
+    // as long as a loaded shared Ollama instance takes.
+    private readonly timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS,
   ) {}
 
   async generate(request: ModelRequest): Promise<ModelResponse> {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs)
 
     let response: Response
     try {
@@ -60,7 +65,7 @@ export class OllamaModel implements AIModel {
       })
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Ollama did not respond within ${REQUEST_TIMEOUT_MS / 1000}s — it may be overloaded right now. Please try again.`)
+        throw new Error(`Ollama did not respond within ${this.timeoutMs / 1000}s — it may be overloaded right now. Please try again.`)
       }
       throw error
     } finally {
