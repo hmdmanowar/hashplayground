@@ -101,7 +101,11 @@ export function MessageList({
   }, [messages])
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto p-4">
+    <div className="flex-1 overflow-y-auto p-4">
+      {/* The scrollbar belongs to this full-width parent (flush with
+          main's true edge); the centered-column look is applied here,
+          one level in, instead of on the scrolling element itself. */}
+      <div className="mx-auto w-full max-w-[65%] space-y-4">
       {messages.map((message, index) => (
         <div key={index}>
           {message.role === 'user' && (
@@ -152,6 +156,7 @@ export function MessageList({
       )}
 
       <div ref={bottomRef} />
+      </div>
 
       {viewingImage && (
         <div

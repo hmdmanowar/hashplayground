@@ -11,6 +11,7 @@ import {
   queueTask,
   cancelTask,
   listCycles,
+  clearHistory,
   pollForWorker,
   reportCycle,
 } from './autonomousWorker.service.js'
@@ -93,6 +94,11 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
 
   app.get('/cycles', { preHandler: requireAdmin, schema: { response: { 200: z.array(cycleSchema) } } }, async (_request, reply) => {
     reply.send(await listCycles())
+  })
+
+  app.delete('/history', { preHandler: requireTopAdmin }, async (_request, reply) => {
+    await clearHistory()
+    reply.status(204).send()
   })
 
   app.get(

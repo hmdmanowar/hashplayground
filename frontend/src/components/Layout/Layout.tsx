@@ -9,6 +9,12 @@ function isPlaygroundPath(path: string): boolean {
   return /^\/projects\/(?!new$)[^/]+$/.test(path)
 }
 
+// Matches the `sm` breakpoint Navbar's own mobile hamburger switches at —
+// the sidebar takes up too much of a phone-width screen to default open.
+function isMobileViewport(): boolean {
+  return window.innerWidth < 640
+}
+
 function LayoutContent() {
   const { pathname } = useLocation()
   const isFullBleed = pathname === '/' || pathname === '/docs' || pathname === '/portfolio' || pathname === '/jarvis'
@@ -20,7 +26,7 @@ function LayoutContent() {
   // The global nav sidebar auto-collapses once, on the moment of entering the
   // Playground (more room for the editor) — it doesn't stay force-collapsed,
   // so manually re-expanding it while still inside Playground sticks.
-  const [collapsed, setCollapsed] = useState(() => isPlaygroundPath(pathname))
+  const [collapsed, setCollapsed] = useState(() => isPlaygroundPath(pathname) || isMobileViewport())
   const wasPlaygroundRef = useRef(isPlaygroundPath(pathname))
 
   useEffect(() => {
@@ -43,8 +49,8 @@ function LayoutContent() {
       {!fullscreen && (
         <Navbar collapsed={collapsed} onToggleSidebar={() => setCollapsed((prev) => !prev)} />
       )}
-      <div className="flex flex-1 overflow-hidden">
-        {!fullscreen && !hideSidebar && <Sidebar collapsed={collapsed} />}
+      <div className="relative flex flex-1 overflow-hidden">
+        {!fullscreen && !hideSidebar && <Sidebar collapsed={collapsed} onCloseOverlay={() => setCollapsed(true)} />}
         <main
           className={`mx-auto flex min-w-0 flex-1 flex-col ${
             fullscreen ? '' : isFullBleed ? '' : 'px-3 py-3'

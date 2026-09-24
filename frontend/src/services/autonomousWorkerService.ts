@@ -53,3 +53,7 @@ export function cancelTask(id: string): Promise<void> {
 export function listCycles(): Promise<CycleLogEntry[]> {
   return request<CycleLogEntry[]>('/autonomous-worker/cycles')
 }
+
+export function clearHistory(): Promise<void> {
+  return request<void>('/autonomous-worker/history', { method: 'DELETE' })
+}

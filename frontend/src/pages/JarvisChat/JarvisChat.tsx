@@ -386,47 +386,52 @@ function JarvisChat() {
           />
         ) : (
           <>
+            {/* MessageList's own root stays full-width so its scrollbar sits at
+                main's true edge — the centered-column look lives inside it
+                (see MessageList.tsx) instead of on this wrapper. */}
             <MessageList messages={messages} isSending={isSending} bottomRef={bottomRef} onEditMessage={handleEditMessage} />
-            {error && <p className="px-4 pb-2 text-sm text-red-500">{error}</p>}
-            {isAnonymous && !loginRequired && remaining !== null && remaining <= 2 && (
-              <p className="px-4 pb-2 text-xs text-[var(--color-muted)]">
-                {remaining === 0 ? 'Last free message.' : `${remaining} free message${remaining === 1 ? '' : 's'} left.`} Log in for unlimited chat.
-              </p>
-            )}
-            {pendingApproval && (
-              <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-primary-strong)] bg-[var(--bg-panel)] px-3 py-2 text-sm">
-                <span className="text-[var(--text-app)]">
-                  Jarvis wants to run <strong>{pendingApproval.tool}</strong> ({pendingApproval.risk} risk) — {JSON.stringify(pendingApproval.args)}
-                </span>
-                <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleApproval(false)}
-                    className="rounded-md border border-[var(--border-panel)] px-2 py-1 text-xs hover:border-[var(--color-primary)]"
-                  >
-                    Deny
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApproval(true)}
-                    className="rounded-md bg-[var(--color-primary-strong)] px-2 py-1 text-xs font-medium text-white"
-                  >
-                    Approve
-                  </button>
+            <div className="mx-auto w-full max-w-[65%]">
+              {error && <p className="px-4 pb-2 text-sm text-red-500">{error}</p>}
+              {isAnonymous && !loginRequired && remaining !== null && remaining <= 2 && (
+                <p className="px-4 pb-2 text-xs text-[var(--color-muted)]">
+                  {remaining === 0 ? 'Last free message.' : `${remaining} free message${remaining === 1 ? '' : 's'} left.`} Log in for unlimited chat.
+                </p>
+              )}
+              {pendingApproval && (
+                <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-primary-strong)] bg-[var(--bg-panel)] px-3 py-2 text-sm">
+                  <span className="text-[var(--text-app)]">
+                    Jarvis wants to run <strong>{pendingApproval.tool}</strong> ({pendingApproval.risk} risk) — {JSON.stringify(pendingApproval.args)}
+                  </span>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleApproval(false)}
+                      className="rounded-md border border-[var(--border-panel)] px-2 py-1 text-xs hover:border-[var(--color-primary)]"
+                    >
+                      Deny
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApproval(true)}
+                      className="rounded-md bg-[var(--color-primary-strong)] px-2 py-1 text-xs font-medium text-white"
+                    >
+                      Approve
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-            <Composer
-              input={input}
-              onInputChange={setInput}
-              onSend={handleSend}
-              isSending={isSending}
-              textareaRef={textareaRef}
-              mic={mic}
-              pendingImage={pendingImage}
-              onAttachImage={handleAttachImage}
-              onRemoveImage={() => setPendingImage(undefined)}
-            />
+              )}
+              <Composer
+                input={input}
+                onInputChange={setInput}
+                onSend={handleSend}
+                isSending={isSending}
+                textareaRef={textareaRef}
+                mic={mic}
+                pendingImage={pendingImage}
+                onAttachImage={handleAttachImage}
+                onRemoveImage={() => setPendingImage(undefined)}
+              />
+            </div>
           </>
         )}
       </main>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type ReactElement } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type ReactElement } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -31,33 +31,45 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
 }
 
 // Renders a ```html code block as an actual live component instead of just
-// text — a sandboxed iframe via srcDoc, same "allow-scripts" only (no
-// allow-same-origin) sandboxing Playground's own PreviewPanel already uses,
-// so the page can't reach cookies/storage/the parent frame regardless of
-// what the model's HTML/JS does. Shown above the raw code, not instead of
+// text, injected straight into this page (no iframe) so it reads as a
+// genuine part of the UI, not a boxed-off preview — per explicit request,
+// after flagging the tradeoff: the model's <script> content now runs with
+// this page's real DOM/fetch/cookies, same as any other code on the page.
+// A shadow root scopes the model's CSS so it can't leak out and break the
+// rest of the app, but it does not sandbox script execution — that's the
+// point here, not a side effect. Shown above the raw code, not instead of
 // it — the model is prompted (see jarvisAssistant.session.ts) to answer
 // "render a button/modal/card" requests with one self-contained,
 // genuinely-interactive HTML block specifically so this has something real
 // to show.
 function LiveHtmlPreview({ html }: { html: string }) {
   const [hidden, setHidden] = useState(false)
+  const hostRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' })
+    shadow.innerHTML = html
+    // A script tag set via innerHTML never executes — browsers only run
+    // <script> elements actually inserted as elements, so each one has to
+    // be swapped for a freshly created equivalent to actually run.
+    for (const old of Array.from(shadow.querySelectorAll('script'))) {
+      const replacement = document.createElement('script')
+      for (const attr of Array.from(old.attributes)) replacement.setAttribute(attr.name, attr.value)
+      replacement.textContent = old.textContent
+      old.replaceWith(replacement)
+    }
+  }, [html, hidden])
 
   return (
-    <div className="mb-2 overflow-hidden rounded-md border border-[var(--border-panel)]">
-      <div className="flex items-center justify-between bg-[var(--bg-app)] px-3 py-1.5 text-xs text-[var(--color-muted)]">
-        <span>Live preview</span>
+    <div className="mb-2">
+      <div className="mb-1 flex items-center justify-end text-xs text-[var(--color-muted)]">
         <button type="button" onClick={() => setHidden((v) => !v)} className="hover:text-[var(--color-primary)]">
-          {hidden ? 'Show' : 'Hide'}
+          {hidden ? 'Show preview' : 'Hide preview'}
         </button>
       </div>
-      {!hidden && (
-        <iframe
-          sandbox="allow-scripts"
-          srcDoc={html}
-          title="Live preview"
-          className="h-72 w-full resize-y overflow-auto border-0 bg-white"
-        />
-      )}
+      {!hidden && <div ref={hostRef} />}
     </div>
   )
 }

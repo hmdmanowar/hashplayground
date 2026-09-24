@@ -69,6 +69,14 @@ export async function listCycles() {
   return cycles.map(toCycleDto)
 }
 
+// Clears past activity only — pending/in_progress tasks are left alone since
+// those are still live work, not history, and deleting an in-progress one
+// out from under the worker would orphan whatever /report call comes next.
+export async function clearHistory() {
+  await prisma.autonomousCycleLog.deleteMany({})
+  await prisma.autonomousTask.deleteMany({ where: { status: { in: ['done', 'failed'] } } })
+}
+
 // Called by the worker itself (see autonomousWorker.routes.ts's token-gated
 // /poll route) — atomically claims the oldest pending task, if any, so a
 // second poll before the first one's /report lands doesn't hand out the
