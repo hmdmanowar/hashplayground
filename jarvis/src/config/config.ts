@@ -40,7 +40,26 @@ export interface JarvisConfig {
   // process's cwd, which is correct as long as `npm run chat`/`npm run api`
   // are launched from the repo root (the normal case).
   repoRoot: string
+  // Confines repo_* tools (and, for the autonomous worker, its own git
+  // orchestration) to one subtree of repoRoot instead of the whole repo —
+  // for when Jarvis lives inside a bigger repo it must not wander outside
+  // of. Unset by default (repoRoot itself is fair game) since an
+  // interactive session has a human watching every action; the autonomous
+  // CLI (cli/autonomous.ts) applies its own narrower default on top of this.
+  repoScopePath: string | undefined
+  // Phase 8: how long the autonomous worker (scheduler/AutonomousWorker.ts)
+  // sleeps between cycles. Hard-floored at 1 minute regardless of the env
+  // value — a misconfigured tiny interval must not turn into a tight
+  // unattended loop.
+  autonomyIntervalMs: number
+  // The one branch the autonomous worker is ever allowed to touch — never
+  // main/master, enforced in AutonomousWorker.ts regardless of this value.
+  autonomyBranch: string
+  // Human-readable per-cycle log, separate from the raw JSONL audit log.
+  autonomyReportPath: string
 }
+
+const MIN_AUTONOMY_INTERVAL_MS = 60_000
 
 export function loadConfig(): JarvisConfig {
   return {
@@ -55,5 +74,9 @@ export function loadConfig(): JarvisConfig {
     conversationsDbPath: process.env.JARVIS_CONVERSATIONS_DB ?? '.jarvis/conversations.sqlite',
     visionModel: process.env.JARVIS_VISION_MODEL ?? 'llava',
     repoRoot: process.env.JARVIS_REPO_ROOT ?? process.cwd(),
+    repoScopePath: process.env.JARVIS_REPO_SCOPE || undefined,
+    autonomyIntervalMs: Math.max(MIN_AUTONOMY_INTERVAL_MS, Number(process.env.JARVIS_AUTONOMY_INTERVAL_MS ?? 60 * 60 * 1000)),
+    autonomyBranch: process.env.JARVIS_AUTONOMY_BRANCH ?? 'jarvis-auto',
+    autonomyReportPath: process.env.JARVIS_AUTONOMY_REPORT ?? '.jarvis/autonomy-log.md',
   }
 }

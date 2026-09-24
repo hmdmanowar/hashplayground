@@ -15,7 +15,15 @@ import { createDevTools } from './DevTools.js'
 export class ToolRegistry {
   private readonly tools = new Map<string, Tool>()
 
-  constructor(workspaceRoot: string, repoRoot: string) {
+  // repoScopePath is for when repoRoot is a real git repo but only a
+  // subdirectory of it should actually be touched — e.g. Jarvis living
+  // inside a monorepo it must not wander outside of when running
+  // unattended (see scheduler/AutonomousWorker.ts). File tools (read/write/
+  // list/search) get the subdirectory as their effective root directly;
+  // git tools still need the real repoRoot to find .git, so they instead
+  // get repoScopePath as a pathspec that confines status/log/diff/commit to
+  // just that subtree. Omit it and every tool behaves exactly as before.
+  constructor(workspaceRoot: string, repoRoot: string, repoScopePath?: string) {
     // write_file creates its own parent dirs lazily, but read_file/
     // list_directory/search_code/run_command all assume the root itself
     // already exists — ensure that up front rather than failing on
@@ -29,13 +37,15 @@ export class ToolRegistry {
       throw new Error(`repoRoot "${repoRoot}" is not a git repository (no .git directory found)`)
     }
 
+    const scopedRoot = repoScopePath ? join(repoRoot, repoScopePath) : repoRoot
+
     const allTools: Tool[] = [
       ...createFileSystemTools(workspaceRoot),
       createSearchTool(workspaceRoot),
       createTerminalTool(workspaceRoot),
-      ...createRepoFileTools(repoRoot),
-      ...createGitTools(repoRoot),
-      ...createDevTools(repoRoot),
+      ...createRepoFileTools(scopedRoot),
+      ...createGitTools(repoRoot, repoScopePath),
+      ...createDevTools(scopedRoot),
     ]
     for (const tool of allTools) this.tools.set(tool.name, tool)
   }

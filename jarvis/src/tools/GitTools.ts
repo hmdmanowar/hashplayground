@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import type { Tool } from './Tool.js'
 import { resolveSandboxedPath } from './sandbox.js'
 import { runProcess, type CommandResult } from './execUtil.js'
@@ -26,13 +27,23 @@ function assertSafe(value: string, pattern: RegExp, label: string): void {
 // name, commit message, or ref can never be reinterpreted as a flag or
 // shell syntax — the only extra guard needed is rejecting values that look
 // like a flag themselves (a leading '-'), which assertSafe does above.
-export function createGitTools(repoRoot: string): Tool[] {
+//
+// scopePath (optional) confines status/log/diff/commit to one subtree of a
+// bigger repo via a trailing git pathspec — for when repoRoot is a real
+// repo but only part of it should actually be touched (see
+// scheduler/AutonomousWorker.ts). Branch/reset operations are left
+// unscoped regardless — a branch or a hard reset isn't a subset of a repo,
+// there's no meaningful way to confine those.
+export function createGitTools(repoRoot: string, scopePath?: string): Tool[] {
+  const scopedRoot = scopePath ? join(repoRoot, scopePath) : repoRoot
+  const pathspec = scopePath ? ['--', scopePath] : []
+
   const statusTool: Tool<Record<string, never>, CommandResult> = {
     name: 'repo_status',
     description: 'Show the working tree status of the real project repository (branch, staged/unstaged/untracked changes).',
     inputSchema: {},
     risk: 'low',
-    execute: () => runProcess('git', ['status', '--porcelain=v1', '-b'], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS),
+    execute: () => runProcess('git', ['status', '--porcelain=v1', '-b', ...pathspec], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS),
   }
 
   const logTool: Tool<{ maxCount?: number }, CommandResult> = {
@@ -41,7 +52,7 @@ export function createGitTools(repoRoot: string): Tool[] {
     inputSchema: { maxCount: 'number' },
     risk: 'low',
     execute: ({ maxCount }) =>
-      runProcess('git', ['log', `-n${maxCount ?? 10}`, '--oneline'], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS),
+      runProcess('git', ['log', `-n${maxCount ?? 10}`, '--oneline', ...pathspec], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS),
   }
 
   const diffTool: Tool<{ path?: string }, CommandResult> = {
@@ -53,8 +64,10 @@ export function createGitTools(repoRoot: string): Tool[] {
     execute: ({ path }) => {
       const args = ['diff', 'HEAD']
       if (path) {
-        resolveSandboxedPath(repoRoot, path) // throws if it escapes repoRoot
-        args.push('--', path)
+        resolveSandboxedPath(scopedRoot, path) // throws if it escapes the effective (possibly scoped) root
+        args.push('--', scopePath ? join(scopePath, path) : path)
+      } else if (scopePath) {
+        args.push('--', scopePath)
       }
       return runProcess('git', args, repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS)
     },
@@ -88,8 +101,8 @@ export function createGitTools(repoRoot: string): Tool[] {
     inputSchema: { message: 'string' },
     risk: 'medium',
     async execute({ message }) {
-      await runProcess('git', ['add', '-A'], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS)
-      const commitResult = await runProcess('git', ['commit', '-m', message], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS)
+      await runProcess('git', ['add', '-A', ...pathspec], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS)
+      const commitResult = await runProcess('git', ['commit', '-m', message, ...pathspec], repoRoot, TIMEOUT_MS, MAX_OUTPUT_CHARS)
       if (commitResult.exitCode !== 0) {
         return { committed: false, ...commitResult }
       }
