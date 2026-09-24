@@ -1,26 +1,6 @@
-import { useState } from 'react'
-
-type ContentSegment = { type: 'text'; text: string } | { type: 'code'; lang: string; code: string }
-
-// Splits on fenced ```lang\ncode``` blocks so code can get its own
-// monospace block with a copy button, instead of dumping everything as one
-// plain-text blob — the single highest-value bit of "message formatting"
-// for a coding-focused model, without pulling in a full markdown/highlight
-// dependency chain.
-function parseContent(content: string): ContentSegment[] {
-  const segments: ContentSegment[] = []
-  const regex = /```(\w*)\n?([\s\S]*?)```/g
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-
-  while ((match = regex.exec(content))) {
-    if (match.index > lastIndex) segments.push({ type: 'text', text: content.slice(lastIndex, match.index) })
-    segments.push({ type: 'code', lang: match[1] || 'text', code: match[2].replace(/\n$/, '') })
-    lastIndex = regex.lastIndex
-  }
-  if (lastIndex < content.length) segments.push({ type: 'text', text: content.slice(lastIndex) })
-  return segments
-}
+import { useState, type ReactNode, type ReactElement } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 function CodeBlock({ lang, code }: { lang: string; code: string }) {
   const [copied, setCopied] = useState(false)
@@ -50,19 +30,73 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
   )
 }
 
+// A fenced ```lang\ncode``` block is always `pre > code` in the markdown
+// AST — inline `code` (single backticks) never has a `pre` parent — so
+// overriding `pre` (not `code`, which react-markdown v9+ no longer tells
+// apart via an `inline` prop) is the reliable way to give fenced blocks
+// their own styled component while leaving inline code alone.
+function PreBlock({ children }: { children?: ReactNode }) {
+  const codeElement = Array.isArray(children) ? children[0] : children
+  const codeProps = (codeElement as ReactElement<{ className?: string; children?: ReactNode }> | undefined)?.props
+  const match = /language-(\w+)/.exec(codeProps?.className ?? '')
+  const codeText = String(codeProps?.children ?? '').replace(/\n$/, '')
+  return <CodeBlock lang={match?.[1] ?? 'text'} code={codeText} />
+}
+
 export function MessageBody({ content }: { content: string }) {
-  const segments = parseContent(content)
   return (
-    <>
-      {segments.map((segment, index) =>
-        segment.type === 'code' ? (
-          <CodeBlock key={index} lang={segment.lang} code={segment.code} />
-        ) : (
-          <p key={index} className="whitespace-pre-wrap text-sm text-[var(--text-app)]">
-            {segment.text.trim()}
-          </p>
-        ),
-      )}
-    </>
+    <div className="jarvis-markdown text-sm text-[var(--text-app)]">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          pre: PreBlock,
+          // `node` is react-markdown's internal AST node, not a real DOM
+          // attribute — must be dropped, not spread, or it renders as a
+          // stray node="[object Object]" attribute.
+          code: ({ className, children, node: _node, ...rest }) => (
+            <code className={`rounded bg-[var(--bg-app)] px-1 py-0.5 text-[0.85em] ${className ?? ''}`} {...rest}>
+              {children}
+            </code>
+          ),
+          p: ({ children }) => <p className="mb-2 whitespace-pre-wrap leading-relaxed last:mb-0">{children}</p>,
+          a: ({ children, href }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-primary)] underline underline-offset-2 hover:text-[var(--color-primary-strong)]"
+            >
+              {children}
+            </a>
+          ),
+          strong: ({ children }) => <strong className="font-semibold text-[var(--text-app)]">{children}</strong>,
+          h1: ({ children }) => <h1 className="mb-2 mt-3 text-lg font-semibold first:mt-0">{children}</h1>,
+          h2: ({ children }) => <h2 className="mb-2 mt-3 text-base font-semibold first:mt-0">{children}</h2>,
+          h3: ({ children }) => <h3 className="mb-1.5 mt-2 text-sm font-semibold first:mt-0">{children}</h3>,
+          ul: ({ children }) => <ul className="mb-2 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-2 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>,
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+          blockquote: ({ children }) => (
+            <blockquote className="mb-2 border-l-2 border-[var(--border-panel)] pl-3 text-[var(--color-muted)] last:mb-0">
+              {children}
+            </blockquote>
+          ),
+          hr: () => <hr className="my-3 border-[var(--border-panel)]" />,
+          table: ({ children }) => (
+            <div className="mb-2 overflow-x-auto rounded-md border border-[var(--border-panel)] last:mb-0">
+              <table className="w-full border-collapse text-left text-sm">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => <thead className="bg-[var(--bg-app)]">{children}</thead>,
+          th: ({ children }) => (
+            <th className="border-b border-[var(--border-panel)] px-3 py-1.5 font-medium text-[var(--text-app)]">{children}</th>
+          ),
+          td: ({ children }) => <td className="border-b border-[var(--border-panel)] px-3 py-1.5 align-top">{children}</td>,
+          tr: ({ children }) => <tr className="last:[&>td]:border-b-0">{children}</tr>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   )
 }

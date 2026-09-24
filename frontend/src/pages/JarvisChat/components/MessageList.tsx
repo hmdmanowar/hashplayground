@@ -109,7 +109,7 @@ export function MessageList({
           )}
           {message.role === 'user' ? (
             <div className="flex justify-end">
-              <div className="flex max-w-[80%] flex-col items-end">
+              <div className="flex min-w-0 max-w-[80%] flex-col items-end">
                 {editingIndex === index ? (
                   <EditableUserBubble
                     content={message.content}
@@ -132,7 +132,7 @@ export function MessageList({
             </div>
           ) : (
             <div className="flex justify-start">
-              <div className="max-w-[80%]">
+              <div className="min-w-0 max-w-[80%]">
                 <MessageBody content={message.content} />
                 <MessageActions content={message.content} />
               </div>
