@@ -30,6 +30,38 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
   )
 }
 
+// Renders a ```html code block as an actual live component instead of just
+// text — a sandboxed iframe via srcDoc, same "allow-scripts" only (no
+// allow-same-origin) sandboxing Playground's own PreviewPanel already uses,
+// so the page can't reach cookies/storage/the parent frame regardless of
+// what the model's HTML/JS does. Shown above the raw code, not instead of
+// it — the model is prompted (see jarvisAssistant.session.ts) to answer
+// "render a button/modal/card" requests with one self-contained,
+// genuinely-interactive HTML block specifically so this has something real
+// to show.
+function LiveHtmlPreview({ html }: { html: string }) {
+  const [hidden, setHidden] = useState(false)
+
+  return (
+    <div className="mb-2 overflow-hidden rounded-md border border-[var(--border-panel)]">
+      <div className="flex items-center justify-between bg-[var(--bg-app)] px-3 py-1.5 text-xs text-[var(--color-muted)]">
+        <span>Live preview</span>
+        <button type="button" onClick={() => setHidden((v) => !v)} className="hover:text-[var(--color-primary)]">
+          {hidden ? 'Show' : 'Hide'}
+        </button>
+      </div>
+      {!hidden && (
+        <iframe
+          sandbox="allow-scripts"
+          srcDoc={html}
+          title="Live preview"
+          className="h-72 w-full resize-y overflow-auto border-0 bg-white"
+        />
+      )}
+    </div>
+  )
+}
+
 // A fenced ```lang\ncode``` block is always `pre > code` in the markdown
 // AST — inline `code` (single backticks) never has a `pre` parent — so
 // overriding `pre` (not `code`, which react-markdown v9+ no longer tells
@@ -39,8 +71,14 @@ function PreBlock({ children }: { children?: ReactNode }) {
   const codeElement = Array.isArray(children) ? children[0] : children
   const codeProps = (codeElement as ReactElement<{ className?: string; children?: ReactNode }> | undefined)?.props
   const match = /language-(\w+)/.exec(codeProps?.className ?? '')
+  const lang = match?.[1] ?? 'text'
   const codeText = String(codeProps?.children ?? '').replace(/\n$/, '')
-  return <CodeBlock lang={match?.[1] ?? 'text'} code={codeText} />
+  return (
+    <>
+      {lang.toLowerCase() === 'html' && <LiveHtmlPreview html={codeText} />}
+      <CodeBlock lang={lang} code={codeText} />
+    </>
+  )
 }
 
 export function MessageBody({ content }: { content: string }) {

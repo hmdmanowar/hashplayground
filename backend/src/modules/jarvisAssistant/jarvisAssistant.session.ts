@@ -3,7 +3,9 @@ import { Jarvis, OllamaModel, PermissionEngine, ToolRegistry, DEFAULT_PERMISSION
 import { env } from '../../env.js'
 import { createPersonalWorkspaceTools } from './jarvisAssistant.tools.js'
 
-const PERSONAL_ASSISTANT_CONTEXT = `This is your personal Jarvis assistant on Hash Playground (hashplayground.in), private to this logged-in account. You have real tools — list_files/read_file/write_file/delete_file — against this user's own personal workspace (separate from any of their Playground projects). You do not have shell/command execution here; that's intentionally not available in this web context.`
+const PERSONAL_ASSISTANT_CONTEXT = `This is your personal Jarvis assistant on Hash Playground (hashplayground.in), private to this logged-in account. You have real tools — list_files/read_file/write_file/delete_file — against this user's own personal workspace (separate from any of their Playground projects). You do not have shell/command execution here; that's intentionally not available in this web context.
+
+The chat UI renders any single \`\`\`html code block as a live, interactive preview (in a sandboxed iframe) right above the code itself — not just as text. So whenever the user asks you to "render", "show", "preview", or "demo" a UI component (a button, modal, card, form, etc.), respond with exactly ONE self-contained \`\`\`html code block that actually works when opened as-is: inline <style> and <script>, no external stylesheets/scripts/fonts/CDNs, no placeholders — real markup, real CSS, real JS event handlers wired up so the interaction genuinely works (e.g. a "render a modal" request means a real button in that HTML that opens a real modal when clicked, not just a static mockup or a text description of one). Keep any explanation brief and put it outside the code block, before or after it.`
 
 // One live Jarvis instance per logged-in user, kept across requests so the
 // approve/deny flow (Jarvis's pendingToolCall) can actually pause between an
