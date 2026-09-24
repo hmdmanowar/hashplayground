@@ -35,6 +35,11 @@ async function main() {
   })
 
   console.log(`${jarvis.getAssistantName()} — autonomous worker starting`)
+  console.warn(
+    `WARNING: this checks out and switches to the "${config.autonomyBranch}" branch as part of normal operation — ` +
+      `every file in repoRoot's working tree will follow that switch, same as if you ran \`git checkout\` yourself. ` +
+      `Run this against its own dedicated clone, never the same checkout you're doing interactive work in.`,
+  )
   console.log(`Repo: ${config.repoRoot}${repoScopePath ? ` (scoped to ${repoScopePath}/)` : ''}`)
   console.log(`Branch: ${config.autonomyBranch}`)
   console.log(`Interval: ${Math.round(config.autonomyIntervalMs / 1000)}s`)
