@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon } from '../Icons/Icons'
+import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon, BotIcon } from '../Icons/Icons'
 import './Sidebar.scss'
 
 interface SidebarProps {
@@ -49,6 +49,12 @@ function Sidebar({ collapsed }: SidebarProps) {
           <NavLink to="/admin" end title="Admin Dashboard" className={(state) => linkClass(state, true)}>
             <ShieldIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
             {!collapsed && <span className="min-w-0 flex-1 truncate">Admin Dashboard</span>}
+          </NavLink>
+        )}
+        {user.role === 'admin' && (
+          <NavLink to="/admin/autonomous-worker" title="Autonomous Worker" className={(state) => linkClass(state, true)}>
+            <BotIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
+            {!collapsed && <span className="min-w-0 flex-1 truncate">Autonomous Worker</span>}
           </NavLink>
         )}
         <NavLink to="/settings" title="Account Settings" className={(state) => linkClass(state, true)}>

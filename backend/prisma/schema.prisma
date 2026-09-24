@@ -238,6 +238,52 @@ model PortfolioContent {
   updatedBy String?
 }
 
+// Admin-panel control plane for the Jarvis autonomous worker (a separate
+// long-lived process — jarvis/src/scheduler/AutonomousWorker.ts — that
+// polls these rows rather than being started/stopped directly, since it
+// can't run inside this web server). Singleton row (id is always 1), same
+// shape as PortfolioContent above.
+model AutonomousWorkerState {
+  id        Int      @id @default(1)
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+// A task queued from the admin panel for the worker to pick up on its next
+// poll. One cycle per task — see AutonomousCycleLog for what actually
+// happened once it ran.
+model AutonomousTask {
+  id            String    @id @default(uuid())
+  description   String
+  status        String    @default("pending") // pending | in_progress | done | failed
+  createdAt     DateTime  @default(now())
+  createdBy     String
+  startedAt     DateTime?
+  completedAt   DateTime?
+  resultSummary String?
+  outcome       String?
+  commitHash    String?
+
+  @@index([status, createdAt])
+}
+
+// One row per cycle the worker reports back, whether or not it was working
+// a specific AutonomousTask — the admin panel's activity feed.
+model AutonomousCycleLog {
+  id           String   @id @default(uuid())
+  cycleNumber  Int
+  timestamp    DateTime @default(now())
+  outcome      String
+  summary      String
+  detail       String?
+  filesChanged Json
+  commitHash   String?
+  taskId       String?
+
+  @@index([timestamp])
+}
+
 // The personal Jarvis assistant page (/jarvis) — one user's saved chat, not
 // tied to any Project. Mirrors Project/ProjectFile's ownership shape, scoped
 // by ownerUsername instead of projectId.

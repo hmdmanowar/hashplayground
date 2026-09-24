@@ -15,6 +15,7 @@ import Playground from "./pages/Playground/Playground";
 import Settings from "./pages/Settings/Settings";
 import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminFeedback from "./pages/AdminFeedback/AdminFeedback";
+import AdminAutonomousWorker from "./pages/AdminAutonomousWorker/AdminAutonomousWorker";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 
 function RootLayout() {
@@ -43,6 +44,7 @@ const router = createBrowserRouter(
         <Route element={<ProtectedRoute requiredRole="admin" />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/feedback" element={<AdminFeedback />} />
+          <Route path="/admin/autonomous-worker" element={<AdminAutonomousWorker />} />
         </Route>
       </Route>
     </Route>,

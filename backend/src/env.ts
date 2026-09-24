@@ -37,6 +37,12 @@ const envSchema = z.object({
   // cloud catalog changes over time, so if this one is ever retired too,
   // check ollama.com/search?c=cloud for a current tag.
   OLLAMA_CHAT_MODEL: z.string().default('gpt-oss:20b-cloud'),
+  // Shared secret the Jarvis autonomous worker (a separate long-lived
+  // process, see jarvis/src/scheduler/AutonomousWorker.ts) presents on its
+  // poll/report calls — it has no browser session, so this stands in for
+  // one. Optional like OLLAMA_API_KEY above: unset just disables those two
+  // routes (503) rather than blocking startup.
+  AUTONOMOUS_WORKER_TOKEN: z.string().min(1).optional(),
 })
 
 export const env = envSchema.parse(process.env)
