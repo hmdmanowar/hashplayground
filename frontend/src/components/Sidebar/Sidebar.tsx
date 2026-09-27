@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon, BotIcon } from '../Icons/Icons'
 import { isMobileViewport } from '../../lib/viewport'
+import { listUsers, isTopAdmin, ADMIN_USERS_CACHE_KEY, type UserSummary } from '../../services/userService'
+import { getCached, setCached } from '../../lib/dataCache'
 import './Sidebar.scss'
 
 interface SidebarProps {
@@ -16,6 +19,26 @@ interface SidebarProps {
 
 function Sidebar({ collapsed, onCloseOverlay }: SidebarProps) {
   const { user } = useAuth()
+  const [isTopAdminUser, setIsTopAdminUser] = useState(false)
+
+  useEffect(() => {
+    if (user?.role !== 'admin') {
+      setIsTopAdminUser(false)
+      return
+    }
+    const cached = getCached<UserSummary[]>(ADMIN_USERS_CACHE_KEY)
+    if (cached) {
+      setIsTopAdminUser(isTopAdmin(cached, user.username))
+      return
+    }
+    listUsers()
+      .then((users) => {
+        setCached(ADMIN_USERS_CACHE_KEY, users)
+        setIsTopAdminUser(isTopAdmin(users, user.username))
+      })
+      .catch(() => {})
+  }, [user?.role, user?.username])
+
   if (!user) return null
 
   function linkClass({ isActive }: { isActive: boolean }, heading = false) {
@@ -72,7 +95,7 @@ function Sidebar({ collapsed, onCloseOverlay }: SidebarProps) {
             {!collapsed && <span className="min-w-0 flex-1 truncate">Admin Dashboard</span>}
           </NavLink>
         )}
-        {user.role === 'admin' && (
+        {isTopAdminUser && (
           <NavLink to="/admin/autonomous-worker" title="Autonomous Worker" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
             <BotIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
             {!collapsed && <span className="min-w-0 flex-1 truncate">Autonomous Worker</span>}

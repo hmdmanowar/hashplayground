@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { requireAdmin, requireTopAdmin } from '../../middleware/auth.js'
+import { requireTopAdmin } from '../../middleware/auth.js'
 import { ApiError } from '../../middleware/errorHandler.js'
 import { env } from '../../env.js'
 import {
@@ -73,7 +73,7 @@ const mergeResultSchema = z.object({ commitSha: z.string() })
 export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>()
 
-  app.get('/state', { preHandler: requireAdmin, schema: { response: { 200: stateSchema } } }, async (_request, reply) => {
+  app.get('/state', { preHandler: requireTopAdmin, schema: { response: { 200: stateSchema } } }, async (_request, reply) => {
     reply.send(await getState())
   })
 
@@ -85,7 +85,7 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  app.get('/tasks', { preHandler: requireAdmin, schema: { response: { 200: z.array(taskSchema) } } }, async (_request, reply) => {
+  app.get('/tasks', { preHandler: requireTopAdmin, schema: { response: { 200: z.array(taskSchema) } } }, async (_request, reply) => {
     reply.send(await listTasks())
   })
 
@@ -117,7 +117,7 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  app.get('/cycles', { preHandler: requireAdmin, schema: { response: { 200: z.array(cycleSchema) } } }, async (_request, reply) => {
+  app.get('/cycles', { preHandler: requireTopAdmin, schema: { response: { 200: z.array(cycleSchema) } } }, async (_request, reply) => {
     reply.send(await listCycles())
   })
 
@@ -128,7 +128,7 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
 
   app.get(
     '/branch-status',
-    { preHandler: requireAdmin, schema: { response: { 200: branchStatusSchema } } },
+    { preHandler: requireTopAdmin, schema: { response: { 200: branchStatusSchema } } },
     async (_request, reply) => {
       reply.send(await getBranchStatus())
     },
