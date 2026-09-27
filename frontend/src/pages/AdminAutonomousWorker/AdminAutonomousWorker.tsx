@@ -153,6 +153,16 @@ function AdminAutonomousWorker() {
       .catch(() => setLoadStatus('error'))
   }, [])
 
+  // Keeps task/cycle status current without a manual page reload — silent,
+  // so a transient failure doesn't flip the whole page into its error state
+  // or interrupt anything the user's mid-typing/mid-confirming.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refresh().catch(() => {})
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
   function refreshBranchStatus() {
     return getBranchStatus()
       .then((status) => {
