@@ -16,7 +16,7 @@ import {
   pollForWorker,
   reportCycle,
 } from './autonomousWorker.service.js'
-import { getBranchStatus, mergeToMain, syncFromMain } from './autonomousWorkerGithub.service.js'
+import { getBranchStatus, mergeToMain, syncFromMain, completeMerge, type MergeDirection } from './autonomousWorkerGithub.service.js'
 
 // The worker has no browser session (it's a separate long-lived process,
 // not a page load) — this shared-secret header stands in for one. Same
@@ -69,7 +69,23 @@ const branchStatusSchema = z.object({
   ),
   tokenConfigured: z.boolean(),
 })
-const mergeResultSchema = z.object({ commitSha: z.string() })
+const conflictFileSchema = z.object({
+  path: z.string(),
+  baseContent: z.string().nullable(),
+  headContent: z.string().nullable(),
+  binary: z.boolean(),
+})
+const mergeConflictSchema = z.object({
+  baseSha: z.string(),
+  headSha: z.string(),
+  mergeBaseSha: z.string(),
+  files: z.array(conflictFileSchema),
+})
+const mergeOutcomeSchema = z.union([
+  z.object({ ok: z.literal(true), commitSha: z.string() }),
+  z.object({ ok: z.literal(false), conflict: mergeConflictSchema }),
+])
+const directionSchema = z.enum(['merge-to-main', 'sync-from-main'])
 
 export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>()
@@ -137,7 +153,7 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
 
   app.post(
     '/merge-to-main',
-    { preHandler: requireTopAdmin, schema: { response: { 200: mergeResultSchema } } },
+    { preHandler: requireTopAdmin, schema: { response: { 200: mergeOutcomeSchema } } },
     async (_request, reply) => {
       reply.send(await mergeToMain())
     },
@@ -145,9 +161,27 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
 
   app.post(
     '/sync-from-main',
-    { preHandler: requireTopAdmin, schema: { response: { 200: mergeResultSchema } } },
+    { preHandler: requireTopAdmin, schema: { response: { 200: mergeOutcomeSchema } } },
     async (_request, reply) => {
       reply.send(await syncFromMain())
+    },
+  )
+
+  app.post(
+    '/resolve-conflict',
+    {
+      preHandler: requireTopAdmin,
+      schema: {
+        body: z.object({
+          direction: directionSchema,
+          resolutions: z.array(z.object({ path: z.string(), content: z.string() })),
+        }),
+        response: { 200: z.object({ commitSha: z.string() }) },
+      },
+    },
+    async (request, reply) => {
+      const direction: MergeDirection = request.body.direction
+      reply.send(await completeMerge(direction, request.body.resolutions))
     },
   )
 
