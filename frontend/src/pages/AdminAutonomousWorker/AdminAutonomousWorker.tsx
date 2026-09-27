@@ -120,6 +120,8 @@ function AdminAutonomousWorker() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [conflict, setConflict] = useState<{ direction: MergeDirection; data: MergeConflict } | null>(null)
   const [isResolvingConflict, setIsResolvingConflict] = useState(false)
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null)
+  const [secondsSinceRefresh, setSecondsSinceRefresh] = useState(0)
 
   const sortedTasks = useMemo(() => {
     if (taskSort === 'newest') return tasks
@@ -144,6 +146,7 @@ function AdminAutonomousWorker() {
       setState(nextState)
       setTasks(nextTasks)
       setCycles(nextCycles)
+      setLastRefreshedAt(new Date())
     })
   }
 
@@ -152,6 +155,26 @@ function AdminAutonomousWorker() {
       .then(() => setLoadStatus('ready'))
       .catch(() => setLoadStatus('error'))
   }, [])
+
+  // Keeps task/cycle status current without a manual page reload — silent,
+  // so a transient failure doesn't flip the whole page into its error state
+  // or interrupt anything the user's mid-typing/mid-confirming.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refresh().catch(() => {})
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Ticks once a second purely so "updated Xs ago" visibly counts —
+  // otherwise there'd be no way to tell the 5s poll above is actually alive
+  // versus the page having silently stalled.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastRefreshedAt) setSecondsSinceRefresh(Math.floor((Date.now() - lastRefreshedAt.getTime()) / 1000))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [lastRefreshedAt])
 
   function refreshBranchStatus() {
     return getBranchStatus()
@@ -318,6 +341,12 @@ function AdminAutonomousWorker() {
             <p className="truncate text-xs text-[var(--color-muted)]">
               {lastActivity ? `Last activity: ${formatTimestamp(lastActivity)}` : 'No activity reported yet.'}
             </p>
+            {lastRefreshedAt && (
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--color-muted)]">
+                <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-500" />
+                Live — updated {secondsSinceRefresh <= 1 ? 'just now' : `${secondsSinceRefresh}s ago`}
+              </p>
+            )}
           </div>
         </div>
         <button
