@@ -16,6 +16,7 @@ import {
   pollForWorker,
   reportCycle,
 } from './autonomousWorker.service.js'
+import { getBranchStatus, mergeToMain, syncFromMain } from './autonomousWorkerGithub.service.js'
 
 // The worker has no browser session (it's a separate long-lived process,
 // not a page load) — this shared-secret header stands in for one. Same
@@ -54,6 +55,20 @@ const cycleSchema = z.object({
   commitHash: z.string().nullable(),
   taskId: z.string().nullable(),
 })
+const branchStatusSchema = z.object({
+  exists: z.boolean(),
+  aheadBy: z.number(),
+  files: z.array(
+    z.object({
+      filename: z.string(),
+      status: z.string(),
+      additions: z.number(),
+      deletions: z.number(),
+      patch: z.string().nullable(),
+    }),
+  ),
+})
+const mergeResultSchema = z.object({ commitSha: z.string() })
 
 export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>()
@@ -110,6 +125,30 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
     await clearHistory()
     reply.status(204).send()
   })
+
+  app.get(
+    '/branch-status',
+    { preHandler: requireAdmin, schema: { response: { 200: branchStatusSchema } } },
+    async (_request, reply) => {
+      reply.send(await getBranchStatus())
+    },
+  )
+
+  app.post(
+    '/merge-to-main',
+    { preHandler: requireTopAdmin, schema: { response: { 200: mergeResultSchema } } },
+    async (_request, reply) => {
+      reply.send(await mergeToMain())
+    },
+  )
+
+  app.post(
+    '/sync-from-main',
+    { preHandler: requireTopAdmin, schema: { response: { 200: mergeResultSchema } } },
+    async (_request, reply) => {
+      reply.send(await syncFromMain())
+    },
+  )
 
   app.get(
     '/poll',

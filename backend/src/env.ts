@@ -43,6 +43,13 @@ const envSchema = z.object({
   // one. Optional like OLLAMA_API_KEY above: unset just disables those two
   // routes (503) rather than blocking startup.
   AUTONOMOUS_WORKER_TOKEN: z.string().min(1).optional(),
+  // A fine-grained GitHub PAT scoped to just this one repo (Contents: Read
+  // and write) — powers merging jarvis-auto into main (and syncing main
+  // back into it) directly from the admin panel. Optional like the two
+  // above: unset only disables those two mutating routes (503), not the
+  // read-only branch-status view, which works fine unauthenticated against
+  // a public repo (just at a lower GitHub API rate limit).
+  GITHUB_REPO_TOKEN: z.string().min(1).optional(),
 })
 
 export const env = envSchema.parse(process.env)

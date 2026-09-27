@@ -62,3 +62,29 @@ export function listCycles(): Promise<CycleLogEntry[]> {
 export function clearHistory(): Promise<void> {
   return request<void>('/autonomous-worker/history', { method: 'DELETE' })
 }
+
+export interface DiffFile {
+  filename: string
+  status: string
+  additions: number
+  deletions: number
+  patch: string | null
+}
+
+export interface BranchStatus {
+  exists: boolean
+  aheadBy: number
+  files: DiffFile[]
+}
+
+export function getBranchStatus(): Promise<BranchStatus> {
+  return request<BranchStatus>('/autonomous-worker/branch-status')
+}
+
+export function mergeToMain(): Promise<{ commitSha: string }> {
+  return request<{ commitSha: string }>('/autonomous-worker/merge-to-main', { method: 'POST' })
+}
+
+export function syncFromMain(): Promise<{ commitSha: string }> {
+  return request<{ commitSha: string }>('/autonomous-worker/sync-from-main', { method: 'POST' })
+}

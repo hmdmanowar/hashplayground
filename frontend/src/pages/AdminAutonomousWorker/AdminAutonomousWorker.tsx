@@ -8,15 +8,20 @@ import {
   retryTask,
   listCycles,
   clearHistory,
+  getBranchStatus,
+  mergeToMain,
+  syncFromMain,
   type WorkerState,
   type AutonomousTask,
   type CycleLogEntry,
+  type BranchStatus,
 } from '../../services/autonomousWorkerService'
 import { useToast } from '../../context/ToastContext'
 import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
 import Select from '../../components/Select/Select'
-import { BotIcon, ClockIcon, TrashIcon, PlayIcon, PauseIcon } from '../../components/Icons/Icons'
+import { BotIcon, ClockIcon, TrashIcon, PlayIcon, PauseIcon, GitBranchIcon, ChevronDownIcon } from '../../components/Icons/Icons'
+import { DiffView } from './DiffView'
 
 const TASK_SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
@@ -102,6 +107,13 @@ function AdminAutonomousWorker() {
   const [clearHistoryOpen, setClearHistoryOpen] = useState(false)
   const [taskSort, setTaskSort] = useState<'newest' | 'status'>('newest')
   const [cycleSort, setCycleSort] = useState<'newest' | 'outcome'>('newest')
+  const [branchStatus, setBranchStatus] = useState<BranchStatus | null>(null)
+  const [branchStatusError, setBranchStatusError] = useState<string | null>(null)
+  const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set())
+  const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false)
+  const [syncConfirmOpen, setSyncConfirmOpen] = useState(false)
+  const [isMerging, setIsMerging] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const sortedTasks = useMemo(() => {
     if (taskSort === 'newest') return tasks
@@ -133,6 +145,21 @@ function AdminAutonomousWorker() {
     refresh()
       .then(() => setLoadStatus('ready'))
       .catch(() => setLoadStatus('error'))
+  }, [])
+
+  function refreshBranchStatus() {
+    return getBranchStatus()
+      .then((status) => {
+        setBranchStatus(status)
+        setBranchStatusError(null)
+      })
+      .catch((error) => setBranchStatusError(error instanceof Error ? error.message : 'Could not load branch status'))
+  }
+
+  // Independent of the main tasks/cycles load above — a slow or failed
+  // GitHub API call shouldn't block the rest of the page from being usable.
+  useEffect(() => {
+    refreshBranchStatus()
   }, [])
 
   async function handleToggle() {
@@ -198,6 +225,43 @@ function AdminAutonomousWorker() {
     } finally {
       setIsClearingHistory(false)
       setClearHistoryOpen(false)
+    }
+  }
+
+  function toggleFileExpanded(filename: string) {
+    setExpandedFiles((prev) => {
+      const next = new Set(prev)
+      if (next.has(filename)) next.delete(filename)
+      else next.add(filename)
+      return next
+    })
+  }
+
+  async function handleMergeToMain() {
+    setIsMerging(true)
+    try {
+      await mergeToMain()
+      showToast('Merged jarvis-auto into main.', { kind: 'success' })
+      await refreshBranchStatus()
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not merge into main')
+    } finally {
+      setIsMerging(false)
+      setMergeConfirmOpen(false)
+    }
+  }
+
+  async function handleSyncFromMain() {
+    setIsSyncing(true)
+    try {
+      await syncFromMain()
+      showToast('Synced main into jarvis-auto.', { kind: 'success' })
+      await refreshBranchStatus()
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not sync from main')
+    } finally {
+      setIsSyncing(false)
+      setSyncConfirmOpen(false)
     }
   }
 
@@ -380,6 +444,77 @@ function AdminAutonomousWorker() {
         </div>
         </div>
       </div>
+
+      <div className="rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)]">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 rounded-t-lg border-b border-[var(--border-panel)] bg-[var(--bg-panel)]/95 p-4 backdrop-blur">
+          <p className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-[var(--text-app)]">
+            <GitBranchIcon className="h-4 w-4" />
+            Review jarvis-auto → main
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSyncConfirmOpen(true)}
+              disabled={!branchStatus?.exists}
+              className="rounded-full border border-[var(--border-panel)] px-3 py-1.5 text-xs font-medium text-[var(--text-app)] transition-colors hover:border-[var(--color-primary)] disabled:opacity-40"
+            >
+              Sync main → jarvis-auto
+            </button>
+            <button
+              type="button"
+              onClick={() => setMergeConfirmOpen(true)}
+              disabled={!branchStatus?.exists || branchStatus.files.length === 0}
+              className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
+            >
+              Merge to main
+            </button>
+          </div>
+        </div>
+        <div className="p-4 pt-4">
+          {branchStatusError && <p className="text-sm text-red-500">{branchStatusError}</p>}
+          {!branchStatusError && !branchStatus && <p className="text-sm text-[var(--color-muted)]">Loading…</p>}
+          {!branchStatusError && branchStatus && !branchStatus.exists && (
+            <p className="text-sm text-[var(--color-muted)]">jarvis-auto doesn't exist yet — nothing for the worker has pushed a branch so far.</p>
+          )}
+          {!branchStatusError && branchStatus?.exists && branchStatus.files.length === 0 && (
+            <p className="text-sm text-[var(--color-muted)]">Up to date — jarvis-auto has nothing main doesn't already have.</p>
+          )}
+          {!branchStatusError && branchStatus?.exists && branchStatus.files.length > 0 && (
+            <>
+              <p className="mb-3 text-xs text-[var(--color-muted)]">
+                {branchStatus.aheadBy} commit{branchStatus.aheadBy === 1 ? '' : 's'} ahead of main, {branchStatus.files.length} file
+                {branchStatus.files.length === 1 ? '' : 's'} changed.
+              </p>
+              <div className="space-y-2">
+                {branchStatus.files.map((file) => {
+                  const expanded = expandedFiles.has(file.filename)
+                  return (
+                    <div key={file.filename} className="overflow-hidden rounded-md border border-[var(--border-panel)]">
+                      <button
+                        type="button"
+                        onClick={() => toggleFileExpanded(file.filename)}
+                        className="flex w-full items-center justify-between gap-2 bg-[var(--bg-app)] px-3 py-2 text-left text-sm"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="shrink-0 rounded-full bg-[var(--hover-overlay)] px-2 py-0.5 text-xs font-medium capitalize text-[var(--color-muted)]">
+                            {file.status}
+                          </span>
+                          <span className="truncate text-[var(--text-app)]">{file.filename}</span>
+                          <span className="shrink-0 text-xs text-[var(--color-muted)]">
+                            <span className="text-emerald-500">+{file.additions}</span> <span className="text-red-500">-{file.deletions}</span>
+                          </span>
+                        </span>
+                        <ChevronDownIcon className={`h-4 w-4 shrink-0 text-[var(--color-muted)] transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                      </button>
+                      {expanded && <DiffView patch={file.patch} />}
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
       </div>
 
       <ConfirmDialog
@@ -389,6 +524,24 @@ function AdminAutonomousWorker() {
         confirmLabel={isClearingHistory ? 'Clearing…' : 'Clear history'}
         onConfirm={handleClearHistory}
         onCancel={() => setClearHistoryOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={mergeConfirmOpen}
+        title="Merge jarvis-auto into main?"
+        message="This pushes a real merge commit onto main — make sure you've reviewed every file above first. This cannot be undone from here (though it can still be reverted with a normal git revert)."
+        confirmLabel={isMerging ? 'Merging…' : 'Merge to main'}
+        onConfirm={handleMergeToMain}
+        onCancel={() => setMergeConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={syncConfirmOpen}
+        title="Sync main into jarvis-auto?"
+        message="Brings jarvis-auto up to date with main, so the worker's next cycle builds on the latest reviewed code."
+        confirmLabel={isSyncing ? 'Syncing…' : 'Sync'}
+        onConfirm={handleSyncFromMain}
+        onCancel={() => setSyncConfirmOpen(false)}
       />
     </div>
   )
