@@ -40,6 +40,8 @@ export interface BranchStatus {
   exists: boolean
   aheadBy: number
   files: DiffFile[]
+  // Never the token itself — just whether merge/sync are even possible.
+  tokenConfigured: boolean
 }
 
 // Compares main...jarvis-auto — what's on jarvis-auto that isn't on main yet,
@@ -48,7 +50,8 @@ export async function getBranchStatus(): Promise<BranchStatus> {
   const response = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/compare/${MAIN}...${AUTO_BRANCH}`, {
     headers: authHeaders(),
   })
-  if (response.status === 404) return { exists: false, aheadBy: 0, files: [] }
+  const tokenConfigured = Boolean(env.GITHUB_REPO_TOKEN)
+  if (response.status === 404) return { exists: false, aheadBy: 0, files: [], tokenConfigured }
   if (!response.ok) {
     const body = await response.text().catch(() => '')
     throw new Error(`GitHub compare failed (${response.status}): ${body}`)
@@ -67,6 +70,7 @@ export async function getBranchStatus(): Promise<BranchStatus> {
       deletions: f.deletions,
       patch: f.patch ?? null,
     })),
+    tokenConfigured,
   }
 }
 

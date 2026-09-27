@@ -455,7 +455,8 @@ function AdminAutonomousWorker() {
             <button
               type="button"
               onClick={() => setSyncConfirmOpen(true)}
-              disabled={!branchStatus?.exists}
+              disabled={!branchStatus?.exists || !branchStatus.tokenConfigured}
+              title={branchStatus && !branchStatus.tokenConfigured ? 'GITHUB_REPO_TOKEN is not configured on the backend' : undefined}
               className="rounded-full border border-[var(--border-panel)] px-3 py-1.5 text-xs font-medium text-[var(--text-app)] transition-colors hover:border-[var(--color-primary)] disabled:opacity-40"
             >
               Sync main → jarvis-auto
@@ -463,7 +464,8 @@ function AdminAutonomousWorker() {
             <button
               type="button"
               onClick={() => setMergeConfirmOpen(true)}
-              disabled={!branchStatus?.exists || branchStatus.files.length === 0}
+              disabled={!branchStatus?.exists || branchStatus.files.length === 0 || !branchStatus.tokenConfigured}
+              title={branchStatus && !branchStatus.tokenConfigured ? 'GITHUB_REPO_TOKEN is not configured on the backend' : undefined}
               className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
             >
               Merge to main
@@ -473,6 +475,11 @@ function AdminAutonomousWorker() {
         <div className="p-4 pt-4">
           {branchStatusError && <p className="text-sm text-red-500">{branchStatusError}</p>}
           {!branchStatusError && !branchStatus && <p className="text-sm text-[var(--color-muted)]">Loading…</p>}
+          {!branchStatusError && branchStatus && !branchStatus.tokenConfigured && (
+            <p className="mb-3 text-xs text-amber-500">
+              GITHUB_REPO_TOKEN isn't set on the backend right now — the diff below still works, but Merge/Sync are disabled until it's configured.
+            </p>
+          )}
           {!branchStatusError && branchStatus && !branchStatus.exists && (
             <p className="text-sm text-[var(--color-muted)]">jarvis-auto doesn't exist yet — nothing for the worker has pushed a branch so far.</p>
           )}

@@ -67,6 +67,7 @@ const branchStatusSchema = z.object({
       patch: z.string().nullable(),
     }),
   ),
+  tokenConfigured: z.boolean(),
 })
 const mergeResultSchema = z.object({ commitSha: z.string() })
 

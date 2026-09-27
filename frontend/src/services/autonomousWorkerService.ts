@@ -75,6 +75,7 @@ export interface BranchStatus {
   exists: boolean
   aheadBy: number
   files: DiffFile[]
+  tokenConfigured: boolean
 }
 
 export function getBranchStatus(): Promise<BranchStatus> {
