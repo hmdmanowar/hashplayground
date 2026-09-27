@@ -10,6 +10,7 @@ import {
   listTasks,
   queueTask,
   cancelTask,
+  retryTask,
   listCycles,
   clearHistory,
   pollForWorker,
@@ -40,6 +41,7 @@ const taskSchema = z.object({
   resultSummary: z.string().nullable(),
   outcome: z.string().nullable(),
   commitHash: z.string().nullable(),
+  attempts: z.number(),
 })
 const cycleSchema = z.object({
   id: z.string(),
@@ -89,6 +91,14 @@ export const autonomousWorkerRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       await cancelTask(request.params.id)
       reply.status(204).send()
+    },
+  )
+
+  app.post(
+    '/tasks/:id/retry',
+    { preHandler: requireTopAdmin, schema: { params: z.object({ id: z.string() }), response: { 200: taskSchema } } },
+    async (request, reply) => {
+      reply.send(await retryTask(request.params.id))
     },
   )
 

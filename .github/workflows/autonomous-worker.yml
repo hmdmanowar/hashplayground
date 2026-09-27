@@ -1,0 +1,47 @@
+name: Autonomous worker
+
+# Runs Jarvis's autonomous worker (jarvis/src/scheduler/AutonomousWorker.ts)
+# on a schedule so queued tasks (see /admin/autonomous-worker) get worked on
+# independent of any developer's own machine being on. Each run is a fresh,
+# ephemeral checkout that does exactly one poll -> maybe-work -> report cycle
+# (jarvis's `autonomous:once` script) and exits — see jarvis/README.md for
+# the full picture of how this fits together with the control plane.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+# Needed so `git push` (inside commitAndPush) succeeds using this job's own
+# short-lived GITHUB_TOKEN — actions/checkout wires that token into the
+# local git config automatically, so no separate deploy key or personal
+# access token is needed.
+permissions:
+  contents: write
+
+jobs:
+  run-once:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - name: Configure the commit identity for this run
+        run: |
+          git config user.name "Jarvis Autonomous Worker"
+          git config user.email "jarvis-bot@users.noreply.github.com"
+
+      - name: Run one autonomous worker cycle
+        run: npm run autonomous:once --workspace jarvis
+        env:
+          JARVIS_REPO_ROOT: ${{ github.workspace }}
+          JARVIS_REPO_SCOPE: jarvis
+          JARVIS_CONTROL_PLANE_URL: ${{ secrets.JARVIS_CONTROL_PLANE_URL }}
+          JARVIS_CONTROL_PLANE_TOKEN: ${{ secrets.JARVIS_CONTROL_PLANE_TOKEN }}
+          OLLAMA_HOST: https://ollama.com
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          JARVIS_MODEL: gpt-oss:20b-cloud

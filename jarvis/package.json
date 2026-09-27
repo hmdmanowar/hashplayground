@@ -10,6 +10,7 @@
     "chat": "tsx src/cli/chat.ts",
     "api": "tsx src/api/server.ts",
     "autonomous": "tsx src/cli/autonomous.ts",
+    "autonomous:once": "tsx src/cli/autonomousOnce.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

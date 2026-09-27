@@ -4,6 +4,19 @@ import { ApiError } from '../../middleware/errorHandler.js'
 
 const STATE_ID = 1
 
+// A transient `error` outcome (a model timeout, a network blip) gets
+// re-queued automatically rather than failing the task outright — only
+// after this many attempts is it left as a permanent `failed` for a human
+// to look at or retry manually. A stale reclaim (see pollForWorker) counts
+// as an attempt too, so a task can't loop forever between "claimed, worker
+// dies" and "reclaimed" without ever counting toward the limit.
+const MAX_TASK_ATTEMPTS = 3
+// Comfortably longer than any single cycle should ever take (repo_* tool
+// calls, npm test/build, git push) — a task still `in_progress` past this
+// almost certainly means the run that claimed it died or got cancelled
+// mid-work, not that it's genuinely still going.
+const STALE_TASK_MS = 15 * 60 * 1000
+
 function toTaskDto(task: AutonomousTask) {
   return {
     id: task.id,
@@ -16,6 +29,7 @@ function toTaskDto(task: AutonomousTask) {
     resultSummary: task.resultSummary,
     outcome: task.outcome,
     commitHash: task.commitHash,
+    attempts: task.attempts,
   }
 }
 
@@ -64,6 +78,20 @@ export async function cancelTask(id: string) {
   await prisma.autonomousTask.delete({ where: { id } })
 }
 
+// A manual retry after the automatic bounded retries (see MAX_TASK_ATTEMPTS)
+// are exhausted — a fresh start rather than another bounded attempt, since a
+// human has now looked at why it failed and decided it's worth trying again.
+export async function retryTask(id: string) {
+  const task = await prisma.autonomousTask.findUnique({ where: { id } })
+  if (!task) throw new ApiError(404, 'Task not found')
+  if (task.status !== 'failed') throw new ApiError(409, 'Only a failed task can be retried')
+  const retried = await prisma.autonomousTask.update({
+    where: { id },
+    data: { status: 'pending', attempts: 0, startedAt: null, completedAt: null, resultSummary: null, outcome: null },
+  })
+  return toTaskDto(retried)
+}
+
 export async function listCycles() {
   const cycles = await prisma.autonomousCycleLog.findMany({ orderBy: { timestamp: 'desc' }, take: 50 })
   return cycles.map(toCycleDto)
@@ -77,6 +105,18 @@ export async function clearHistory() {
   await prisma.autonomousTask.deleteMany({ where: { status: { in: ['done', 'failed'] } } })
 }
 
+// A task left `in_progress` past STALE_TASK_MS means whatever run claimed it
+// (a killed/cancelled CI job, a crashed local process) never reported back —
+// reclaim it to `pending` so the next poll can pick it up again, rather than
+// leaving it stuck forever. Counts as an attempt, same as a reported `error`.
+async function reclaimStaleTasks(): Promise<void> {
+  const staleBefore = new Date(Date.now() - STALE_TASK_MS)
+  await prisma.autonomousTask.updateMany({
+    where: { status: 'in_progress', startedAt: { lt: staleBefore } },
+    data: { status: 'pending', attempts: { increment: 1 } },
+  })
+}
+
 // Called by the worker itself (see autonomousWorker.routes.ts's token-gated
 // /poll route) — atomically claims the oldest pending task, if any, so a
 // second poll before the first one's /report lands doesn't hand out the
@@ -85,8 +125,17 @@ export async function pollForWorker() {
   const state = await getState()
   if (!state.enabled) return { enabled: false, task: null }
 
+  await reclaimStaleTasks()
+
   const next = await prisma.autonomousTask.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' } })
   if (!next) return { enabled: true, task: null }
+  if (next.attempts >= MAX_TASK_ATTEMPTS) {
+    await prisma.autonomousTask.update({
+      where: { id: next.id },
+      data: { status: 'failed', completedAt: new Date(), resultSummary: 'Exceeded the maximum retry attempts.' },
+    })
+    return { enabled: true, task: null }
+  }
 
   const claimed = await prisma.autonomousTask.update({
     where: { id: next.id },
@@ -121,15 +170,34 @@ export async function reportCycle(report: CycleReport) {
   })
 
   if (report.taskId) {
-    await prisma.autonomousTask.update({
-      where: { id: report.taskId },
-      data: {
-        status: report.outcome === 'error' ? 'failed' : 'done',
-        completedAt: new Date(),
-        resultSummary: report.summary,
-        outcome: report.outcome,
-        commitHash: report.commitHash,
-      },
-    })
+    if (report.outcome === 'error') {
+      const task = await prisma.autonomousTask.findUnique({ where: { id: report.taskId } })
+      const attempts = (task?.attempts ?? 0) + 1
+      const exhausted = attempts >= MAX_TASK_ATTEMPTS
+      await prisma.autonomousTask.update({
+        where: { id: report.taskId },
+        data: {
+          // A transient error gets one more shot at the next poll instead of
+          // failing outright — only `pending` (not `in_progress`) is picked
+          // up again, so this doubles as releasing the claim from this run.
+          status: exhausted ? 'failed' : 'pending',
+          attempts,
+          resultSummary: report.summary,
+          outcome: report.outcome,
+          ...(exhausted ? { completedAt: new Date() } : {}),
+        },
+      })
+    } else {
+      await prisma.autonomousTask.update({
+        where: { id: report.taskId },
+        data: {
+          status: 'done',
+          completedAt: new Date(),
+          resultSummary: report.summary,
+          outcome: report.outcome,
+          commitHash: report.commitHash,
+        },
+      })
+    }
   }
 }

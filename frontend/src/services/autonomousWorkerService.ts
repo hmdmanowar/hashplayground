@@ -16,6 +16,7 @@ export interface AutonomousTask {
   resultSummary: string | null
   outcome: string | null
   commitHash: string | null
+  attempts: number
 }
 
 export interface CycleLogEntry {
@@ -48,6 +49,10 @@ export function queueTask(description: string): Promise<AutonomousTask> {
 
 export function cancelTask(id: string): Promise<void> {
   return request<void>(`/autonomous-worker/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export function retryTask(id: string): Promise<AutonomousTask> {
+  return request<AutonomousTask>(`/autonomous-worker/tasks/${encodeURIComponent(id)}/retry`, { method: 'POST' })
 }
 
 export function listCycles(): Promise<CycleLogEntry[]> {

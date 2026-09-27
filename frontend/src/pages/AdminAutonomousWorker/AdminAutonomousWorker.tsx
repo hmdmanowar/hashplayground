@@ -5,6 +5,7 @@ import {
   listTasks,
   queueTask,
   cancelTask,
+  retryTask,
   listCycles,
   clearHistory,
   type WorkerState,
@@ -175,6 +176,16 @@ function AdminAutonomousWorker() {
     }
   }
 
+  async function handleRetryTask(task: AutonomousTask) {
+    try {
+      const retried = await retryTask(task.id)
+      setTasks((prev) => prev.map((item) => (item.id === task.id ? retried : item)))
+      showToast('Task re-queued.', { kind: 'success' })
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not retry task')
+    }
+  }
+
   async function handleClearHistory() {
     setIsClearingHistory(true)
     try {
@@ -312,6 +323,15 @@ function AdminAutonomousWorker() {
                   className="shrink-0 text-xs text-[var(--color-muted)] hover:text-red-500"
                 >
                   Cancel
+                </button>
+              )}
+              {task.status === 'failed' && (
+                <button
+                  type="button"
+                  onClick={() => handleRetryTask(task)}
+                  className="shrink-0 text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+                >
+                  Retry
                 </button>
               )}
             </div>

@@ -4,7 +4,7 @@ An independent, model-agnostic AI agent runtime. Jarvis is a standalone product 
 
 This repo has no dependency on, and must never import from, the Hash Playground codebase.
 
-## Status: v0.1 (Foundation + Brain) + Phase 2 (Memory) + Phase 3 (Tools) + Phase 4 (Agent) + Phase 5 (Vision) + Phase 6 (Autonomous Developer) + a full web UI
+## Status: v0.1 (Foundation + Brain) + Phase 2 (Memory) + Phase 3 (Tools) + Phase 4 (Agent) + Phase 5 (Vision) + Phase 6 (Autonomous Developer) + Phase 8 (24/7 Autonomous Operation) + a full web UI
 
 Done:
 - Standalone TypeScript project, own git repo
@@ -21,7 +21,9 @@ Done:
 - A local HTTP API (`src/api/server.ts`, 127.0.0.1 only, no auth) and a full React web UI (`web/`) — multi-conversation history, message timestamps/copy/share/edit, image attachments, and a voice assistant (speech-to-text with auto-submit, auto-speak replies, a "Hey `<assistant name>`" wake word, barge-in on "stop", and hands-free multi-turn conversation until a goodbye phrase) built entirely on free browser Speech APIs — no external voice service. A small client-side command matcher also lets phrases like "delete this conversation" or "disable voice assistant" act on the UI directly rather than going through the model.
 - **Autonomous Developer** (`src/tools/RepoTools.ts`, `GitTools.ts`, `DevTools.ts`) — a second tool root, `repoRoot` (defaults to the process's cwd, override via `JARVIS_REPO_ROOT`), separate from the disposable `workspaceRoot` sandbox: Jarvis can inspect, edit, branch, checkpoint, and test its own real repository. `repo_read_file`/`repo_list_directory`/`repo_search_code`/`repo_status`/`repo_log`/`repo_diff`/`repo_run_tests` are low risk (automatic); `repo_write_file`/`repo_create_branch`/`repo_checkout_branch`/`repo_commit`/`repo_run_build` are medium (also automatic, reviewable afterward via `repo_diff`/`repo_status`/`.jarvis/audit.log`); `repo_reset` (hard reset to a ref — the one destructive, history-discarding op) is high risk and always requires `/approve`. Git tool calls spawn `git` with an argv array rather than a shell string, and branch names/refs are validated against a safe pattern, so there's no way for a value to be reinterpreted as a flag or shell syntax. `ToolRegistry` now takes `(workspaceRoot, repoRoot)` and fails fast if `repoRoot` isn't a git repository.
 
-Not started yet (later phases, in the order planned): multi-agent roles and 24/7 autonomous operation (Phase 8).
+- **24/7 Autonomous Operation** (`src/scheduler/AutonomousWorker.ts`) — see "Autonomous worker" below.
+
+Not started yet (later phases, in the order planned): multi-agent roles.
 
 ## Setup
 
@@ -59,6 +61,19 @@ npm run api       # backend on http://127.0.0.1:4000
 npm run web:dev   # frontend, Vite will print the URL (default http://localhost:5173)
 ```
 The same commands above work by just typing them into the chat box — there's no separate memory or approval UI yet.
+
+## Autonomous worker
+
+`src/scheduler/AutonomousWorker.ts` runs Jarvis unattended on its own codebase (see `repoRoot`/`repoScopePath` above), on a dedicated branch (`autonomyBranch`, never `main`/`master`) — every cycle is deterministic plumbing (branch checkout, `npm test`/`npm run build`, commit/revert/push) around one bounded model turn, never left to the model to remember to do correctly.
+
+Two ways to run it, same underlying cycle either way:
+
+- **`npm run autonomous`** — an infinite loop (`intervalMs` apart, `JARVIS_AUTONOMY_INTERVAL_MS`, floored at 1 minute) for a long-lived process you start and leave running (e.g. on your own machine for local testing/demos).
+- **`npm run autonomous:once`** — does exactly one poll → maybe-work → report cycle, then exits. Meant for a scheduler that isn't itself a long-lived process — Hash Playground runs this via a GitHub Actions cron workflow (`.github/workflows/autonomous-worker.yml` at the repo root) every 15 minutes, so queued tasks get worked on independent of any developer's machine being on, for free (the repo is public, so Actions minutes are unlimited) and without a separate deploy key (the workflow's own short-lived `GITHUB_TOKEN`, granted `contents: write`, is enough to push).
+
+Both require a **control plane** to do anything beyond local exploration — `JARVIS_CONTROL_PLANE_URL` + `JARVIS_CONTROL_PLANE_TOKEN` pointed at a deployed Hash Playground backend (see `backend/src/modules/autonomousWorker`), which is where the admin panel's enable/disable toggle and task queue actually live; `autonomous:once` hard-errors without them since there's no sensible "always on, explore forever" mode for a single bounded run. `autonomous` (the loop) still works with neither set, for local-only exploration with no admin panel involved.
+
+Other env vars worth knowing for a non-local run: `OLLAMA_HOST` (defaults to `http://localhost:11434`; a cloud/CI run should set this to `https://ollama.com` and pass `OLLAMA_API_KEY`), `JARVIS_MODEL` (a real Ollama Cloud catalog tag, e.g. `gpt-oss:20b-cloud`, when pointed at the cloud host — the local default `qwen2.5-coder` only exists on a local Ollama), `JARVIS_REPO_ROOT` (the checkout to operate on — a CI job's own ephemeral checkout is inherently safe to point this at directly), `JARVIS_REPO_SCOPE` (confines every repo_* tool and git operation to one subtree, e.g. `jarvis`, when Jarvis lives inside a bigger repo).
 
 ## Development
 

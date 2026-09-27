@@ -264,6 +264,11 @@ model AutonomousTask {
   resultSummary String?
   outcome       String?
   commitHash    String?
+  // Bumped on each transient (`error` outcome) failure — see
+  // MAX_TASK_ATTEMPTS in autonomousWorker.service.ts. Also bumped when a
+  // stale `in_progress` task (the run that claimed it died mid-work) gets
+  // reclaimed back to pending.
+  attempts      Int       @default(0)
 
   @@index([status, createdAt])
 }

@@ -258,6 +258,56 @@ export async function runCycle(
   return { cycleNumber, timestamp, summary, filesChanged: files, testResult: 'passed', outcome: 'pushed', commitHash, detail, taskId }
 }
 
+export interface OnceOutcome {
+  // Set when the control plane reported disabled (or was unreachable) —
+  // no cycle ran at all, nothing to report.
+  skipped?: string
+  result?: CycleResult
+}
+
+// A single poll -> maybe-run-one-cycle -> report, then return — for a
+// caller that isn't a long-lived process itself (a CI job, a scheduled
+// task), where `runAutonomousLoop`'s infinite while+sleep makes no sense.
+// Deliberately a new, separate function rather than a refactor of the loop
+// below: same control-plane/report/error-handling behavior as one iteration
+// of that loop, just without touching code that's already tested and
+// working. `controlPlane` is required — there's no "always on, explore
+// forever" mode that makes sense for a single bounded run.
+export async function runOnce(options: AutonomousWorkerOptions & { controlPlane: ControlPlane }): Promise<OnceOutcome> {
+  if (PROTECTED_BRANCHES.has(options.branch)) {
+    throw new Error(`autonomyBranch cannot be "${options.branch}" — refusing to operate directly on a protected branch.`)
+  }
+
+  const poll = await pollControlPlane(options.controlPlane)
+  if (!poll.enabled) {
+    const reason = 'disabled from the control plane (or it was unreachable)'
+    options.onCycleSkipped?.(reason)
+    return { skipped: reason }
+  }
+
+  try {
+    const result = await runCycle(options, 1, poll.task)
+    appendReport(options.reportPath, result)
+    options.onCycleComplete?.(result)
+    await reportToControlPlane(options.controlPlane, result)
+    return { result }
+  } catch (error) {
+    const errorResult: CycleResult = {
+      cycleNumber: 1,
+      timestamp: new Date().toISOString(),
+      summary: 'Cycle failed with an error.',
+      filesChanged: [],
+      testResult: 'skipped',
+      outcome: 'error',
+      detail: error instanceof Error ? error.message : String(error),
+      taskId: poll.task?.id,
+    }
+    appendReport(options.reportPath, errorResult)
+    await reportToControlPlane(options.controlPlane, errorResult)
+    return { result: errorResult }
+  }
+}
+
 // Runs cycles forever at `intervalMs` apart until SIGINT/SIGTERM, always
 // letting the in-flight cycle finish before stopping. `branch` may never be
 // main/master — that's a configuration error, refused up front rather than

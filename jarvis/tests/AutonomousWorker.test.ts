@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { Jarvis } from '../src/core/Jarvis.js'
 import { ToolRegistry } from '../src/tools/registry.js'
 import { PermissionEngine } from '../src/permissions/PermissionEngine.js'
-import { runCycle, runAutonomousLoop, type AutonomousWorkerOptions } from '../src/scheduler/AutonomousWorker.js'
+import { runCycle, runAutonomousLoop, runOnce, type AutonomousWorkerOptions } from '../src/scheduler/AutonomousWorker.js'
 import type { AIModel, ModelRequest, ModelResponse } from '../src/models/AIModel.js'
 
 // Steps through a fixed script of canned responses, one per generate() call
@@ -374,5 +374,42 @@ describe('AutonomousWorker with a control plane', () => {
     })
 
     expect(model.receivedRequests).toHaveLength(0)
+  })
+
+  it('runOnce does exactly one cycle, reports it, and returns instead of looping', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ enabled: true, task: null }) }) // poll
+      .mockResolvedValueOnce({ ok: true }) // report
+    const model = new ScriptedModel(['Nothing worth changing right now.'])
+    const jarvis = makeJarvis(fixture, model)
+
+    const outcome = await runOnce({
+      ...optionsFor(fixture, jarvis),
+      controlPlane: { baseUrl: 'http://control-plane.test', token: 'secret' },
+    })
+
+    expect(outcome.skipped).toBeUndefined()
+    expect(outcome.result?.outcome).toBe('no-changes')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      'http://control-plane.test/api/autonomous-worker/report',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('runOnce returns skipped without touching the model when the control plane reports disabled', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ enabled: false, task: null }) })
+    const model = new ScriptedModel(['should never be called'])
+    const jarvis = makeJarvis(fixture, model)
+
+    const outcome = await runOnce({
+      ...optionsFor(fixture, jarvis),
+      controlPlane: { baseUrl: 'http://control-plane.test', token: 'secret' },
+    })
+
+    expect(outcome.skipped).toBeTruthy()
+    expect(outcome.result).toBeUndefined()
+    expect(model.receivedRequests).toHaveLength(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })
