@@ -17,9 +17,11 @@ import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminFeedback from "./pages/AdminFeedback/AdminFeedback";
 import AdminAutonomousWorker from "./pages/AdminAutonomousWorker/AdminAutonomousWorker";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
+import { useDisableInspect } from "./hooks/useDisableInspect";
 
 function RootLayout() {
   useDocumentTitle();
+  useDisableInspect();
   return <Outlet />;
 }
 
