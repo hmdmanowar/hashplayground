@@ -1,4 +1,5 @@
 import type { AssistantInfo, ConversationSummary } from '../../../services/assistantService'
+import { isMobileViewport } from '../../../lib/viewport'
 import { PanelIcon, ComposeIcon, SpeakerIcon, SpeakerOffIcon, MicIcon } from './icons'
 import { ConversationRow } from './ConversationRow'
 
@@ -6,6 +7,7 @@ export function Sidebar({
   info,
   collapsed,
   onToggleCollapsed,
+  onCloseOverlay,
   conversations,
   activeConversationId,
   onNewChat,
@@ -22,6 +24,10 @@ export function Sidebar({
   info: AssistantInfo | null
   collapsed: boolean
   onToggleCollapsed: () => void
+  // Mobile only: expanding opens this as a floating overlay above the chat
+  // instead of squeezing it aside — closes it when the backdrop is tapped
+  // or a conversation is picked. Desktop's persistent sidebar ignores it.
+  onCloseOverlay: () => void
   conversations: ConversationSummary[]
   activeConversationId: string | undefined
   onNewChat: () => void
@@ -36,6 +42,13 @@ export function Sidebar({
   wakeWordPermissionDenied: boolean
 }) {
   const assistantName = info?.assistantName ?? 'Jarvis'
+
+  function handleNavigate(action: () => void) {
+    return () => {
+      action()
+      if (isMobileViewport()) onCloseOverlay()
+    }
+  }
   const wakeWordTitle = wakeWordPermissionDenied
     ? 'Microphone permission was denied — allow it in your browser to use the wake word'
     : !wakeWordSupported
@@ -45,9 +58,21 @@ export function Sidebar({
         : `Turn on wake word ("Hey ${assistantName}")`
 
   return (
-    <aside
-      className={`flex shrink-0 flex-col border-r border-[var(--border-panel)] ${collapsed ? 'w-16 items-center py-2' : 'w-64 p-2'}`}
-    >
+    <>
+      {!collapsed && (
+        <div
+          onClick={onCloseOverlay}
+          aria-hidden="true"
+          className="absolute inset-0 z-20 bg-black/50 sm:hidden"
+        />
+      )}
+      <aside
+        className={`flex shrink-0 flex-col border-r border-[var(--border-panel)] ${
+          collapsed
+            ? 'relative w-16 items-center py-2'
+            : 'absolute inset-y-0 left-0 z-30 w-64 bg-[var(--bg-app)] p-2 shadow-2xl sm:static sm:z-auto sm:bg-transparent sm:shadow-none'
+        }`}
+      >
       <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between px-1 py-1'}`}>
         {!collapsed && <span className="text-sm font-semibold text-[var(--text-app)]">{assistantName}</span>}
         <button
@@ -73,7 +98,7 @@ export function Sidebar({
         <>
           <button
             type="button"
-            onClick={onNewChat}
+            onClick={handleNavigate(onNewChat)}
             className="mt-1 flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium text-[var(--text-app)] hover:bg-[var(--bg-app)]"
           >
             + New chat
@@ -84,7 +109,7 @@ export function Sidebar({
                 key={conversation.id}
                 conversation={conversation}
                 active={conversation.id === activeConversationId}
-                onSelect={() => onSelectConversation(conversation.id)}
+                onSelect={handleNavigate(() => onSelectConversation(conversation.id))}
                 onRename={(title) => onRenameConversation(conversation.id, title)}
                 onDelete={() => onDeleteConversation(conversation)}
               />
@@ -118,6 +143,7 @@ export function Sidebar({
           </div>
         </>
       )}
-    </aside>
+      </aside>
+    </>
   )
 }

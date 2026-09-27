@@ -4,15 +4,10 @@ import Navbar from '../Navbar/Navbar'
 import Sidebar from '../Sidebar/Sidebar'
 import Header from '../Header/Header'
 import { PageHeaderProvider, usePageFullscreenValue } from '../../context/PageHeaderContext'
+import { isMobileViewport } from '../../lib/viewport'
 
 function isPlaygroundPath(path: string): boolean {
   return /^\/projects\/(?!new$)[^/]+$/.test(path)
-}
-
-// Matches the `sm` breakpoint Navbar's own mobile hamburger switches at —
-// the sidebar takes up too much of a phone-width screen to default open.
-function isMobileViewport(): boolean {
-  return window.innerWidth < 640
 }
 
 function LayoutContent() {

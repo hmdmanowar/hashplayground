@@ -71,7 +71,7 @@ function JarvisChat() {
   const [loginRequired, setLoginRequired] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
+  const { collapsed: sidebarCollapsed, toggle: toggleSidebar, setCollapsed: setSidebarCollapsed } = useSidebarCollapsed()
   const { enabled: autoSpeakEnabled, toggle: toggleAutoSpeak } = useAutoSpeak()
   const { value: wakeWordEnabled, setValue: setWakeWordEnabled, toggle: toggleWakeWord } = usePersistentToggle('jarvis-wake-word')
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -356,6 +356,7 @@ function JarvisChat() {
         info={info}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebar}
+        onCloseOverlay={() => setSidebarCollapsed(true)}
         conversations={conversations}
         activeConversationId={activeConversationId}
         onNewChat={handleNewChat}
@@ -390,7 +391,7 @@ function JarvisChat() {
                 main's true edge — the centered-column look lives inside it
                 (see MessageList.tsx) instead of on this wrapper. */}
             <MessageList messages={messages} isSending={isSending} bottomRef={bottomRef} onEditMessage={handleEditMessage} />
-            <div className="mx-auto w-full max-w-[65%]">
+            <div className="mx-auto w-full max-w-full sm:max-w-[65%]">
               {error && <p className="px-4 pb-2 text-sm text-red-500">{error}</p>}
               {isAnonymous && !loginRequired && remaining !== null && remaining <= 2 && (
                 <p className="px-4 pb-2 text-xs text-[var(--color-muted)]">

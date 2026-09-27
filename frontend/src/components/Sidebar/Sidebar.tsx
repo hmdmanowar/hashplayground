@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon, BotIcon } from '../Icons/Icons'
+import { isMobileViewport } from '../../lib/viewport'
 import './Sidebar.scss'
 
 interface SidebarProps {
@@ -11,12 +12,6 @@ interface SidebarProps {
   // behind that overlay is tapped. Desktop ignores it; the sidebar there
   // stays a normal in-flow panel that's fine to push content over.
   onCloseOverlay?: () => void
-}
-
-// Matches Navbar's own hamburger breakpoint — desktop's persistent sidebar
-// should stay open across navigation, only the mobile overlay auto-closes.
-function isMobileViewport(): boolean {
-  return window.innerWidth < 640
 }
 
 function Sidebar({ collapsed, onCloseOverlay }: SidebarProps) {

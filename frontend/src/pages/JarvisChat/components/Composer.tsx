@@ -72,7 +72,7 @@ export function Composer({
           </button>
         </div>
       )}
-      <div className="flex items-end gap-1.5 rounded-xl border border-[var(--border-panel)] bg-[var(--bg-app)] p-1.5">
+      <div className="flex flex-col gap-1 rounded-xl border border-[var(--border-panel)] bg-[var(--bg-app)] p-1.5">
         <input
           ref={fileInputRef}
           type="file"
@@ -84,50 +84,6 @@ export function Composer({
             event.target.value = ''
           }}
         />
-        <div className="relative" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            title="Add"
-            aria-label="Add"
-            aria-expanded={menuOpen}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-muted)] hover:text-[var(--color-primary)]"
-          >
-            <PlusIcon />
-          </button>
-          {menuOpen && (
-            <div className="absolute bottom-10 left-0 z-10 w-56 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false)
-                  fileInputRef.current?.click()
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--bg-app)]"
-              >
-                <ImageIcon />
-                <span className="flex flex-col">
-                  <strong className="text-sm text-[var(--text-app)]">Add photos</strong>
-                  <small className="text-xs text-[var(--color-muted)]">Upload from your computer</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false)
-                  fileInputRef.current?.click()
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--bg-app)]"
-              >
-                <AttachIcon />
-                <span className="flex flex-col">
-                  <strong className="text-sm text-[var(--text-app)]">Attach Files</strong>
-                  <small className="text-xs text-[var(--color-muted)]">Upload from your computer</small>
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
         <textarea
           ref={textareaRef}
           value={input}
@@ -141,38 +97,84 @@ export function Composer({
           placeholder={mic.isListening ? 'Listening…' : 'Ask anything'}
           rows={1}
           autoFocus
-          className="max-h-[200px] flex-1 resize-none bg-transparent px-1 py-1.5 text-sm text-[var(--text-app)] outline-none placeholder:text-[var(--color-muted)]"
+          className="max-h-[200px] w-full resize-none bg-transparent px-2 py-1.5 text-sm text-[var(--text-app)] outline-none placeholder:text-[var(--color-muted)]"
         />
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            disabled
-            title="Extended reasoning — coming soon"
-            className="flex items-center gap-1 rounded-full border border-[var(--border-panel)] px-2 py-1 text-xs text-[var(--color-muted)] opacity-50"
-          >
-            <ThinkIcon />
-            Think
-          </button>
-          <button
-            type="button"
-            onClick={mic.toggle}
-            disabled={!mic.isSupported}
-            title={mic.isSupported ? (mic.isListening ? 'Stop listening' : 'Voice input') : 'Voice input is not supported in this browser'}
-            aria-label={mic.isListening ? 'Stop listening' : 'Voice input'}
-            className={`flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-40 ${
-              mic.isListening ? 'bg-red-500/20 text-red-500' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
-            }`}
-          >
-            <MicIcon />
-          </button>
-          <button
-            type="submit"
-            disabled={isSending || (!input.trim() && !pendingImage)}
-            aria-label="Send"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-strong)] text-white disabled:opacity-40"
-          >
-            ↑
-          </button>
+        <div className="flex items-center justify-between gap-1">
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              title="Add"
+              aria-label="Add"
+              aria-expanded={menuOpen}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+            >
+              <PlusIcon />
+            </button>
+            {menuOpen && (
+              <div className="absolute bottom-10 left-0 z-10 w-56 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-1 shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    fileInputRef.current?.click()
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--bg-app)]"
+                >
+                  <ImageIcon />
+                  <span className="flex flex-col">
+                    <strong className="text-sm text-[var(--text-app)]">Add photos</strong>
+                    <small className="text-xs text-[var(--color-muted)]">Upload from your computer</small>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    fileInputRef.current?.click()
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--bg-app)]"
+                >
+                  <AttachIcon />
+                  <span className="flex flex-col">
+                    <strong className="text-sm text-[var(--text-app)]">Attach Files</strong>
+                    <small className="text-xs text-[var(--color-muted)]">Upload from your computer</small>
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled
+              title="Extended reasoning — coming soon"
+              className="flex items-center gap-1 rounded-full border border-[var(--border-panel)] px-2 py-1 text-xs text-[var(--color-muted)] opacity-50"
+            >
+              <ThinkIcon />
+              Think
+            </button>
+            <button
+              type="button"
+              onClick={mic.toggle}
+              disabled={!mic.isSupported}
+              title={mic.isSupported ? (mic.isListening ? 'Stop listening' : 'Voice input') : 'Voice input is not supported in this browser'}
+              aria-label={mic.isListening ? 'Stop listening' : 'Voice input'}
+              className={`flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-40 ${
+                mic.isListening ? 'bg-red-500/20 text-red-500' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
+              }`}
+            >
+              <MicIcon />
+            </button>
+            <button
+              type="submit"
+              disabled={isSending || (!input.trim() && !pendingImage)}
+              aria-label="Send"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-strong)] text-white disabled:opacity-40"
+            >
+              ↑
+            </button>
+          </div>
         </div>
       </div>
     </form>
