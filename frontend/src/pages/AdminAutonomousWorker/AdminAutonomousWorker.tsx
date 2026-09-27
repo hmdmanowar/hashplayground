@@ -11,13 +11,17 @@ import {
   getBranchStatus,
   mergeToMain,
   syncFromMain,
+  resolveConflict,
   type WorkerState,
   type AutonomousTask,
   type CycleLogEntry,
   type BranchStatus,
+  type MergeConflict,
+  type MergeDirection,
 } from '../../services/autonomousWorkerService'
 import { useToast } from '../../context/ToastContext'
 import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
+import { ConflictResolver } from './ConflictResolver'
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
 import Select from '../../components/Select/Select'
 import { BotIcon, ClockIcon, TrashIcon, PlayIcon, PauseIcon, GitBranchIcon, ChevronDownIcon } from '../../components/Icons/Icons'
@@ -114,6 +118,8 @@ function AdminAutonomousWorker() {
   const [syncConfirmOpen, setSyncConfirmOpen] = useState(false)
   const [isMerging, setIsMerging] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [conflict, setConflict] = useState<{ direction: MergeDirection; data: MergeConflict } | null>(null)
+  const [isResolvingConflict, setIsResolvingConflict] = useState(false)
 
   const sortedTasks = useMemo(() => {
     if (taskSort === 'newest') return tasks
@@ -240,9 +246,13 @@ function AdminAutonomousWorker() {
   async function handleMergeToMain() {
     setIsMerging(true)
     try {
-      await mergeToMain()
-      showToast('Merged jarvis-auto into main.', { kind: 'success' })
-      await refreshBranchStatus()
+      const outcome = await mergeToMain()
+      if (!outcome.ok) {
+        setConflict({ direction: 'merge-to-main', data: outcome.conflict })
+      } else {
+        showToast('Merged jarvis-auto into main.', { kind: 'success' })
+        await refreshBranchStatus()
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not merge into main')
     } finally {
@@ -254,14 +264,33 @@ function AdminAutonomousWorker() {
   async function handleSyncFromMain() {
     setIsSyncing(true)
     try {
-      await syncFromMain()
-      showToast('Synced main into jarvis-auto.', { kind: 'success' })
-      await refreshBranchStatus()
+      const outcome = await syncFromMain()
+      if (!outcome.ok) {
+        setConflict({ direction: 'sync-from-main', data: outcome.conflict })
+      } else {
+        showToast('Synced main into jarvis-auto.', { kind: 'success' })
+        await refreshBranchStatus()
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not sync from main')
     } finally {
       setIsSyncing(false)
       setSyncConfirmOpen(false)
+    }
+  }
+
+  async function handleResolveConflict(resolutions: { path: string; content: string }[]) {
+    if (!conflict) return
+    setIsResolvingConflict(true)
+    try {
+      await resolveConflict(conflict.direction, resolutions)
+      showToast('Merge conflict resolved.', { kind: 'success' })
+      setConflict(null)
+      await refreshBranchStatus()
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not complete the merge')
+    } finally {
+      setIsResolvingConflict(false)
     }
   }
 
@@ -550,6 +579,17 @@ function AdminAutonomousWorker() {
         onConfirm={handleSyncFromMain}
         onCancel={() => setSyncConfirmOpen(false)}
       />
+
+      {conflict && (
+        <ConflictResolver
+          conflict={conflict.data}
+          baseLabel={conflict.direction === 'merge-to-main' ? 'main' : 'jarvis-auto'}
+          headLabel={conflict.direction === 'merge-to-main' ? 'jarvis-auto' : 'main'}
+          submitting={isResolvingConflict}
+          onSubmit={handleResolveConflict}
+          onCancel={() => setConflict(null)}
+        />
+      )}
     </div>
   )
 }

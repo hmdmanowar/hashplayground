@@ -82,10 +82,32 @@ export function getBranchStatus(): Promise<BranchStatus> {
   return request<BranchStatus>('/autonomous-worker/branch-status')
 }
 
-export function mergeToMain(): Promise<{ commitSha: string }> {
-  return request<{ commitSha: string }>('/autonomous-worker/merge-to-main', { method: 'POST' })
+export interface ConflictFile {
+  path: string
+  baseContent: string | null
+  headContent: string | null
+  binary: boolean
 }
 
-export function syncFromMain(): Promise<{ commitSha: string }> {
-  return request<{ commitSha: string }>('/autonomous-worker/sync-from-main', { method: 'POST' })
+export interface MergeConflict {
+  baseSha: string
+  headSha: string
+  mergeBaseSha: string
+  files: ConflictFile[]
+}
+
+export type MergeOutcome = { ok: true; commitSha: string } | { ok: false; conflict: MergeConflict }
+
+export type MergeDirection = 'merge-to-main' | 'sync-from-main'
+
+export function mergeToMain(): Promise<MergeOutcome> {
+  return request<MergeOutcome>('/autonomous-worker/merge-to-main', { method: 'POST' })
+}
+
+export function syncFromMain(): Promise<MergeOutcome> {
+  return request<MergeOutcome>('/autonomous-worker/sync-from-main', { method: 'POST' })
+}
+
+export function resolveConflict(direction: MergeDirection, resolutions: { path: string; content: string }[]): Promise<{ commitSha: string }> {
+  return request<{ commitSha: string }>('/autonomous-worker/resolve-conflict', { method: 'POST', body: { direction, resolutions } })
 }
