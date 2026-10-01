@@ -144,6 +144,21 @@ body {
   }
 }
 
+@keyframes bf-caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.bf-caret {
+  animation: bf-caret-blink 1s step-end infinite;
+}
+
 .bf-float {
   animation: bf-float 5s ease-in-out infinite;
 }

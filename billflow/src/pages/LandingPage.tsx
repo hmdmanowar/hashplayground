@@ -6,6 +6,7 @@ import TemplateCard from '../components/TemplateCard'
 import WaitlistDialog from '../components/WaitlistDialog'
 import HowItWorks from '../components/landing/HowItWorks'
 import ProofStrip from '../components/landing/ProofStrip'
+import TypewriterWords from '../components/landing/TypewriterWords'
 import {
   ArrowRightIcon,
   BankIcon,
@@ -62,6 +63,19 @@ function sampleDraft(): InvoiceDraft {
     style: 'classic',
   }
 }
+
+// Everyone the generator is for — typed out one by one in the hero.
+const AUDIENCES = [
+  'freelancers',
+  'consultants',
+  'designers',
+  'photographers',
+  'agencies',
+  'developers',
+  'tutors & coaches',
+  'exporters',
+  'small businesses',
+]
 
 const HIGHLIGHTS = ['No sign-up', 'GST ready', 'UPI QR on every invoice', 'PDF in seconds']
 
@@ -162,7 +176,16 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
           Free invoicing for India, built by Hash Playground
         </span>
         <h1 className="mt-5 text-4xl leading-tight font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Free GST invoicing for <span className="text-[var(--color-accent)]">freelancers</span> and small businesses
+          Free GST invoicing for{' '}
+          {/* Fixed two-line slot so the layout doesn't jump as words change */}
+          <span className="block min-h-[2.4em] sm:min-h-[1.2em]">
+            <TypewriterWords
+              words={AUDIENCES}
+              fallback="freelancers & small businesses"
+              className="text-[var(--color-accent)]"
+            />
+          </span>
+          <span className="sr-only">{AUDIENCES.join(', ')}</span>
         </h1>
         <p className="mt-5 max-w-xl text-base text-[var(--color-muted)] sm:text-lg">{LANDING_PAGE.intro}</p>
         <div className="mt-8 flex flex-wrap gap-3">
