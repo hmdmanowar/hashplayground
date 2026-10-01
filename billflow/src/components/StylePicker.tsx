@@ -9,9 +9,15 @@ function Thumbnail({ look }: { look: InvoiceStyle }) {
   const topTitle = look.layout !== 'split'
   return (
     <div className="flex h-16 w-12 shrink-0 flex-col gap-[3px] rounded bg-white p-1.5 shadow-sm ring-1 ring-gray-200" aria-hidden="true">
-      <div className={`flex ${topTitle ? (look.layout === 'centered' ? 'justify-center' : 'justify-start') : 'justify-end'}`}>
-        <span className="h-1 w-5 rounded-full" style={{ backgroundColor: look.title.color }} />
-      </div>
+      {look.layout === 'banner' ? (
+        <div className="-mx-1.5 -mt-1.5 flex h-4 items-end rounded-t px-1.5 pb-1" style={{ backgroundColor: look.bannerBg }}>
+          <span className="h-1 w-5 rounded-full bg-white" />
+        </div>
+      ) : (
+        <div className={`flex ${topTitle ? (look.layout === 'centered' ? 'justify-center' : 'justify-start') : 'justify-end'}`}>
+          <span className="h-1 w-5 rounded-full" style={{ backgroundColor: look.title.color }} />
+        </div>
+      )}
       <span className="h-[2px] w-full rounded-full bg-gray-200" />
       <span
         className="mt-0.5 h-1.5"

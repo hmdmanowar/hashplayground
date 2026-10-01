@@ -58,7 +58,16 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
   const look = getInvoiceStyle(draft.style)
   const topTitle = look.layout !== 'split'
 
-  const cell: CSSProperties = look.grid ? { border: `1px solid ${look.rule}` } : {}
+  // Row padding (dense styles are tighter) plus the style's cell borders:
+  // full grid, column lines only, or none.
+  const pad = look.dense ? '4px' : '8px'
+  const ruleLine = `1px solid ${look.rule}`
+  const cell: CSSProperties = {
+    paddingTop: pad,
+    paddingBottom: pad,
+    ...(look.grid ? { border: ruleLine } : look.columnLines ? { borderLeft: ruleLine, borderRight: ruleLine } : {}),
+  }
+  const headCell: CSSProperties = { ...cell, ...(look.grid || look.columnLines ? { border: ruleLine } : {}) }
   const labelStyle: CSSProperties = { color: look.label }
 
   const titleEl = (
@@ -101,7 +110,20 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
       {look.recipientTag && (
         <p className="mb-2 text-right text-[9px] font-semibold tracking-wider text-gray-500">ORIGINAL FOR RECIPIENT</p>
       )}
-      {topTitle ? (
+      {look.layout === 'banner' ? (
+        <>
+          <header
+            className="-mx-5 -mt-5 mb-3 rounded-t-xl px-5 pt-5 pb-4 sm:-mx-7 sm:-mt-7 sm:px-7 sm:pt-6"
+            style={{ backgroundColor: look.bannerBg ?? look.accent }}
+          >
+            {draft.logoDataUrl && (
+              <img src={draft.logoDataUrl} alt="" className="mb-2 max-h-9 max-w-[140px] object-contain" />
+            )}
+            {titleEl}
+          </header>
+          {metaEl}
+        </>
+      ) : topTitle ? (
         <header>
           <div className={look.layout === 'centered' ? 'text-center' : 'text-left'}>{titleEl}</div>
           <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
@@ -130,7 +152,10 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
       </div>
 
       <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[420px] border-collapse text-xs">
+        <table
+          className="w-full min-w-[420px] border-collapse text-xs"
+          style={look.columnLines ? { borderBottom: ruleLine } : undefined}
+        >
           <thead>
             <tr
               className="text-left text-[10px] font-semibold tracking-wide uppercase"
@@ -141,13 +166,13 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
                 borderBottom: look.headRule ? `2px solid ${look.accent}` : undefined,
               }}
             >
-              <th className="px-2 py-2" style={cell}>#</th>
-              <th className="px-2 py-2" style={cell}>Description</th>
-              {showHsn && <th className="px-2 py-2" style={cell}>HSN/SAC</th>}
-              <th className="px-2 py-2 text-right" style={cell}>Qty</th>
-              <th className="px-2 py-2 text-right" style={cell}>Rate</th>
-              {taxed && <th className="px-2 py-2 text-right" style={cell}>Tax %</th>}
-              <th className="px-2 py-2 text-right" style={cell}>Amount</th>
+              <th className="px-2" style={headCell}>#</th>
+              <th className="px-2" style={headCell}>Description</th>
+              {showHsn && <th className="px-2" style={headCell}>HSN/SAC</th>}
+              <th className="px-2 text-right" style={headCell}>Qty</th>
+              <th className="px-2 text-right" style={headCell}>Rate</th>
+              {taxed && <th className="px-2 text-right" style={headCell}>Tax %</th>}
+              <th className="px-2 text-right" style={headCell}>Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -157,18 +182,18 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
                 className="align-top"
                 style={{
                   backgroundColor: look.zebra && index % 2 === 1 ? look.zebra : undefined,
-                  borderBottom: look.grid ? undefined : `1px solid ${look.rule}`,
+                  borderBottom: look.grid || look.columnLines ? undefined : ruleLine,
                 }}
               >
-                <td className="px-2 py-2 text-gray-500" style={cell}>{index + 1}</td>
-                <td className="px-2 py-2 break-words" style={cell}>
+                <td className="px-2 text-gray-500" style={cell}>{index + 1}</td>
+                <td className="px-2 break-words" style={cell}>
                   {item.description || <span className="text-gray-400">—</span>}
                 </td>
-                {showHsn && <td className="px-2 py-2" style={cell}>{item.hsn}</td>}
-                <td className="px-2 py-2 text-right" style={cell}>{formatQuantity(item.quantity)}</td>
-                <td className="px-2 py-2 text-right whitespace-nowrap" style={cell}>{money(toMinor(item.rate))}</td>
-                {taxed && <td className="px-2 py-2 text-right" style={cell}>{formatQuantity(item.taxRate)}%</td>}
-                <td className="px-2 py-2 text-right font-medium whitespace-nowrap" style={cell}>
+                {showHsn && <td className="px-2" style={cell}>{item.hsn}</td>}
+                <td className="px-2 text-right" style={cell}>{formatQuantity(item.quantity)}</td>
+                <td className="px-2 text-right whitespace-nowrap" style={cell}>{money(toMinor(item.rate))}</td>
+                {taxed && <td className="px-2 text-right" style={cell}>{formatQuantity(item.taxRate)}%</td>}
+                <td className="px-2 text-right font-medium whitespace-nowrap" style={cell}>
                   {money(totals.lines[index].amount)}
                 </td>
               </tr>
@@ -208,7 +233,7 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
           ))}
           {look.totalBand ? (
             <div
-              className="!mt-2 flex justify-between gap-4 rounded-sm px-2 py-2 text-sm font-bold"
+              className="!mt-2 flex justify-between gap-4 rounded-sm px-2 text-sm font-bold"
               style={{ backgroundColor: look.totalBand.bg, color: look.totalBand.text }}
             >
               <dt>Total ({draft.currency})</dt>

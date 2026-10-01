@@ -110,26 +110,33 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     doc.text('ORIGINAL FOR RECIPIENT', RIGHT, MARGIN - 3, { align: 'right' })
   }
 
+  // "banner": full-width colour band on top with the logo and title in it;
+  // meta follows below on the left.
+  const banner = look.layout === 'banner'
+  const BANNER_HEIGHT = 32
+  if (banner) fill(look.bannerBg ?? look.accent, 0, 0, PAGE_WIDTH, BANNER_HEIGHT)
+
   // "split": logo left, title + meta right-aligned.
   setText(look.title.size, look.title.bold ? 'bold' : 'normal', hexToRgb(look.title.color))
-  if (look.layout === 'centered') doc.text(title, PAGE_WIDTH / 2, y + 2, { align: 'center' })
+  if (banner) doc.text(title, MARGIN, draft.logoDataUrl ? 26 : 19)
+  else if (look.layout === 'centered') doc.text(title, PAGE_WIDTH / 2, y + 2, { align: 'center' })
   else if (look.layout === 'stacked') doc.text(title, MARGIN, y + 1)
   else doc.text(title, RIGHT, y + 2, { align: 'right' })
-  const blockTop = topTitle ? y + (look.title.size < 16 ? 9 : 12) : y
+  const blockTop = banner ? BANNER_HEIGHT + 8 : topTitle ? y + (look.title.size < 16 ? 9 : 12) : y
 
   let logoBottom = blockTop
   if (draft.logoDataUrl) {
     const size = await loadImageSize(draft.logoDataUrl)
     if (size && size.width > 0 && size.height > 0) {
-      const scale = Math.min(42 / size.width, 20 / size.height)
+      const scale = banner ? Math.min(40 / size.width, 11 / size.height) : Math.min(42 / size.width, 20 / size.height)
       const width = size.width * scale
       const height = size.height * scale
       const format = draft.logoDataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG'
-      const logoX = centered ? RIGHT - width : MARGIN
-      const logoTop = centered ? blockTop - 3 : y - 4
+      const logoX = banner ? MARGIN : centered ? RIGHT - width : MARGIN
+      const logoTop = banner ? 7 : centered ? blockTop - 3 : y - 4
       try {
         doc.addImage(draft.logoDataUrl, format, logoX, logoTop, width, height, 'logo', 'FAST')
-        logoBottom = logoTop + height
+        if (!banner) logoBottom = logoTop + height
       } catch {
         // unreadable image — skip the logo rather than fail the download
       }
@@ -218,20 +225,26 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   // baseline = top + padding + cap height of the font.
   const capHeight = (size: number) => size * PT_TO_MM * 0.72
   const HEADER_HEIGHT = 7
-  const CELL_PAD = 2.3
+  const CELL_PAD = look.dense ? 1.4 : 2.3
 
   // "grid" styles rule every cell: outer box plus a line at each column edge.
-  function cellBorders(top: number, height: number) {
-    if (!look.grid) return
+  // "columnLines" styles draw only the vertical column edges (plus a box
+  // round the header), leaving rows unruled.
+  function cellBorders(top: number, height: number, isHeader = false) {
+    if (!look.grid && !look.columnLines) return
     doc.setDrawColor(COLOR_RULE[0], COLOR_RULE[1], COLOR_RULE[2])
     doc.setLineWidth(0.3)
-    doc.rect(MARGIN, top, RIGHT - MARGIN, height)
+    if (look.grid || isHeader) doc.rect(MARGIN, top, RIGHT - MARGIN, height)
+    else {
+      doc.line(MARGIN, top, MARGIN, top + height)
+      doc.line(RIGHT, top, RIGHT, top + height)
+    }
     for (let index = 1; index < columns.length; index++) doc.line(columnX(index), top, columnX(index), top + height)
   }
 
   function tableHeader() {
     fill(look.head.bg, MARGIN, y, RIGHT - MARGIN, HEADER_HEIGHT)
-    cellBorders(y, HEADER_HEIGHT)
+    cellBorders(y, HEADER_HEIGHT, true)
     if (look.headRule) {
       doc.setDrawColor(COLOR_ACCENT[0], COLOR_ACCENT[1], COLOR_ACCENT[2])
       doc.setLineWidth(0.5)
@@ -268,8 +281,9 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
       doc.text(values[col.key], cellX(index), baseline, { align: col.align, lineHeightFactor: LINE / (9.5 * PT_TO_MM) }),
     )
     y += rowHeight
-    if (!look.grid) rule(y)
+    if (!look.grid && !look.columnLines) rule(y)
   })
+  if (look.columnLines) rule(y)
   y += 6.4
 
   // ------------------------------------------------------------ totals

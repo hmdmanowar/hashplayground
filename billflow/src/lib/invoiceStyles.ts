@@ -6,11 +6,14 @@ export type InvoiceStyleId =
   | 'classic'
   | 'bold'
   | 'minimal'
-  | 'elegant'
   | 'vibrant'
   | 'vintage'
   | 'modern'
   | 'service'
+  | 'compact'
+  | 'studio'
+  | 'genz'
+  | 'fresh'
 
 export interface InvoiceStyle {
   id: InvoiceStyleId
@@ -19,7 +22,11 @@ export interface InvoiceStyle {
   serif: boolean
   // 'split': logo left, title + meta right. 'centered' / 'stacked': title
   // across the top (centred / left-aligned), then meta left and logo right.
-  layout: 'split' | 'centered' | 'stacked'
+  // 'banner': a full-width colour band on top holding the logo and title.
+  layout: 'split' | 'centered' | 'stacked' | 'banner'
+  bannerBg?: string // 'banner' layout only
+  columnLines?: boolean // vertical column lines only, no row rules
+  dense?: boolean // tighter rows for long item lists
   title: { color: string; bold: boolean; size: number }
   head: { bg: string; text: string }
   headRule: boolean // table header marked by accent rules above/below instead of a fill
@@ -87,24 +94,6 @@ export const INVOICE_STYLES: InvoiceStyle[] = [
     label: '#6b7280',
     accent: '#111827',
     totalBand: null,
-  },
-  {
-    id: 'elegant',
-    name: 'Elegant',
-    description: 'Serif type, black header, grey total band',
-    serif: true,
-    layout: 'split',
-    title: { color: '#111111', bold: false, size: 24 },
-    head: { bg: '#111111', text: '#ffffff' },
-    headRule: false,
-    recipientTag: false,
-    boxed: false,
-    grid: false,
-    zebra: null,
-    rule: '#d4d4d4',
-    label: '#6b6b6b',
-    accent: '#111111',
-    totalBand: { bg: '#efefef', text: '#111111' },
   },
   {
     id: 'vibrant',
@@ -177,6 +166,81 @@ export const INVOICE_STYLES: InvoiceStyle[] = [
     label: '#1e3a8a',
     accent: '#1e3a8a',
     totalBand: { bg: '#eef2ff', text: '#1e3a8a' },
+  },
+  {
+    id: 'compact',
+    name: 'Compact',
+    description: 'Dense boxed layout for long item lists',
+    serif: false,
+    layout: 'centered',
+    title: { color: '#111827', bold: true, size: 12 },
+    head: { bg: '#f3f4f6', text: '#111827' },
+    headRule: false,
+    recipientTag: true,
+    boxed: true,
+    grid: false,
+    columnLines: true,
+    dense: true,
+    zebra: null,
+    rule: '#6b7280',
+    label: '#111827',
+    accent: '#111827',
+    totalBand: null,
+  },
+  {
+    id: 'studio',
+    name: 'Studio',
+    description: 'Pink header band for creative work',
+    serif: false,
+    layout: 'stacked',
+    title: { color: '#be185d', bold: true, size: 13 },
+    head: { bg: '#db2777', text: '#ffffff' },
+    headRule: false,
+    recipientTag: false,
+    boxed: false,
+    grid: false,
+    zebra: null,
+    rule: '#f3d0e1',
+    label: '#be185d',
+    accent: '#db2777',
+    totalBand: { bg: '#fce7f3', text: '#831843' },
+  },
+  {
+    id: 'genz',
+    name: 'GenZ',
+    description: 'Bold blue banner across the top',
+    serif: false,
+    layout: 'banner',
+    bannerBg: '#2563eb',
+    title: { color: '#ffffff', bold: true, size: 13 },
+    head: { bg: '#2563eb', text: '#ffffff' },
+    headRule: false,
+    recipientTag: false,
+    boxed: false,
+    grid: false,
+    zebra: null,
+    rule: '#e5e7eb',
+    label: '#2563eb',
+    accent: '#2563eb',
+    totalBand: { bg: '#2563eb', text: '#ffffff' },
+  },
+  {
+    id: 'fresh',
+    name: 'Fresh',
+    description: 'Emerald header with soft striped rows',
+    serif: false,
+    layout: 'split',
+    title: { color: '#047857', bold: true, size: 20 },
+    head: { bg: '#047857', text: '#ffffff' },
+    headRule: false,
+    recipientTag: false,
+    boxed: false,
+    grid: false,
+    zebra: '#ecfdf5',
+    rule: '#d1fae5',
+    label: '#047857',
+    accent: '#047857',
+    totalBand: { bg: '#d1fae5', text: '#065f46' },
   },
 ]
 
