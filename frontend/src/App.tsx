@@ -18,6 +18,7 @@ import AdminFeedback from "./pages/AdminFeedback/AdminFeedback";
 import AdminAutonomousWorker from "./pages/AdminAutonomousWorker/AdminAutonomousWorker";
 import AdminBillflow from "./pages/AdminBillflow/AdminBillflow";
 import BillflowRedirect from "./pages/BillflowRedirect/BillflowRedirect";
+import NotFound from "./pages/NotFound/NotFound";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import { useDisableInspect } from "./hooks/useDisableInspect";
 
@@ -52,6 +53,7 @@ const router = createBrowserRouter(
           <Route path="/admin/autonomous-worker" element={<AdminAutonomousWorker />} />
           <Route path="/admin/billflow" element={<AdminBillflow />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Route>,
   ),

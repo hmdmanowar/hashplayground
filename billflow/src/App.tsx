@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
 import SiteFooter from './components/SiteFooter'
 import SiteBackground from './components/SiteBackground'
@@ -7,12 +7,13 @@ import ScrollToTopButton from './components/ScrollToTopButton'
 import GeneratorPage from './pages/GeneratorPage'
 import LandingPage from './pages/LandingPage'
 import TemplatesPage from './pages/TemplatesPage'
+import NotFoundPage from './pages/NotFoundPage'
 import { findTemplate } from './lib/templates'
 
 function TemplateRoute() {
   const { slug = '' } = useParams()
   const template = findTemplate(slug)
-  if (!template) return <Navigate to="/" replace />
+  if (!template) return <NotFoundPage />
   // Keyed by slug so switching templates remounts with that template's draft.
   return <GeneratorPage key={template.slug} template={template} />
 }
@@ -39,7 +40,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/:slug" element={<TemplateRoute />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         <SiteFooter />
