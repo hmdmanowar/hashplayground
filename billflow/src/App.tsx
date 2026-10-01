@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from '
 import SiteHeader from './components/SiteHeader'
 import SiteFooter from './components/SiteFooter'
 import SiteBackground from './components/SiteBackground'
+import ScrollToTopButton from './components/ScrollToTopButton'
 import GeneratorPage from './pages/GeneratorPage'
 import LandingPage from './pages/LandingPage'
 import TemplatesPage from './pages/TemplatesPage'
@@ -42,6 +43,7 @@ function App() {
           </Routes>
         </main>
         <SiteFooter />
+        <ScrollToTopButton />
       </div>
     </BrowserRouter>
   )

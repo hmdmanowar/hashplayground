@@ -5,6 +5,7 @@ import InvoicePreview from '../components/InvoicePreview'
 import TemplateCard from '../components/TemplateCard'
 import WaitlistDialog from '../components/WaitlistDialog'
 import HowItWorks from '../components/landing/HowItWorks'
+import ProofStrip from '../components/landing/ProofStrip'
 import {
   ArrowRightIcon,
   BankIcon,
@@ -440,6 +441,7 @@ function LandingPage() {
     // them without creating a scroll container.
     <div className="overflow-x-clip">
       <Hero draft={draft} />
+      <ProofStrip />
       <Facts />
       <HowItWorks />
       <Features />
