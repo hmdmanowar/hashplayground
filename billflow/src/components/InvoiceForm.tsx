@@ -15,7 +15,8 @@ import {
   type Party,
   type TaxMode,
 } from '../lib/invoice'
-import { PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
+import { findUpiId } from '../lib/upi'
+import { CheckIcon, PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
 
 const MAX_LOGO_BYTES = 500_000
 
@@ -54,6 +55,30 @@ function Field({ label, children, hint }: { label: string; children: ReactNode; 
 function GstinHint({ value, mode }: { value: string; mode: TaxMode }) {
   if (!isGst(mode) || !value.trim() || isValidGstin(value)) return null
   return <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">This doesn’t look like a valid 15-character GSTIN.</span>
+}
+
+function UpiHint({ draft }: { draft: InvoiceDraft }) {
+  const upiId = findUpiId(draft.paymentDetails)
+  if (!upiId) {
+    return (
+      <span className="mt-1 block text-xs text-[var(--color-muted)]">
+        Add your UPI ID (e.g. name@okaxis) to put a scan-to-pay QR code on the invoice.
+      </span>
+    )
+  }
+  if (draft.currency !== 'INR') {
+    return (
+      <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">
+        UPI only works in INR, so no QR code is added to {draft.currency} invoices.
+      </span>
+    )
+  }
+  return (
+    <span className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
+      <CheckIcon className="h-3.5 w-3.5" />
+      A UPI QR code for {upiId} with the invoice total is added to the invoice.
+    </span>
+  )
 }
 
 function PartyFields({
@@ -319,7 +344,7 @@ function InvoiceForm({ draft, update, updateParty, updateItem, addItem, removeIt
 
       <Section title="Payment details & notes">
         <div className="space-y-3">
-          <Field label="Payment details (UPI ID, bank account, IFSC…)">
+          <Field label="Payment details (UPI ID, bank account, IFSC…)" hint={<UpiHint draft={draft} />}>
             <textarea
               className="bf-input resize-y"
               rows={3}

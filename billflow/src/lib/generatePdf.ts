@@ -11,6 +11,7 @@ import {
   type InvoiceDraft,
   type Party,
 } from './invoice'
+import { qrDataUrl, upiPaymentFor } from './upi'
 
 // Draws the invoice directly with jsPDF (same approach as the main app's
 // Portfolio/generateResumePdf.ts) rather than screenshotting the preview:
@@ -92,7 +93,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
       const height = size.height * scale
       const format = draft.logoDataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG'
       try {
-        doc.addImage(draft.logoDataUrl, format, MARGIN, y - 4, width, height)
+        doc.addImage(draft.logoDataUrl, format, MARGIN, y - 4, width, height, 'logo', 'FAST')
         logoBottom = y - 4 + height
       } catch {
         // unreadable image — skip the logo rather than fail the download
@@ -244,19 +245,45 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   y += words.length * LINE + 4
 
   // ------------------------------------------------------------ notes
-  function block(title: string, body: string) {
+  // An optional QR sits at the block's right edge; text wraps beside it.
+  const QR_SIZE = 30
+  const QR_CAPTION_HEIGHT = 8
+
+  function block(title: string, body: string, qr?: { dataUrl: string; caption: string[] }) {
     if (!body.trim()) return
     setText(9.5)
-    const lines = doc.splitTextToSize(pdfSafe(body), RIGHT - MARGIN) as string[]
-    ensureSpace(lines.length * LINE + 8)
+    const textWidth = qr ? RIGHT - MARGIN - QR_SIZE - 8 : RIGHT - MARGIN
+    const lines = doc.splitTextToSize(pdfSafe(body), textWidth) as string[]
+    const textHeight = LINE + 0.4 + lines.length * LINE
+    const blockHeight = qr ? Math.max(textHeight, QR_SIZE + QR_CAPTION_HEIGHT) : textHeight
+    ensureSpace(blockHeight + 4)
+    const top = y
     setText(8, 'bold', COLOR_MUTED)
     doc.text(title, MARGIN, y)
     y += LINE + 0.4
     setText(9.5)
     doc.text(lines, MARGIN, y, { lineHeightFactor: LINE / (9.5 * PT_TO_MM) })
-    y += lines.length * LINE + 4
+    if (qr) {
+      const qrX = RIGHT - QR_SIZE
+      const qrTop = top - capHeight(8)
+      doc.addImage(qr.dataUrl, 'PNG', qrX, qrTop, QR_SIZE, QR_SIZE, 'upi-qr', 'FAST')
+      setText(7.5, 'normal', COLOR_MUTED)
+      doc.text(qr.caption, qrX + QR_SIZE / 2, qrTop + QR_SIZE + 3, {
+        align: 'center',
+        lineHeightFactor: 3.2 / (7.5 * PT_TO_MM),
+      })
+    }
+    y = top + blockHeight + 4
   }
-  block('PAYMENT DETAILS', draft.paymentDetails)
+
+  const upi = upiPaymentFor(draft)
+  const upiQr = upi
+    ? {
+        dataUrl: await qrDataUrl(upi.uri),
+        caption: [upi.amountMinor > 0 ? `Scan to pay ${money(upi.amountMinor)}` : 'Scan to pay', 'with any UPI app'],
+      }
+    : undefined
+  block('PAYMENT DETAILS', draft.paymentDetails, upiQr)
   block('NOTES', draft.notes)
 
   // ------------------------------------------------------------ footer

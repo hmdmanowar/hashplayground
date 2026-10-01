@@ -10,6 +10,7 @@ import {
   type InvoiceDraft,
   type Party,
 } from '../lib/invoice'
+import { useUpiQr } from '../lib/upi'
 
 // A paper-white sheet in both themes — it previews a printed document, so
 // it deliberately ignores the app's dark palette. Mirrors generatePdf.ts.
@@ -44,6 +45,7 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
   const showHsn = draft.items.some((item) => item.hsn.trim())
   const money = (minor: number) => formatMoney(minor, draft.currency)
   const taxLabel = taxIdLabel(draft.taxMode)
+  const upi = useUpiQr(draft)
 
   return (
     <article
@@ -151,9 +153,27 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
       <p className="mt-4 text-xs text-gray-500 italic">Amount in words: {amountInWords(totals.total, draft.currency)}</p>
 
       {draft.paymentDetails.trim() && (
-        <section className="mt-5">
-          <h3 className="text-[10px] font-semibold tracking-wider text-gray-500">PAYMENT DETAILS</h3>
-          <p className="mt-1 text-xs whitespace-pre-line">{draft.paymentDetails}</p>
+        <section className="mt-5 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="text-[10px] font-semibold tracking-wider text-gray-500">PAYMENT DETAILS</h3>
+            <p className="mt-1 text-xs break-words whitespace-pre-line">{draft.paymentDetails}</p>
+          </div>
+          {upi.payment && upi.dataUrl && (
+            <figure className="shrink-0 text-center">
+              <img src={upi.dataUrl} alt={`UPI QR code to pay ${upi.payment.upiId}`} className="h-24 w-24" />
+              <figcaption className="mt-1 text-[10px] leading-tight text-gray-500">
+                Scan to pay
+                {upi.payment.amountMinor > 0 && (
+                  <>
+                    <br />
+                    <span className="font-semibold text-gray-700">{money(upi.payment.amountMinor)}</span>
+                  </>
+                )}
+                <br />
+                with any UPI app
+              </figcaption>
+            </figure>
+          )}
         </section>
       )}
       {draft.notes.trim() && (
