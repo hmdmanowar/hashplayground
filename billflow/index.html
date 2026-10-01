@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="%BASE_URL%billflow-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3d52a0" />
+    <!-- Applied before first paint so the page doesn't flash light-then-dark.
+         Same "theme" localStorage key as the main Hash Playground app. -->
+    <script>
+      try {
+        var t = localStorage.getItem('theme')
+        if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches))
+          document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
+    <!-- seo:start — replaced per page by scripts/prerender.mjs -->
+    <title>Free Online Invoice Generator — BillFlow by Hash Playground</title>
+    <meta name="description" content="Create a professional invoice and download it as a PDF. Free, no sign-up, GST ready." />
+    <!-- seo:end -->
+  </head>
+  <body>
+    <div id="root"><!-- seo:body --></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -16,6 +16,8 @@ import Settings from "./pages/Settings/Settings";
 import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminFeedback from "./pages/AdminFeedback/AdminFeedback";
 import AdminAutonomousWorker from "./pages/AdminAutonomousWorker/AdminAutonomousWorker";
+import AdminBillflow from "./pages/AdminBillflow/AdminBillflow";
+import BillflowRedirect from "./pages/BillflowRedirect/BillflowRedirect";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import { useDisableInspect } from "./hooks/useDisableInspect";
 
@@ -32,6 +34,7 @@ const router = createBrowserRouter(
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/billflow/*" element={<BillflowRedirect />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/docs" element={<Docs />} />
@@ -47,6 +50,7 @@ const router = createBrowserRouter(
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/feedback" element={<AdminFeedback />} />
           <Route path="/admin/autonomous-worker" element={<AdminAutonomousWorker />} />
+          <Route path="/admin/billflow" element={<AdminBillflow />} />
         </Route>
       </Route>
     </Route>,

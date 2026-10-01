@@ -9,6 +9,7 @@ export function getCrumbs(pathname: string): Crumb[] {
   if (pathname === '/dashboard') return [{ label: 'Project Dashboard', path: '/dashboard' }]
   if (pathname === '/admin') return [{ label: 'Admin Dashboard', path: '/admin' }]
   if (pathname === '/admin/feedback') return [{ label: 'Feedback', path: '/admin/feedback' }]
+  if (pathname === '/admin/billflow') return [{ label: 'BillFlow', path: '/admin/billflow' }]
   if (pathname === '/admin/autonomous-worker')
     return [{ label: 'Autonomous Worker', path: '/admin/autonomous-worker' }]
   if (pathname === '/projects/new')

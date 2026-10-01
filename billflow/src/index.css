@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* dark: utilities follow the .dark class (set by useTheme), not the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens mirrored from frontend/src/index.css so BillFlow looks native
+   to Hash Playground. Keep the two in sync when the brand palette changes. */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --color-primary: #7091e6;
+  --color-primary-strong: #3d52a0;
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 15%, transparent);
+
+  --bg-panel: #ede8f5;
+  --bg-app: color-mix(in srgb, var(--bg-panel) 55%, white);
+  --text-app: #111827;
+  --color-muted: #48567a;
+  --border-panel: #adbbda;
+  --hover-overlay: rgba(0, 0, 0, 0.05);
+  --color-accent: var(--color-primary-strong);
+  --color-accent-soft: var(--color-primary-soft);
+}
+
+.dark {
+  --bg-app: #1e1e1e;
+  --text-app: #d4d4d4;
+  --bg-panel: #252526;
+  --color-muted: #8697c4;
+  --border-panel: #3c3c3c;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --color-accent: #818cf8;
+  --color-accent-soft: rgba(129, 140, 248, 0.15);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  color: var(--text-app);
+}
+
+@layer components {
+  .bf-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+
+  .bf-input {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-panel);
+    background: var(--bg-app);
+    color: var(--text-app);
+    padding: 0.45rem 0.65rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .bf-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  .bf-card {
+    border-radius: 1rem;
+    border: 1px solid var(--border-panel);
+    background: var(--bg-panel);
+    padding: 1rem;
+  }
+}
+
+/* "Print" fallback for the jsPDF download — prints only the invoice sheet. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .billflow-print-area,
+  .billflow-print-area * {
+    visibility: visible;
+  }
+
+  .billflow-print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,126 @@
+// Post-build step: turns the single SPA shell (dist/index.html) into one
+// static HTML file per template in src/data/templates.json, so crawlers that
+// don't run JavaScript still see each page's own <title>, meta description,
+// canonical, OG tags, JSON-LD and visible H1/intro/FAQ text.
+//
+//   dist/index.html              -> https://hashplayground.in/billflow/
+//   dist/<slug>/index.html       -> https://hashplayground.in/billflow/<slug>/
+//   dist/sitemap.xml             -> https://hashplayground.in/billflow/sitemap.xml
+//
+// Static hosting serves these real files before the SPA rewrite kicks in.
+// React then mounts with createRoot, replacing the static #root content.
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const dist = join(root, 'dist')
+const data = JSON.parse(readFileSync(join(root, 'src/data/templates.json'), 'utf8'))
+const shell = readFileSync(join(dist, 'index.html'), 'utf8')
+
+const HEAD_PATTERN = /<!-- seo:start[\s\S]*?<!-- seo:end -->/
+const BODY_MARKER = '<!-- seo:body -->'
+if (!HEAD_PATTERN.test(shell) || !shell.includes(BODY_MARKER)) {
+  throw new Error('prerender: seo markers missing from dist/index.html')
+}
+
+const escapeHtml = (value) =>
+  String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+// JSON inside <script> must not be able to close the tag.
+const jsonLd = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
+
+const pageUrl = (slug) => `${data.siteOrigin}${data.basePath}${slug ? `${slug}/` : ''}`
+const ogImage = `${data.siteOrigin}${data.basePath}billflow-logo.png`
+
+function head(template) {
+  const url = pageUrl(template.slug)
+  const title = escapeHtml(template.metaTitle)
+  const description = escapeHtml(template.metaDescription)
+  const structured = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'BillFlow',
+      url,
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Any (browser-based)',
+      description: template.metaDescription,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: template.faq.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ]
+  return [
+    `<title>${title}</title>`,
+    `<meta name="description" content="${description}" />`,
+    '<meta name="robots" content="index, follow" />',
+    `<link rel="canonical" href="${url}" />`,
+    '<meta property="og:type" content="website" />',
+    '<meta property="og:site_name" content="BillFlow" />',
+    `<meta property="og:url" content="${url}" />`,
+    `<meta property="og:title" content="${title}" />`,
+    `<meta property="og:description" content="${description}" />`,
+    `<meta property="og:image" content="${ogImage}" />`,
+    '<meta name="twitter:card" content="summary" />',
+    `<meta name="twitter:title" content="${title}" />`,
+    `<meta name="twitter:description" content="${description}" />`,
+    `<meta name="twitter:image" content="${ogImage}" />`,
+    ...structured.map((entry) => `<script type="application/ld+json">${jsonLd(entry)}</script>`),
+  ].join('\n    ')
+}
+
+// Plain inline-styled markup: it shows only until the JS bundle mounts (and
+// to non-JS crawlers), so it must not depend on Tailwind classes.
+function body(template) {
+  const links = data.templates
+    .filter((other) => other.slug !== template.slug)
+    .map((other) => `<li><a href="${pageUrl(other.slug)}">${escapeHtml(other.slug ? other.h1 : 'Free Invoice Generator')}</a></li>`)
+    .join('')
+  const faq = template.faq
+    .map((item) => `<h3>${escapeHtml(item.q)}</h3><p>${escapeHtml(item.a)}</p>`)
+    .join('')
+  return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+      <p><a href="${pageUrl('')}">BillFlow</a></p>
+      <h1>${escapeHtml(template.h1)}</h1>
+      <p>${escapeHtml(template.intro)}</p>
+      <p>Loading the invoice generator…</p>
+      <h2>Frequently asked questions</h2>${faq}
+      <h2>Free invoice templates</h2><ul>${links}</ul>
+    </div>`
+}
+
+for (const template of data.templates) {
+  const html = shell
+    .replace(HEAD_PATTERN, () => head(template))
+    .replace(BODY_MARKER, () => body(template))
+  const outFile = template.slug ? join(dist, template.slug, 'index.html') : join(dist, 'index.html')
+  mkdirSync(dirname(outFile), { recursive: true })
+  writeFileSync(outFile, html)
+}
+
+const today = new Date().toISOString().slice(0, 10)
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${data.templates
+  .map(
+    (template) => `  <url>
+    <loc>${pageUrl(template.slug)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>${template.slug ? '0.8' : '0.9'}</priority>
+  </url>`,
+  )
+  .join('\n')}
+</urlset>
+`
+writeFileSync(join(dist, 'sitemap.xml'), sitemap)
+
+console.log(`prerender: wrote ${data.templates.length} pages + sitemap.xml`)

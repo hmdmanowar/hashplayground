@@ -1,0 +1,345 @@
+import { useState, type ChangeEvent, type ReactNode } from 'react'
+import {
+  CURRENCIES,
+  TAX_MODES,
+  computeTotals,
+  formatMoney,
+  hasTax,
+  isGst,
+  isValidGstin,
+  suggestedGstMode,
+  taxIdLabel,
+  type CurrencyCode,
+  type InvoiceDraft,
+  type LineItem,
+  type Party,
+  type TaxMode,
+} from '../lib/invoice'
+import { PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
+
+const MAX_LOGO_BYTES = 500_000
+
+interface InvoiceFormProps {
+  draft: InvoiceDraft
+  update: (patch: Partial<InvoiceDraft>) => void
+  updateParty: (side: 'from' | 'to', patch: Partial<Party>) => void
+  updateItem: (id: string, patch: Partial<LineItem>) => void
+  addItem: () => void
+  removeItem: (id: string) => void
+  reset: () => void
+}
+
+function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
+  return (
+    <section className="bf-card">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: ReactNode }) {
+  return (
+    <label className="block min-w-0">
+      <span className="bf-label">{label}</span>
+      {children}
+      {hint}
+    </label>
+  )
+}
+
+function GstinHint({ value, mode }: { value: string; mode: TaxMode }) {
+  if (!isGst(mode) || !value.trim() || isValidGstin(value)) return null
+  return <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">This doesn’t look like a valid 15-character GSTIN.</span>
+}
+
+function PartyFields({
+  side,
+  party,
+  mode,
+  updateParty,
+}: {
+  side: 'from' | 'to'
+  party: Party
+  mode: TaxMode
+  updateParty: InvoiceFormProps['updateParty']
+}) {
+  const set = (patch: Partial<Party>) => updateParty(side, patch)
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <Field label={side === 'from' ? 'Business / your name' : 'Client name'}>
+          <input className="bf-input" value={party.name} onChange={(e) => set({ name: e.target.value })} />
+        </Field>
+      </div>
+      <div className="sm:col-span-2">
+        <Field label="Address">
+          <textarea
+            className="bf-input resize-y"
+            rows={2}
+            value={party.address}
+            onChange={(e) => set({ address: e.target.value })}
+          />
+        </Field>
+      </div>
+      <Field label={`${taxIdLabel(mode)} (optional)`} hint={<GstinHint value={party.taxId} mode={mode} />}>
+        <input
+          className="bf-input uppercase"
+          value={party.taxId}
+          maxLength={20}
+          onChange={(e) => set({ taxId: e.target.value.toUpperCase() })}
+        />
+      </Field>
+      <Field label="Email (optional)">
+        <input className="bf-input" type="email" value={party.email} onChange={(e) => set({ email: e.target.value })} />
+      </Field>
+      {side === 'from' && (
+        <Field label="Phone (optional)">
+          <input className="bf-input" type="tel" value={party.phone} onChange={(e) => set({ phone: e.target.value })} />
+        </Field>
+      )}
+    </div>
+  )
+}
+
+function InvoiceForm({ draft, update, updateParty, updateItem, addItem, removeItem, reset }: InvoiceFormProps) {
+  const [logoError, setLogoError] = useState('')
+  const totals = computeTotals(draft)
+  const taxed = hasTax(draft.taxMode)
+  const suggestion = isGst(draft.taxMode) ? suggestedGstMode(draft.from.taxId, draft.to.taxId) : null
+
+  function handleLogo(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!/^image\/(png|jpe?g)$/.test(file.type)) {
+      setLogoError('Please choose a PNG or JPG image.')
+      return
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      setLogoError('Logo must be under 500 KB.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        update({ logoDataUrl: reader.result })
+        setLogoError('')
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div className="space-y-4">
+      <Section
+        title="Invoice details"
+        action={
+          <button
+            type="button"
+            onClick={reset}
+            className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
+            title="Start a new invoice (keeps your business details)"
+          >
+            <ResetIcon className="h-3.5 w-3.5" />
+            New invoice
+          </button>
+        }
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Document title">
+            <input className="bf-input" value={draft.documentTitle} onChange={(e) => update({ documentTitle: e.target.value })} />
+          </Field>
+          <Field label="Invoice number">
+            <input className="bf-input" value={draft.invoiceNumber} onChange={(e) => update({ invoiceNumber: e.target.value })} />
+          </Field>
+          <Field label="Invoice date">
+            <input className="bf-input" type="date" value={draft.issueDate} onChange={(e) => update({ issueDate: e.target.value })} />
+          </Field>
+          <Field label="Due date">
+            <input className="bf-input" type="date" value={draft.dueDate} onChange={(e) => update({ dueDate: e.target.value })} />
+          </Field>
+          <Field label="Currency">
+            <select
+              className="bf-input"
+              value={draft.currency}
+              onChange={(e) => update({ currency: e.target.value as CurrencyCode })}
+            >
+              {CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Tax">
+            <select className="bf-input" value={draft.taxMode} onChange={(e) => update({ taxMode: e.target.value as TaxMode })}>
+              {TAX_MODES.map((mode) => (
+                <option key={mode.value} value={mode.value}>
+                  {mode.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {draft.taxMode === 'custom' && (
+            <Field label="Tax name">
+              <input
+                className="bf-input"
+                placeholder="VAT"
+                value={draft.taxLabel}
+                onChange={(e) => update({ taxLabel: e.target.value })}
+              />
+            </Field>
+          )}
+          <Field label="Discount % (optional)">
+            <input
+              className="bf-input"
+              inputMode="decimal"
+              value={draft.discountPercent}
+              onChange={(e) => update({ discountPercent: e.target.value })}
+            />
+          </Field>
+        </div>
+        {suggestion && suggestion !== draft.taxMode && (
+          <p className="mt-3 rounded-lg bg-[var(--color-primary-soft)] px-3 py-2 text-xs">
+            The GSTINs show {suggestion === 'gst_inter' ? 'different states, so this supply should use IGST' : 'the same state, so this supply should use CGST + SGST'}.{' '}
+            <button
+              type="button"
+              className="cursor-pointer font-semibold text-[var(--color-accent)] underline"
+              onClick={() => update({ taxMode: suggestion })}
+            >
+              Switch
+            </button>
+          </p>
+        )}
+      </Section>
+
+      <Section title="Your business">
+        <div className="mb-3 flex items-center gap-3">
+          {draft.logoDataUrl ? (
+            <div className="relative">
+              <img src={draft.logoDataUrl} alt="Your logo" className="h-12 max-w-[140px] rounded object-contain" />
+              <button
+                type="button"
+                onClick={() => update({ logoDataUrl: '' })}
+                aria-label="Remove logo"
+                className="absolute -right-2 -top-2 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[var(--bg-app)] shadow"
+              >
+                <XIcon className="h-3 w-3" />
+              </button>
+            </div>
+          ) : null}
+          <label className="cursor-pointer rounded-full border border-dashed border-[var(--border-panel)] px-3 py-1.5 text-xs font-medium text-[var(--color-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]">
+            {draft.logoDataUrl ? 'Change logo' : 'Upload logo (PNG/JPG)'}
+            <input type="file" accept="image/png,image/jpeg" className="sr-only" onChange={handleLogo} />
+          </label>
+          {logoError && <span className="text-xs text-red-600 dark:text-red-400">{logoError}</span>}
+        </div>
+        <PartyFields side="from" party={draft.from} mode={draft.taxMode} updateParty={updateParty} />
+      </Section>
+
+      <Section title="Bill to">
+        <PartyFields side="to" party={draft.to} mode={draft.taxMode} updateParty={updateParty} />
+      </Section>
+
+      <Section title="Items">
+        <div className="space-y-3">
+          {draft.items.map((item, index) => (
+            <div key={item.id} className="rounded-xl border border-[var(--border-panel)] bg-[var(--bg-app)] p-3">
+              <div className="flex items-start gap-2">
+                <span className="mt-2 w-5 shrink-0 text-xs font-semibold text-[var(--color-muted)]">{index + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <input
+                    className="bf-input"
+                    placeholder="Description of goods or services"
+                    aria-label={`Item ${index + 1} description`}
+                    value={item.description}
+                    onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                  />
+                  <div className={`mt-2 grid grid-cols-2 gap-2 ${taxed ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
+                    <Field label="HSN/SAC">
+                      <input className="bf-input" value={item.hsn} onChange={(e) => updateItem(item.id, { hsn: e.target.value })} />
+                    </Field>
+                    <Field label="Qty">
+                      <input
+                        className="bf-input"
+                        inputMode="decimal"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.id, { quantity: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Rate">
+                      <input
+                        className="bf-input"
+                        inputMode="decimal"
+                        value={item.rate}
+                        onChange={(e) => updateItem(item.id, { rate: e.target.value })}
+                      />
+                    </Field>
+                    {taxed && (
+                      <Field label="Tax %">
+                        <input
+                          className="bf-input"
+                          inputMode="decimal"
+                          value={item.taxRate}
+                          onChange={(e) => updateItem(item.id, { taxRate: e.target.value })}
+                        />
+                      </Field>
+                    )}
+                  </div>
+                  <p className="mt-2 text-right text-xs text-[var(--color-muted)]">
+                    Amount: <span className="font-semibold text-[var(--text-app)]">{formatMoney(totals.lines[index].amount, draft.currency)}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeItem(item.id)}
+                  disabled={draft.items.length === 1}
+                  aria-label={`Remove item ${index + 1}`}
+                  className="mt-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--color-muted)] transition-colors hover:bg-[var(--hover-overlay)] hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addItem}
+          className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-panel)] py-2 text-sm font-medium text-[var(--color-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+        >
+          <PlusIcon className="h-4 w-4" />
+          Add item
+        </button>
+      </Section>
+
+      <Section title="Payment details & notes">
+        <div className="space-y-3">
+          <Field label="Payment details (UPI ID, bank account, IFSC…)">
+            <textarea
+              className="bf-input resize-y"
+              rows={3}
+              placeholder={'UPI: yourname@okbank\nA/c 1234567890 · IFSC ABCD0123456'}
+              value={draft.paymentDetails}
+              onChange={(e) => update({ paymentDetails: e.target.value })}
+            />
+          </Field>
+          <Field label="Notes / terms">
+            <textarea
+              className="bf-input resize-y"
+              rows={2}
+              value={draft.notes}
+              onChange={(e) => update({ notes: e.target.value })}
+            />
+          </Field>
+        </div>
+      </Section>
+    </div>
+  )
+}
+
+export default InvoiceForm

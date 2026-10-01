@@ -5,14 +5,17 @@
   "workspaces": [
     "frontend",
     "backend",
-    "jarvis"
+    "jarvis",
+    "billflow"
   ],
   "scripts": {
-    "dev": "concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev": "concurrently -n backend,frontend,billflow -c blue,green,magenta \"npm:dev:backend\" \"npm:dev:frontend\" \"npm:dev:billflow\"",
     "dev:frontend": "npm run dev --workspace frontend",
     "dev:backend": "npm run dev --workspace backend",
+    "dev:billflow": "npm run dev --workspace billflow",
     "build:frontend": "npm run build --workspace frontend",
     "build:backend": "npm run build --workspace backend",
+    "build:billflow": "npm run build --workspace billflow",
     "lint:frontend": "npm run lint --workspace frontend"
   },
   "devDependencies": {

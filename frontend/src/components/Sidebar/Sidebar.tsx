@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon, BotIcon } from '../Icons/Icons'
+import { HomeIcon, GridIcon, ShieldIcon, SettingsIcon, ClipboardListIcon, BotIcon, WalletIcon } from '../Icons/Icons'
 import { isMobileViewport } from '../../lib/viewport'
 import { listUsers, isTopAdmin, ADMIN_USERS_CACHE_KEY, type UserSummary } from '../../services/userService'
 import { getCached, setCached } from '../../lib/dataCache'
@@ -99,6 +99,12 @@ function Sidebar({ collapsed, onCloseOverlay }: SidebarProps) {
           <NavLink to="/admin/autonomous-worker" title="Autonomous Worker" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
             <BotIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
             {!collapsed && <span className="min-w-0 flex-1 truncate">Autonomous Worker</span>}
+          </NavLink>
+        )}
+        {isTopAdminUser && (
+          <NavLink to="/admin/billflow" title="BillFlow" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
+            <WalletIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
+            {!collapsed && <span className="min-w-0 flex-1 truncate">BillFlow</span>}
           </NavLink>
         )}
         <NavLink to="/settings" title="Account Settings" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
