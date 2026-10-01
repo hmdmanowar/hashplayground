@@ -15,7 +15,7 @@ import {
   type Party,
   type TaxMode,
 } from '../lib/invoice'
-import { findUpiId } from '../lib/upi'
+import { findUpiId, findUpiPhoneWithoutHandle } from '../lib/upi'
 import { CheckIcon, PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
 
 const MAX_LOGO_BYTES = 500_000
@@ -59,6 +59,16 @@ function GstinHint({ value, mode }: { value: string; mode: TaxMode }) {
 
 function UpiHint({ draft }: { draft: InvoiceDraft }) {
   const upiId = findUpiId(draft.paymentDetails)
+  const phone = findUpiPhoneWithoutHandle(draft.paymentDetails)
+  if (phone) {
+    return (
+      <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">
+        Looks like a UPI phone number. Add your app’s handle to get a scan-to-pay QR code, e.g.{' '}
+        <strong>{phone}@ybl</strong> (PhonePe), <strong>{phone}@paytm</strong> (Paytm) or{' '}
+        <strong>@okaxis</strong> (Google Pay). You’ll find your exact UPI ID in your UPI app’s profile.
+      </span>
+    )
+  }
   if (!upiId) {
     return (
       <span className="mt-1 block text-xs text-[var(--color-muted)]">

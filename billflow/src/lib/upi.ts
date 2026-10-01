@@ -9,6 +9,19 @@ export function findUpiId(text: string): string | null {
   return UPI_ID_PATTERN.exec(text)?.[1] ?? null
 }
 
+const UPI_MENTION = /\b(upi|gpay|google pay|phonepe|paytm|bhim)\b/i
+// Indian mobile (optionally +91 / 0 prefixed), not part of a longer number
+// and not already followed by an @handle.
+const MOBILE_PATTERN = /(?<![\d@])(?:\+?91[\s-]?|0)?([6-9]\d{4}[\s-]?\d{5})(?![\d@])/
+
+// A bare phone number can't go into a UPI QR: the @handle depends on the
+// payer's app and can't be guessed. Detect it so the form can ask for it.
+export function findUpiPhoneWithoutHandle(text: string): string | null {
+  if (findUpiId(text) || !UPI_MENTION.test(text)) return null
+  const match = MOBILE_PATTERN.exec(text)
+  return match ? match[1].replace(/[\s-]/g, '') : null
+}
+
 export interface UpiPayment {
   upiId: string
   uri: string
