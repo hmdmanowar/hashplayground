@@ -15,7 +15,11 @@ function TemplateRoute() {
 
 function ScrollToTop() {
   const { pathname } = useLocation()
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  // Block body, not `() => window.scrollTo(...)`: newer browsers return a
+  // Promise from scrollTo, which React would then call as the effect cleanup.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
   return null
 }
 
