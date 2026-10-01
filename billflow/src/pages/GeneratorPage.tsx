@@ -115,7 +115,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
             {downloadError && <p className="w-full text-sm text-red-600 dark:text-red-400">{downloadError}</p>}
           </div>
 
-          <StylePicker value={draft.style} onChange={(style) => update({ style })} />
+          <StylePicker draft={draft} value={draft.style} onChange={(style) => update({ style })} />
           <InvoicePreview draft={draft} />
           <UpgradeBanner onUpgrade={handleUpgrade} />
         </div>

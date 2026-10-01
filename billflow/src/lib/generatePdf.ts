@@ -94,7 +94,10 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   }
 
   // ------------------------------------------------------------ header
-  const centered = look.layout === 'centered'
+  // "centered" and "stacked" both put the title on its own line at the top,
+  // with meta on the left and the logo on the right underneath.
+  const topTitle = look.layout !== 'split'
+  const centered = topTitle
   const title = pdfSafe(draft.documentTitle || 'Invoice').toUpperCase()
   const meta: [string, string][] = [
     ['Invoice no.', draft.invoiceNumber],
@@ -102,11 +105,17 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     ['Due date', formatDate(draft.dueDate)],
   ]
 
-  // "split": logo left, title + meta right-aligned. "centered": title across
-  // the top, then meta on the left and the logo on the right.
+  if (look.recipientTag) {
+    setText(7, 'bold', COLOR_MUTED)
+    doc.text('ORIGINAL FOR RECIPIENT', RIGHT, MARGIN - 3, { align: 'right' })
+  }
+
+  // "split": logo left, title + meta right-aligned.
   setText(look.title.size, look.title.bold ? 'bold' : 'normal', hexToRgb(look.title.color))
-  doc.text(title, centered ? PAGE_WIDTH / 2 : RIGHT, y + 2, { align: centered ? 'center' : 'right' })
-  const blockTop = centered ? y + 12 : y
+  if (look.layout === 'centered') doc.text(title, PAGE_WIDTH / 2, y + 2, { align: 'center' })
+  else if (look.layout === 'stacked') doc.text(title, MARGIN, y + 1)
+  else doc.text(title, RIGHT, y + 2, { align: 'right' })
+  const blockTop = topTitle ? y + (look.title.size < 16 ? 9 : 12) : y
 
   let logoBottom = blockTop
   if (draft.logoDataUrl) {
@@ -172,9 +181,20 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   }
 
   const half = (RIGHT - MARGIN - 10) / 2
-  const fromBottom = party('FROM', draft.from, MARGIN, half)
-  const toBottom = party('BILL TO', draft.to, MARGIN + half + 10, half)
+  if (look.boxed) y += 2
+  const partiesTop = y - 4.5
+  const fromBottom = party('FROM', draft.from, MARGIN + (look.boxed ? 3 : 0), half - (look.boxed ? 3 : 0))
+  const toBottom = party('BILL TO', draft.to, MARGIN + half + 10, half - (look.boxed ? 3 : 0))
   y = Math.max(fromBottom, toBottom) + 5
+  if (look.boxed) {
+    // Boxed register look: border round both parties with a divider between
+    const boxBottom = y - 3
+    doc.setDrawColor(COLOR_RULE[0], COLOR_RULE[1], COLOR_RULE[2])
+    doc.setLineWidth(0.3)
+    doc.rect(MARGIN, partiesTop, RIGHT - MARGIN, boxBottom - partiesTop)
+    doc.line(MARGIN + half + 5, partiesTop, MARGIN + half + 5, boxBottom)
+    y += 2
+  }
 
   // ------------------------------------------------------------ items table
   const showHsn = draft.items.some((item) => item.hsn.trim())
@@ -212,6 +232,12 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   function tableHeader() {
     fill(look.head.bg, MARGIN, y, RIGHT - MARGIN, HEADER_HEIGHT)
     cellBorders(y, HEADER_HEIGHT)
+    if (look.headRule) {
+      doc.setDrawColor(COLOR_ACCENT[0], COLOR_ACCENT[1], COLOR_ACCENT[2])
+      doc.setLineWidth(0.5)
+      doc.line(MARGIN, y, RIGHT, y)
+      doc.line(MARGIN, y + HEADER_HEIGHT, RIGHT, y + HEADER_HEIGHT)
+    }
     setText(8.5, 'bold', hexToRgb(look.head.text))
     const baseline = y + (HEADER_HEIGHT + capHeight(8.5)) / 2
     columns.forEach((col, index) => doc.text(col.label, cellX(index), baseline, { align: col.align }))
@@ -257,11 +283,14 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   totals.taxLines.forEach((line) => summary.push({ label: line.label, value: money(line.amount) }))
 
   ensureSpace(summary.length * 5.5 + 16)
+  const totalsTop = y - 4.5
+  // Boxed styles keep amounts clear of the box's right border.
+  const valueX = look.boxed ? RIGHT - 2.5 : RIGHT
   for (const row of summary) {
     setText(9.5, 'normal', COLOR_MUTED)
     doc.text(pdfSafe(row.label), RIGHT - 40, y, { align: 'right' })
     setText(9.5)
-    doc.text(row.value, RIGHT, y, { align: 'right' })
+    doc.text(row.value, valueX, y, { align: 'right' })
     y += 5.5
   }
   if (look.totalBand) {
@@ -279,8 +308,14 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     y += 3.5
     setText(12, 'bold')
     doc.text(`Total (${draft.currency})`, RIGHT - 40, y, { align: 'right' })
-    doc.text(money(totals.total), RIGHT, y, { align: 'right' })
+    doc.text(money(totals.total), valueX, y, { align: 'right' })
     y += 8
+  }
+  if (look.boxed) {
+    doc.setDrawColor(COLOR_RULE[0], COLOR_RULE[1], COLOR_RULE[2])
+    doc.setLineWidth(0.3)
+    doc.rect(RIGHT - 86, totalsTop, 86, y - 4 - totalsTop)
+    y += 2
   }
 
   setText(9, 'italic', COLOR_MUTED)

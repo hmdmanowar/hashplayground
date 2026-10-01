@@ -283,7 +283,7 @@ function TemplateShowcase() {
       {/* Auto-scrolling marquee: the set is rendered twice and slid by -50%
           for a seamless loop; hover/focus pauses it. The second copy is
           hidden from screen readers and skipped by keyboard focus. */}
-      <div className="bf-marquee-track mt-8 pb-4">
+      <div className="bf-marquee-track mx-auto mt-8 max-w-7xl pb-4">
         <div className="bf-marquee flex">
           {[false, true].map((duplicate) =>
             showcase.map((template) => (

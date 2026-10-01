@@ -45,7 +45,9 @@ function PartyBlock({ title, party, taxLabel, labelColor }: { title: string; par
   )
 }
 
-function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
+// printable=false for scaled-down samples (style gallery) so Print only
+// ever picks up the real invoice sheet.
+function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; printable?: boolean }) {
   const totals = computeTotals(draft)
   const taxed = hasTax(draft.taxMode)
   const showHsn = draft.items.some((item) => item.hsn.trim())
@@ -54,7 +56,7 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
   const upi = useUpiQr(draft)
   const payLines = paymentLines(draft.payment)
   const look = getInvoiceStyle(draft.style)
-  const centered = look.layout === 'centered'
+  const topTitle = look.layout !== 'split'
 
   const cell: CSSProperties = look.grid ? { border: `1px solid ${look.rule}` } : {}
   const labelStyle: CSSProperties = { color: look.label }
@@ -75,7 +77,7 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
   ].filter(([, value]) => value)
 
   const metaEl = (
-    <dl className={`mt-2 grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-xs ${centered ? 'justify-start' : 'justify-end'}`}>
+    <dl className={`mt-2 grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-xs ${topTitle ? 'justify-start' : 'justify-end'}`}>
       {metaRows.map(([label, value]) => (
         <div key={label} className="contents">
           <dt className="text-gray-500">{label}</dt>
@@ -92,13 +94,16 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
   return (
     <article
       aria-label="Invoice preview"
-      className={`billflow-print-area rounded-xl border border-gray-200 bg-white p-5 text-gray-900 shadow-sm sm:p-7 ${
+      className={`${printable ? 'billflow-print-area' : ''} rounded-xl border border-gray-200 bg-white p-5 text-gray-900 shadow-sm sm:p-7 ${
         look.serif ? 'font-serif' : ''
       }`}
     >
-      {centered ? (
+      {look.recipientTag && (
+        <p className="mb-2 text-right text-[9px] font-semibold tracking-wider text-gray-500">ORIGINAL FOR RECIPIENT</p>
+      )}
+      {topTitle ? (
         <header>
-          <div className="text-center">{titleEl}</div>
+          <div className={look.layout === 'centered' ? 'text-center' : 'text-left'}>{titleEl}</div>
           <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
             {metaEl}
             {logoEl}
@@ -114,9 +119,14 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
         </header>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div
+        className={`mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 ${look.boxed ? 'border p-3' : ''}`}
+        style={look.boxed ? { borderColor: look.rule } : undefined}
+      >
         <PartyBlock title="FROM" party={draft.from} taxLabel={taxLabel} labelColor={look.label} />
-        <PartyBlock title="BILL TO" party={draft.to} taxLabel={taxLabel} labelColor={look.label} />
+        <div className={look.boxed ? 'sm:border-l sm:pl-5' : ''} style={look.boxed ? { borderColor: look.rule } : undefined}>
+          <PartyBlock title="BILL TO" party={draft.to} taxLabel={taxLabel} labelColor={look.label} />
+        </div>
       </div>
 
       <div className="mt-6 overflow-x-auto">
@@ -124,7 +134,12 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
           <thead>
             <tr
               className="text-left text-[10px] font-semibold tracking-wide uppercase"
-              style={{ backgroundColor: look.head.bg, color: look.head.text }}
+              style={{
+                backgroundColor: look.head.bg,
+                color: look.head.text,
+                borderTop: look.headRule ? `2px solid ${look.accent}` : undefined,
+                borderBottom: look.headRule ? `2px solid ${look.accent}` : undefined,
+              }}
             >
               <th className="px-2 py-2" style={cell}>#</th>
               <th className="px-2 py-2" style={cell}>Description</th>
@@ -163,7 +178,10 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
       </div>
 
       <div className="mt-4 flex justify-end">
-        <dl className="w-full max-w-xs space-y-1 text-xs">
+        <dl
+          className={`w-full max-w-xs space-y-1 text-xs ${look.boxed ? 'border p-2' : ''}`}
+          style={look.boxed ? { borderColor: look.rule } : undefined}
+        >
           <div className="flex justify-between gap-4">
             <dt className="text-gray-500">Subtotal</dt>
             <dd>{money(totals.subtotal)}</dd>

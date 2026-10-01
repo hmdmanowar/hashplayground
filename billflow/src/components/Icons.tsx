@@ -253,3 +253,19 @@ export function ArrowUpIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  )
+}
+
+export function ChevronRightIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  )
+}
