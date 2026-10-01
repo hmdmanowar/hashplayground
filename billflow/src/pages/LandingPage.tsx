@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import FaqList from '../components/FaqList'
 import InvoicePreview from '../components/InvoicePreview'
@@ -29,6 +29,7 @@ import {
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
 import { EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft } from '../lib/invoice'
+import { INVOICE_STYLES } from '../lib/invoiceStyles'
 import { GENERATOR_PATH, LANDING_PAGE, TEMPLATES, findTemplate } from '../lib/templates'
 
 // ---------------------------------------------------------------- data
@@ -167,7 +168,31 @@ function SectionHeading({ eyebrow, title, accent, body }: { eyebrow?: string; ti
   )
 }
 
+const STYLE_ROTATE_MS = 3200
+
 function Hero({ draft }: { draft: InvoiceDraft }) {
+  const [styleIndex, setStyleIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [sheetHeight, setSheetHeight] = useState(0)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const look = INVOICE_STYLES[styleIndex]
+
+  // Auto-advance through every style; hover pauses, reduced motion opts out
+  // (the dots still let anyone flip through manually).
+  useEffect(() => {
+    if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const timer = setTimeout(() => setStyleIndex((prev) => (prev + 1) % INVOICE_STYLES.length), STYLE_ROTATE_MS)
+    return () => clearTimeout(timer)
+  }, [paused, styleIndex])
+
+  useEffect(() => {
+    const node = sheetRef.current
+    if (!node) return
+    const observer = new ResizeObserver(() => setSheetHeight((prev) => Math.max(prev, node.offsetHeight)))
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [styleIndex])
+
   return (
     <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 pt-12 pb-20 lg:grid-cols-[1.05fr_1fr] lg:pt-20">
       <div className="bf-fade-in">
@@ -213,11 +238,20 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
         </ul>
       </div>
 
-      {/* Live product shot: the real invoice preview with floating callouts */}
-      <div className="relative mx-auto w-full max-w-xl" aria-hidden="true">
-        <div className="absolute -inset-8 rounded-[3rem] bg-[var(--color-primary)]/20 blur-3xl" />
-        <div className="pointer-events-none relative rotate-1 select-none">
-          <InvoicePreview draft={draft} />
+      {/* Live product shot: the real invoice preview, cycling through every
+          invoice style, with floating callouts */}
+      <div
+        className="relative mx-auto w-full max-w-xl"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div className="absolute -inset-8 rounded-[3rem] bg-[var(--color-primary)]/20 blur-3xl" aria-hidden="true" />
+        {/* Holds the tallest style seen so far, so switching styles never
+            makes the hero jump up and down. */}
+        <div className="relative" style={{ minHeight: sheetHeight || undefined }} aria-hidden="true">
+          <div ref={sheetRef} key={look.id} className="bf-fade-in pointer-events-none rotate-1 select-none">
+            <InvoicePreview draft={{ ...draft, style: look.id }} />
+          </div>
         </div>
         <div className="bf-float absolute -top-4 left-2 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 shadow-xl sm:-left-10">
           <p className="text-[11px] text-[var(--color-muted)]">GST worked out</p>
@@ -230,9 +264,34 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
           </p>
           <p className="text-[11px] text-[var(--color-muted)]">Any UPI app, exact amount</p>
         </div>
-        <div className="bf-float absolute -bottom-5 left-6 flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-xl">
+        <div
+          className="bf-float absolute left-6 flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-xl"
+          style={{ bottom: 36 }}
+          aria-hidden="true"
+        >
           <CheckIcon className="h-4 w-4" />
           PDF ready in seconds
+        </div>
+
+        <div className="relative mt-8 flex flex-col items-center gap-2">
+          <p className="text-xs text-[var(--color-muted)]" aria-live="polite">
+            Style: <span className="font-semibold text-[var(--text-app)]">{look.name}</span> · one of {INVOICE_STYLES.length}{' '}
+            PDF styles
+          </p>
+          <div className="flex flex-wrap justify-center gap-1.5" role="group" aria-label="Preview invoice styles">
+            {INVOICE_STYLES.map((style, index) => (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => setStyleIndex(index)}
+                aria-label={`Show ${style.name} style`}
+                aria-pressed={index === styleIndex}
+                className={`h-2 cursor-pointer rounded-full transition-all duration-300 ${
+                  index === styleIndex ? 'w-6 bg-[var(--color-primary-strong)]' : 'w-2 bg-[var(--border-panel)] hover:bg-[var(--color-primary)]'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
