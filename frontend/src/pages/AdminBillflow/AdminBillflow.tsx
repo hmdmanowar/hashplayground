@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
-import { getBillflowStats, type BillflowStats } from '../../services/billflowService'
+import { getBillflowStats, resetBillflowData, type BillflowStats } from '../../services/billflowService'
+import { useToast } from '../../context/ToastContext'
 
 // Milestone-1 go/no-go gate for building BillFlow's paid tier (Razorpay,
 // dashboard, reminders) — see the BillFlow plan. Tune here if the bar moves.
@@ -31,11 +32,106 @@ function GateMeter({ label, value, target }: { label: string; value: number; tar
   )
 }
 
+// Irreversible wipe of all BillFlow events + waitlist, confirmed by
+// re-entering the top admin's account password (checked server-side).
+function ResetDialog({
+  waitlistTotal,
+  onClose,
+  onDone,
+}: {
+  waitlistTotal: number
+  onClose: () => void
+  onDone: (result: { events: number; waitlist: number }) => void
+}) {
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !submitting) onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, submitting])
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    setSubmitting(true)
+    setError('')
+    try {
+      onDone(await resetBillflowData(password))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Reset failed')
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => !submitting && onClose()}>
+      <form
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="billflow-reset-title"
+        onSubmit={handleSubmit}
+        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-md rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-6 shadow-2xl"
+      >
+        <h2 id="billflow-reset-title" className="text-lg font-semibold text-red-600 dark:text-red-400">
+          Reset all BillFlow data?
+        </h2>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">This permanently deletes, with no undo:</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+          <li>every page view, PDF download and upgrade click</li>
+          <li>
+            all {waitlistTotal} Pro waitlist signup{waitlistTotal === 1 ? '' : 's'} (emails and price intent)
+          </li>
+        </ul>
+        <p className="mt-3 text-sm text-[var(--color-muted)]">Users’ invoices are not affected; they live in their own browsers.</p>
+
+        <label className="mt-4 block">
+          <span className="text-sm font-medium">Enter your account password to confirm</span>
+          <input
+            type="password"
+            autoComplete="current-password"
+            autoFocus
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="mt-1 w-full rounded-lg border border-[var(--border-panel)] bg-[var(--bg-app)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
+          />
+        </label>
+        {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="cursor-pointer rounded-full border border-[var(--border-panel)] bg-[var(--bg-app)] px-4 py-2 text-sm font-medium transition-colors hover:border-[var(--color-primary)] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting || !password}
+            className="cursor-pointer rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? 'Resetting…' : 'Reset everything'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
 function AdminBillflow() {
   const [stats, setStats] = useState<BillflowStats | null>(null)
   const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [resetOpen, setResetOpen] = useState(false)
+  const { showToast } = useToast()
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
     getBillflowStats()
       .then((data) => {
         setStats(data)
@@ -43,6 +139,18 @@ function AdminBillflow() {
       })
       .catch(() => setLoadStatus('error'))
   }, [])
+
+  useEffect(() => {
+    loadStats()
+  }, [loadStats])
+
+  const closeReset = useCallback(() => setResetOpen(false), [])
+
+  function handleResetDone(result: { events: number; waitlist: number }) {
+    setResetOpen(false)
+    showToast(`BillFlow reset: removed ${result.events} events and ${result.waitlist} waitlist signups.`, { kind: 'success' })
+    loadStats()
+  }
 
   if (loadStatus === 'loading') return <LoadingOverlay />
 
@@ -191,6 +299,25 @@ function AdminBillflow() {
           </table>
         </div>
       </section>
+
+      <section className="rounded-lg border border-red-300 p-4 dark:border-red-900">
+        <h2 className="text-sm font-semibold text-red-600 dark:text-red-400">Danger zone</h2>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="max-w-xl text-sm text-[var(--color-muted)]">
+            Reset all BillFlow tracking (page views, downloads, upgrade clicks) and the Pro waitlist to start fresh.
+            Requires your account password.
+          </p>
+          <button
+            type="button"
+            onClick={() => setResetOpen(true)}
+            className="cursor-pointer rounded-full border border-red-400 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white dark:text-red-400"
+          >
+            Reset all data
+          </button>
+        </div>
+      </section>
+
+      {resetOpen && <ResetDialog waitlistTotal={stats.waitlistTotal} onClose={closeReset} onDone={handleResetDone} />}
     </div>
   )
 }

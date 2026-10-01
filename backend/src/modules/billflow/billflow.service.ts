@@ -1,4 +1,6 @@
 import { prisma } from '../../lib/prisma.js'
+import { verifyPasswordHash } from '../../lib/password.js'
+import { ApiError } from '../../middleware/errorHandler.js'
 
 export const BILLFLOW_PRICE_INTENTS = [199, 299, 499] as const
 export const BILLFLOW_EVENT_TYPES = ['page_view', 'pdf_downloaded', 'upgrade_clicked'] as const
@@ -72,4 +74,21 @@ export async function getStats(): Promise<BillflowStatsDto> {
       .sort((a, b) => b.count - a.count),
     eventsByDay: byDay.map((row) => ({ day: row.day.toISOString().slice(0, 10), type: row.type, count: row.count })),
   }
+}
+
+// Wipes all BillFlow demand data (funnel events + waitlist) so tracking can
+// start fresh. Destructive and irreversible, so the top admin must re-enter
+// their account password even though they are already signed in.
+export async function resetAllData(username: string, password: string): Promise<{ events: number; waitlist: number }> {
+  const user = await prisma.user.findUnique({ where: { username }, select: { passwordHash: true } })
+  if (!user?.passwordHash) {
+    throw new ApiError(400, 'Set an account password in Account Settings before using reset.')
+  }
+  if (!(await verifyPasswordHash(password, user.passwordHash))) throw new ApiError(403, 'Incorrect password')
+
+  const [events, waitlist] = await prisma.$transaction([
+    prisma.billflowEvent.deleteMany({}),
+    prisma.billflowWaitlist.deleteMany({}),
+  ])
+  return { events: events.count, waitlist: waitlist.count }
 }

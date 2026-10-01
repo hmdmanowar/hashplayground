@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { joinWaitlist, recordEvent, getStats, BILLFLOW_EVENT_TYPES } from './billflow.service.js'
+import { joinWaitlist, recordEvent, getStats, resetAllData, BILLFLOW_EVENT_TYPES } from './billflow.service.js'
 import { requireTopAdmin } from '../../middleware/auth.js'
 
 // Template slugs are lowercase-kebab (see billflow/src/data/templates.json);
@@ -58,6 +58,22 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       await recordEvent(request.body.type, request.body.slug)
       reply.status(204).send()
+    },
+  )
+
+  // Top admin only, and re-confirmed with the account password.
+  app.post(
+    '/admin/reset',
+    {
+      preHandler: requireTopAdmin,
+      schema: {
+        body: z.object({ password: z.string().min(1).max(200) }),
+        response: { 200: z.object({ events: z.number(), waitlist: z.number() }) },
+      },
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
+      reply.send(await resetAllData(request.authUser!.username, request.body.password))
     },
   )
 
