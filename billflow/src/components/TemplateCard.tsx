@@ -33,11 +33,11 @@ function TemplateCard({ template, focusable = true }: { template: InvoiceTemplat
     <Link
       to={templatePath(template.slug)}
       tabIndex={focusable ? undefined : -1}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] transition-all hover:-translate-y-0.5 hover:border-[var(--color-primary)] hover:shadow-lg focus-visible:border-[var(--color-primary)] focus-visible:outline-none"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] transition-all duration-300 ease-out hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:border-[var(--color-primary)] hover:shadow-lg focus-visible:border-[var(--color-primary)] focus-visible:outline-none"
     >
       {/* Miniature of the invoice this template produces */}
       <div className="border-b border-[var(--border-panel)] bg-[var(--bg-app)] px-5 pt-5" aria-hidden="true">
-        <div className="rounded-t-lg bg-white px-4 pt-3 pb-4 text-[9px] text-gray-600 shadow-sm transition-transform group-hover:-translate-y-0.5">
+        <div className="rounded-t-lg bg-white px-4 pt-3 pb-4 text-[9px] text-gray-600 shadow-sm transition-transform duration-300 ease-out group-hover:-translate-y-0.5 motion-reduce:transition-none">
           <div className="flex items-start justify-between">
             <span className="mt-0.5 h-3 w-8 rounded-sm bg-gray-200" />
             <span className="font-bold tracking-wide text-[#3d52a0] uppercase">{template.documentTitle}</span>

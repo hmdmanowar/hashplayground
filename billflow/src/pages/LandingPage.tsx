@@ -166,7 +166,7 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             to={GENERATOR_PATH}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-strong)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[#3d52a0]/25 transition-transform hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-strong)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[#3d52a0]/25 transition-transform duration-300 ease-out hover:-translate-y-0.5 motion-reduce:transition-none"
           >
             Create an invoice, free
             <ArrowRightIcon className="h-4 w-4" />
@@ -316,7 +316,7 @@ function Personas() {
             <Link
               key={persona.title}
               to={`/${persona.slug}/`}
-              className="group flex items-center gap-4 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--color-primary)] hover:shadow-lg"
+              className="group flex items-center gap-4 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-5 transition-all duration-300 ease-out hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:border-[var(--color-primary)] hover:shadow-lg"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-primary-strong)] text-white">
                 <Icon className="h-6 w-6" />
@@ -401,7 +401,7 @@ function FinalCta() {
         </p>
         <Link
           to={GENERATOR_PATH}
-          className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-semibold text-[#141a3a] transition-transform hover:-translate-y-0.5"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-semibold text-[#141a3a] transition-transform duration-300 ease-out hover:-translate-y-0.5 motion-reduce:transition-none"
         >
           Create an invoice, free
           <ArrowRightIcon className="h-4 w-4" />
