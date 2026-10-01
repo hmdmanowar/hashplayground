@@ -25,7 +25,7 @@ function ScrollToTopButton() {
       onClick={scrollUp}
       aria-label="Scroll to top"
       tabIndex={visible ? 0 : -1}
-      className={`fixed right-5 bottom-5 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[var(--color-primary-strong)] text-white shadow-lg shadow-black/20 transition-all duration-300 ease-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none print:hidden ${
+      className={`bf-scroll-top fixed right-5 bottom-5 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[var(--color-primary-strong)] text-white shadow-lg shadow-black/20 transition-all duration-300 ease-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none print:hidden ${
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
       }`}
     >

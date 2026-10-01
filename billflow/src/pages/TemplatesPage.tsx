@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import InvoicePreview from '../components/InvoicePreview'
 import { ArrowRightIcon, CheckIcon, SparkleIcon, XIcon } from '../components/Icons'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
 import { isGst } from '../lib/invoice'
-import { INVOICE_STYLES } from '../lib/invoiceStyles'
+import { getInvoiceStyle, INVOICE_STYLES, type InvoiceStyleId } from '../lib/invoiceStyles'
+import { readJson } from '../lib/storage'
 import { sampleDraftFor } from '../lib/sampleDraft'
-import { GALLERY_PAGE, GENERATOR_PATH, TEMPLATES, type InvoiceTemplate } from '../lib/templates'
+import { findTemplate, GALLERY_PAGE, GENERATOR_PATH, TEMPLATES, type InvoiceTemplate } from '../lib/templates'
 
 const STEPS = ['Pick a template', 'Fill in your details', 'Download the PDF']
 
@@ -31,7 +32,7 @@ const PREVIEW_WIDTH = 640
 
 // Renders the real invoice preview at a fixed width and scales it to fit
 // whatever width the card has.
-function ScaledPreview({ template, styleId }: { template: InvoiceTemplate; styleId: (typeof CARD_STYLES)[number] }) {
+function ScaledPreview({ template, styleId }: { template: InvoiceTemplate; styleId: InvoiceStyleId }) {
   const boxRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.4)
   const draft = useMemo(() => sampleDraftFor(template, styleId), [template, styleId])
@@ -68,7 +69,7 @@ function GalleryCard({ template, index }: { template: InvoiceTemplate; index: nu
 
   return (
     <Link
-      to={`/${template.slug}/`}
+      to={`/templates/?template=${template.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-xl focus-visible:border-[var(--color-primary)] focus-visible:outline-none motion-reduce:transition-none"
     >
       <div className="bg-[var(--bg-app)] px-4 pt-4">
@@ -80,7 +81,7 @@ function GalleryCard({ template, index }: { template: InvoiceTemplate; index: nu
       {/* Hover call to action over the preview */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex h-[17rem] items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
         <span className="flex items-center gap-2 rounded-full bg-[var(--color-primary-strong)] px-5 py-2.5 text-sm font-semibold text-white shadow-xl">
-          Use this template
+          Choose this template
           <ArrowRightIcon className="h-4 w-4" />
         </span>
       </div>
@@ -103,11 +104,107 @@ function GalleryCard({ template, index }: { template: InvoiceTemplate; index: nu
   )
 }
 
+// Step 2: the chosen template shown in every style; pick one, then continue
+// to the generator with both applied.
+function StyleStep({ template }: { template: InvoiceTemplate }) {
+  const navigate = useNavigate()
+  const savedStyle = readJson<{ style?: string }>('billflow:business')?.style
+  const [selected, setSelected] = useState<InvoiceStyleId>(getInvoiceStyle(savedStyle).id)
+  const current = getInvoiceStyle(selected)
+
+  function proceed() {
+    navigate(`/${template.slug}/`, { state: { style: selected } })
+  }
+
+  return (
+    <div className="pb-28">
+      <section className="mx-auto max-w-7xl px-4 pt-10 pb-6">
+        <Link
+          to="/templates/"
+          className="text-xs font-semibold text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+        >
+          ← All templates
+        </Link>
+        <p className="mt-4 text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase">Step 2 of 2</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          Pick a style for your <span className="text-[var(--color-accent)]">{template.label}</span>
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm text-[var(--color-muted)] sm:text-base">
+          This is exactly how your downloaded PDF will look. You can still switch styles later in the editor.
+        </p>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="radiogroup" aria-label="Invoice style">
+          {INVOICE_STYLES.map((look) => {
+            const active = look.id === selected
+            return (
+              <button
+                key={look.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSelected(look.id)}
+                onDoubleClick={() => navigate(`/${template.slug}/`, { state: { style: look.id } })}
+                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border text-left transition-all duration-300 ease-out hover:-translate-y-1 motion-reduce:transition-none ${
+                  active
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] shadow-xl ring-2 ring-[var(--color-primary)]/40'
+                    : 'border-[var(--border-panel)] bg-[var(--bg-panel)] shadow-sm hover:border-[var(--color-primary)] hover:shadow-lg'
+                }`}
+              >
+                <div className="bg-[var(--bg-app)] px-4 pt-4">
+                  <div className="overflow-hidden rounded-t-lg shadow-sm ring-1 ring-black/5">
+                    <ScaledPreview template={template} styleId={look.id} />
+                  </div>
+                </div>
+                <div className="flex items-start justify-between gap-2 p-4">
+                  <div>
+                    <p className="font-semibold">{look.name}</p>
+                    <p className="mt-0.5 text-xs text-[var(--color-muted)]">{look.description}</p>
+                  </div>
+                  <span
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      active ? 'border-[var(--color-primary-strong)] bg-[var(--color-primary-strong)] text-white' : 'border-[var(--border-panel)]'
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {active && <CheckIcon className="h-3 w-3" />}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Continue bar stays in reach while browsing styles */}
+      <div data-bottom-bar className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border-panel)] bg-[var(--bg-panel)]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+          <p className="min-w-0 truncate text-sm text-[var(--color-muted)]">
+            <span className="font-semibold text-[var(--text-app)]">{template.label}</span> ·{' '}
+            <span className="font-semibold text-[var(--text-app)]">{current.name}</span> style
+          </p>
+          <button
+            type="button"
+            onClick={proceed}
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-[var(--color-primary-strong)] px-5 py-2.5 text-sm font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5"
+          >
+            Continue with {current.name}
+            <ArrowRightIcon className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 let viewed = false
 
 function TemplatesPage() {
   const [query, setQuery] = useState('')
   const [filterId, setFilterId] = useState('all')
+  const [params] = useSearchParams()
+  const picked = findTemplate(params.get('template') ?? '')
 
   usePageMeta(GALLERY_PAGE)
 
@@ -116,6 +213,14 @@ function TemplatesPage() {
     viewed = true
     trackEvent('page_view', GALLERY_PAGE.slug)
   }, [])
+
+  // Switching between gallery and style step changes only the query string,
+  // which the app-level scroll reset doesn't watch.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [picked?.slug])
+
+  if (picked) return <StyleStep key={picked.slug} template={picked} />
 
   const search = query.trim().toLowerCase()
   const filter = FILTERS.find((item) => item.id === filterId) ?? FILTERS[0]

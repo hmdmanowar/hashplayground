@@ -290,3 +290,8 @@ body {
     transition: none !important;
   }
 }
+
+/* Lift the scroll-to-top button above any fixed bottom action bar. */
+body:has([data-bottom-bar]) .bf-scroll-top {
+  bottom: 5.25rem;
+}

@@ -63,7 +63,9 @@ function buildDefault(template: InvoiceTemplate): InvoiceDraft {
   }
 }
 
-function loadInitial(template: InvoiceTemplate): InvoiceDraft {
+// requestedStyle: a style picked on the templates page just before opening
+// this template; it wins over the saved one (and is then saved itself).
+function loadInitial(template: InvoiceTemplate, requestedStyle?: string): InvoiceDraft {
   const base = buildDefault(template)
   const saved = readJson<Partial<InvoiceDraft>>(draftKey(template.slug))
   const business = readJson<StoredBusiness>(BUSINESS_KEY)
@@ -74,13 +76,13 @@ function loadInitial(template: InvoiceTemplate): InvoiceDraft {
     to: { ...EMPTY_PARTY, ...saved?.to },
     items: saved?.items?.length ? saved.items : base.items,
     logoDataUrl: business?.logoDataUrl ?? '',
-    style: getInvoiceStyle(business?.style).id,
+    style: getInvoiceStyle(requestedStyle ?? business?.style).id,
     payment: migratePayment(business),
   }
 }
 
-export function useInvoiceDraft(template: InvoiceTemplate) {
-  const [draft, setDraft] = useState<InvoiceDraft>(() => loadInitial(template))
+export function useInvoiceDraft(template: InvoiceTemplate, requestedStyle?: string) {
+  const [draft, setDraft] = useState<InvoiceDraft>(() => loadInitial(template, requestedStyle))
 
   const { from, logoDataUrl, payment, style, ...body } = draft
   const bodyJson = JSON.stringify(body)

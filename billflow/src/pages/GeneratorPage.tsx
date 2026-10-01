@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import FaqList from '../components/FaqList'
 import InvoiceForm from '../components/InvoiceForm'
 import InvoicePreview from '../components/InvoicePreview'
@@ -22,7 +22,12 @@ const HOW_IT_WORKS = [
 const viewedSlugs = new Set<string>()
 
 function GeneratorPage({ template }: { template: InvoiceTemplate }) {
-  const { draft, update, updateParty, updatePayment, updateItem, addItem, removeItem, reset } = useInvoiceDraft(template)
+  // Style chosen on the templates page (step 2), passed via navigation state.
+  const requestedStyle = (useLocation().state as { style?: string } | null)?.style
+  const { draft, update, updateParty, updatePayment, updateItem, addItem, removeItem, reset } = useInvoiceDraft(
+    template,
+    requestedStyle,
+  )
   const [downloading, setDownloading] = useState(false)
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [downloadError, setDownloadError] = useState('')
