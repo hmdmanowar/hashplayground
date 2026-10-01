@@ -32,7 +32,16 @@ const jsonLd = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
 
 const pageUrl = (slug) => `${data.siteOrigin}${data.basePath}${slug ? `${slug}/` : ''}`
 const gallery = data.galleryPage
-const ogImage = `${data.siteOrigin}${data.basePath}billflow-logo.png`
+// 1200x630 social card (JPEG, ~120 KB: WhatsApp skips previews over ~300 KB)
+const ogImage = `${data.siteOrigin}${data.basePath}og-billflow.jpg`
+const logoUrl = `${data.siteOrigin}${data.basePath}billflow-logo.png`
+
+// Breadcrumb trail as schema.org BreadcrumbList
+const breadcrumbs = (trail) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: trail.map(([name, url], index) => ({ '@type': 'ListItem', position: index + 1, name, item: url })),
+})
 
 function head(template, extraStructured = []) {
   const url = pageUrl(template.slug)
@@ -71,11 +80,16 @@ function head(template, extraStructured = []) {
     `<link rel="canonical" href="${url}" />`,
     '<meta property="og:type" content="website" />',
     '<meta property="og:site_name" content="BillFlow" />',
+    '<meta property="og:locale" content="en_IN" />',
     `<meta property="og:url" content="${url}" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
     `<meta property="og:image" content="${ogImage}" />`,
-    '<meta name="twitter:card" content="summary" />',
+    '<meta property="og:image:type" content="image/jpeg" />',
+    '<meta property="og:image:width" content="1200" />',
+    '<meta property="og:image:height" content="630" />',
+    '<meta property="og:image:alt" content="BillFlow: free GST invoice generator with UPI QR and PDF download" />',
+    '<meta name="twitter:card" content="summary_large_image" />',
     `<meta name="twitter:title" content="${title}" />`,
     `<meta name="twitter:description" content="${description}" />`,
     `<meta name="twitter:image" content="${ogImage}" />`,
@@ -97,6 +111,7 @@ function body(template) {
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(template.h1)}</h1>
       <p>${escapeHtml(template.intro)}</p>
+      ${template.highlights?.length ? `<h2>What this template includes</h2><ul>${template.highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
       <p>Loading the invoice generator…</p>
       <h2>Frequently asked questions</h2>${faq}
       <h2><a href="${pageUrl(gallery.slug)}">Free invoice templates</a></h2><ul>${links}</ul>
@@ -140,12 +155,34 @@ function landingBody() {
 
 writeFileSync(
   join(dist, 'index.html'),
-  shell.replace(HEAD_PATTERN, () => head(landing)).replace(BODY_MARKER, () => landingBody()),
+  shell
+    .replace(HEAD_PATTERN, () =>
+      head(landing, [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'BillFlow',
+          url: pageUrl(''),
+          logo: logoUrl,
+          parentOrganization: { '@type': 'Organization', name: 'Hash Playground', url: `${data.siteOrigin}/` },
+        },
+        { '@context': 'https://schema.org', '@type': 'WebSite', name: 'BillFlow', url: pageUrl('') },
+      ]),
+    )
+    .replace(BODY_MARKER, () => landingBody()),
 )
 
 for (const template of data.templates) {
   const html = shell
-    .replace(HEAD_PATTERN, () => head(template))
+    .replace(HEAD_PATTERN, () =>
+      head(template, [
+        breadcrumbs([
+          ['BillFlow', pageUrl('')],
+          ['Templates', pageUrl(gallery.slug)],
+          [template.label, pageUrl(template.slug)],
+        ]),
+      ]),
+    )
     .replace(BODY_MARKER, () => body(template))
   const outFile = join(dist, template.slug, 'index.html')
   mkdirSync(dirname(outFile), { recursive: true })
@@ -167,7 +204,11 @@ const galleryFile = join(dist, gallery.slug, 'index.html')
 mkdirSync(dirname(galleryFile), { recursive: true })
 writeFileSync(
   galleryFile,
-  shell.replace(HEAD_PATTERN, () => head(gallery, [itemList])).replace(BODY_MARKER, () => galleryBody()),
+  shell
+    .replace(HEAD_PATTERN, () =>
+      head(gallery, [itemList, breadcrumbs([['BillFlow', pageUrl('')], ['Templates', pageUrl(gallery.slug)]])]),
+    )
+    .replace(BODY_MARKER, () => galleryBody()),
 )
 
 const sitemapPages = [landing, gallery, ...data.templates]

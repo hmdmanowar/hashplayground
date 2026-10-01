@@ -21,6 +21,9 @@ export interface InvoiceTemplate extends PageMeta {
   items: { description: string; hsn: string; quantity: string; rate: string; taxRate: string }[]
   notes: string
   faq: { q: string; a: string }[]
+  // Template-specific "what's included" points (shown on the page and in
+  // the prerendered HTML, so each template page has its own content).
+  highlights: string[]
 }
 
 export const SITE_ORIGIN = data.siteOrigin

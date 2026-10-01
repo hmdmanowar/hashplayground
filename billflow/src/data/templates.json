@@ -3,8 +3,8 @@
   "basePath": "/billflow/",
   "landingPage": {
     "slug": "",
-    "metaTitle": "BillFlow — Free GST Invoice Generator for Freelancers & Small Businesses",
-    "metaDescription": "Create GST-ready invoices in under a minute, add a scan-to-pay UPI QR and download a professional PDF. Free, no sign-up. Built for Indian freelancers, consultants and small businesses.",
+    "metaTitle": "Free GST Invoice Generator for India | BillFlow",
+    "metaDescription": "Create GST-ready invoices in under a minute, add a scan-to-pay UPI QR and download a clean PDF. Free, no sign-up. Built for Indian freelancers.",
     "h1": "Free GST invoicing for freelancers and small businesses",
     "intro": "Create a professional invoice in under a minute, with GST worked out for you, a UPI QR your client can scan to pay, and a clean PDF ready to send. No sign-up, no limits.",
     "faq": [
@@ -36,8 +36,8 @@
   },
   "galleryPage": {
     "slug": "templates",
-    "metaTitle": "Free Invoice Templates (GST, Proforma, Freelance & More) | BillFlow",
-    "metaDescription": "Pick a free invoice template for your business: GST tax invoice, proforma, freelance, consulting, photography, tuition, export and VAT invoices. Fill in online and download as PDF.",
+    "metaTitle": "Free Invoice Templates: GST, Proforma & More | BillFlow",
+    "metaDescription": "14 free invoice templates: GST tax invoice, proforma, freelance, consulting, export and VAT. Pick one, choose a style and download a PDF.",
     "h1": "Free invoice templates",
     "intro": "Pick the template closest to your work. Each one opens in the invoice generator with sample items, the right tax setup and wording already filled in, so you only change the details."
   },
@@ -45,8 +45,8 @@
     {
       "slug": "invoice-generator",
       "label": "Standard Invoice",
-      "metaTitle": "Free Online Invoice Generator (GST Ready) — Create PDF Invoices | BillFlow",
-      "metaDescription": "Fill in a simple form, see your invoice update live and download a professional PDF. GST ready with CGST/SGST/IGST, HSN/SAC codes, UPI QR and amount in words. Free, no sign-up.",
+      "metaTitle": "Online Invoice Generator – Free PDF, No Sign-up | BillFlow",
+      "metaDescription": "Fill in a simple form, watch your invoice update live and download a PDF. GST, HSN/SAC, UPI QR and amount in words. Free, no sign-up.",
       "h1": "Free Invoice Generator",
       "intro": "Fill in your details, watch the invoice update live, and download a clean PDF. No sign-up and no limits. Built for freelancers, consultants and small businesses, with full GST support.",
       "documentTitle": "Invoice",
@@ -91,12 +91,19 @@
           "q": "Can BillFlow remind my clients to pay?",
           "a": "Automatic payment reminders, a paid/unpaid dashboard and client history are coming in BillFlow Pro. Join the early access list from the banner below the invoice preview."
         }
+      ],
+      "highlights": [
+        "Business and client details with optional GSTIN",
+        "Line items with HSN/SAC codes, quantity, rate and GST rate",
+        "Automatic CGST + SGST or IGST split and amount in words",
+        "Scan-to-pay UPI QR and bank details with IFSC auto-fill",
+        "11 PDF styles and your own logo"
       ]
     },
     {
       "slug": "gst-invoice-format",
       "label": "GST Invoice Format",
-      "metaTitle": "GST Invoice Format — Free GST Bill Generator with PDF Download | BillFlow",
+      "metaTitle": "GST Invoice Format – Free GST Bill Maker | BillFlow",
       "metaDescription": "Make a GST-compliant tax invoice online with GSTIN, HSN/SAC codes, CGST/SGST or IGST and amount in words. Free PDF download, no sign-up.",
       "h1": "GST Invoice Format Generator",
       "intro": "A ready-made GST tax invoice format with every field you need: supplier and recipient GSTIN, HSN/SAC codes, per-line GST rates, CGST/SGST or IGST split and the total in words.",
@@ -130,12 +137,19 @@
           "q": "When do I charge CGST + SGST instead of IGST?",
           "a": "Charge CGST + SGST when you and your client are in the same state (intra-state supply). Charge IGST when the supply is to another state (inter-state). BillFlow suggests the right option from the first two digits of both GSTINs."
         }
+      ],
+      "highlights": [
+        "Supplier and recipient GSTIN with format check",
+        "HSN/SAC code and GST rate on every line",
+        "CGST + SGST for intra-state or IGST for inter-state supply",
+        "Taxable value, tax amounts and total in words",
+        "Declaration note: particulars are true and correct"
       ]
     },
     {
       "slug": "freelance-invoice-template",
       "label": "Freelance Invoice",
-      "metaTitle": "Freelance Invoice Template — Free Invoice Maker for Freelancers | BillFlow",
+      "metaTitle": "Freelance Invoice Template (Free PDF) | BillFlow",
       "metaDescription": "A simple freelance invoice template you can fill in online and download as a PDF. Add milestones or hourly work, payment details and due date. Free.",
       "h1": "Freelance Invoice Template",
       "intro": "Bill a client for a project milestone or hourly work in under a minute. Add your UPI or bank details so clients can pay you straight away.",
@@ -169,12 +183,19 @@
           "q": "How do I get paid faster as a freelancer?",
           "a": "Set a clear due date, include your UPI ID or bank details, and follow up the day an invoice becomes overdue. BillFlow Pro will send those follow-ups automatically."
         }
+      ],
+      "highlights": [
+        "Milestone and hourly line items",
+        "No-GST setup for freelancers below the registration threshold",
+        "UPI ID with a scan-to-pay QR so clients pay instantly",
+        "15-day due date and polite payment note",
+        "Clean PDF you can send over email or WhatsApp"
       ]
     },
     {
       "slug": "proforma-invoice",
       "label": "Proforma Invoice",
-      "metaTitle": "Proforma Invoice Format — Create a Proforma Invoice Online (Free PDF) | BillFlow",
+      "metaTitle": "Proforma Invoice Format – Free Online Maker | BillFlow",
       "metaDescription": "Create a proforma invoice online and download it as a PDF. Send a quotation-style invoice before delivery, with GST, HSN codes and terms. Free, no sign-up.",
       "h1": "Proforma Invoice Generator",
       "intro": "Send a proforma invoice, a preliminary bill of sale, before you deliver goods or start work, so your buyer can approve the price or arrange payment.",
@@ -208,12 +229,19 @@
           "q": "Is a proforma invoice legally binding?",
           "a": "No. It is an estimate or commitment of terms. Once the sale happens, you issue a regular (tax) invoice."
         }
+      ],
+      "highlights": [
+        "“Proforma Invoice” title so it is not mistaken for a tax invoice",
+        "Goods with HSN codes, quantities and unit prices",
+        "IGST for inter-state supply",
+        "Validity note: prices valid for 15 days",
+        "Delivery and installation as a separate line"
       ]
     },
     {
       "slug": "consulting-invoice-template",
       "label": "Consulting Invoice",
-      "metaTitle": "Consulting Invoice Template — Free Consultant Invoice Generator | BillFlow",
+      "metaTitle": "Consulting Invoice Template – Free PDF | BillFlow",
       "metaDescription": "Bill consulting hours or retainers with a professional consultant invoice template. GST ready, PDF download, no sign-up required.",
       "h1": "Consulting Invoice Template",
       "intro": "Bill hourly consulting, day rates or monthly retainers with a clean, professional invoice that your client's finance team will process without questions.",
@@ -247,12 +275,19 @@
           "q": "Should I bill hourly or by retainer?",
           "a": "Either works on this template. Use quantity for hours or days, or add a single “Monthly retainer” line."
         }
+      ],
+      "highlights": [
+        "Hourly and day-rate line items",
+        "Management consulting SAC code 998311",
+        "CGST + SGST split for same-state clients",
+        "30-day payment terms",
+        "Room for a retainer or workshop fee"
       ]
     },
     {
       "slug": "web-developer-invoice",
       "label": "Web Developer Invoice",
-      "metaTitle": "Web Developer Invoice Template — Free Invoice for Website Projects | BillFlow",
+      "metaTitle": "Web Developer Invoice Template – Free PDF | BillFlow",
       "metaDescription": "Invoice website design, development and hosting work with a free web developer invoice template. GST ready with SAC codes, PDF download.",
       "h1": "Web Developer Invoice Template",
       "intro": "Itemise design, development, hosting and maintenance for a website project, with correct SAC codes and GST, then download a PDF to send to your client.",
@@ -293,12 +328,19 @@
           "q": "How should I invoice a website project in milestones?",
           "a": "Send one invoice per milestone (for example design, development, launch), and add a note about any advance already received."
         }
+      ],
+      "highlights": [
+        "Design, development and hosting as separate lines",
+        "IT service SAC codes 998314 and 998315",
+        "GST at 18% with automatic split",
+        "Note for advance received and balance due on handover",
+        "Bank transfer details with IFSC auto-fill"
       ]
     },
     {
       "slug": "graphic-designer-invoice",
       "label": "Graphic Designer Invoice",
-      "metaTitle": "Graphic Design Invoice Template — Free Designer Invoice Maker | BillFlow",
+      "metaTitle": "Graphic Design Invoice Template – Free | BillFlow",
       "metaDescription": "A free invoice template for graphic and logo designers. Itemise concepts, revisions and brand assets, add your logo and download a PDF.",
       "h1": "Graphic Designer Invoice Template",
       "intro": "Itemise logo concepts, brand guidelines, social creatives and revisions, add your own logo, and send a polished invoice that matches your design work.",
@@ -339,12 +381,19 @@
           "q": "Can I add my own logo to the invoice?",
           "a": "Yes. Upload a PNG or JPG in the “Your business” section and it appears on the preview and the PDF."
         }
+      ],
+      "highlights": [
+        "Logo concepts, brand guidelines and creatives itemised",
+        "Quantity-based pricing for social media creatives",
+        "No-GST setup for independent designers",
+        "Note that final files follow full payment",
+        "Your own logo on the invoice"
       ]
     },
     {
       "slug": "photography-invoice",
       "label": "Photography Invoice",
-      "metaTitle": "Photography Invoice Template — Free Invoice for Photographers | BillFlow",
+      "metaTitle": "Photography Invoice Template – Free PDF | BillFlow",
       "metaDescription": "Invoice shoots, editing and albums with a free photography invoice template. Add advance paid, GST and payment details. Download as PDF.",
       "h1": "Photography Invoice Template",
       "intro": "Bill a wedding, event or product shoot with editing and album charges, note the advance you received, and send a clean PDF invoice.",
@@ -378,12 +427,19 @@
           "q": "How do I show an advance on the invoice?",
           "a": "Mention it in the notes, or add a line item with a negative rate for the advance amount."
         }
+      ],
+      "highlights": [
+        "Shoot day and album charges as separate lines",
+        "Photography SAC code 998381",
+        "GST at 18% with CGST + SGST split",
+        "Advance received noted against the balance",
+        "Payment due before album delivery"
       ]
     },
     {
       "slug": "tutor-invoice-template",
       "label": "Tuition Invoice",
-      "metaTitle": "Tuition Fee Invoice Template — Free Invoice for Tutors & Coaches | BillFlow",
+      "metaTitle": "Tuition Fee Invoice Template – Free PDF | BillFlow",
       "metaDescription": "A simple tuition fee invoice for private tutors, coaches and trainers. Bill monthly sessions, add payment details and download a PDF. Free.",
       "h1": "Tuition Fee Invoice Template",
       "intro": "Bill monthly tuition, coaching sessions or course fees to parents or students with a simple, professional invoice.",
@@ -417,12 +473,19 @@
           "q": "How do I bill several students at once?",
           "a": "Create one invoice per student or parent so each payment can be tracked separately."
         }
+      ],
+      "highlights": [
+        "“Fee Invoice” title for parents and students",
+        "Monthly sessions and study material",
+        "No-GST setup for private tutors",
+        "Fee due date (by the 5th of the month)",
+        "UPI QR so parents can pay from their phone"
       ]
     },
     {
       "slug": "invoice-for-international-clients",
       "label": "International Client Invoice",
-      "metaTitle": "Invoice for International Clients (Export of Services under LUT) | BillFlow",
+      "metaTitle": "Export Invoice for Foreign Clients (LUT) | BillFlow",
       "metaDescription": "Invoice foreign clients in USD, EUR or GBP. Zero-rated export of services under LUT, SWIFT/bank details and PDF download. Free invoice template.",
       "h1": "Invoice Template for International Clients",
       "intro": "Bill overseas clients in their currency. For export of services from India under a Letter of Undertaking (LUT), the supply is zero-rated with no IGST charged.",
@@ -456,12 +519,19 @@
           "q": "Which currencies are supported?",
           "a": "INR, USD, EUR, GBP and AED. The amount in words follows the chosen currency."
         }
+      ],
+      "highlights": [
+        "Invoice in USD, EUR, GBP or AED",
+        "Zero-rated export of services under LUT, no IGST",
+        "LUT declaration wording in the notes",
+        "Amount in words in the chosen currency",
+        "Bank details for international transfers"
       ]
     },
     {
       "slug": "invoice-without-gst",
       "label": "Invoice Without GST",
-      "metaTitle": "Invoice Format Without GST — Bill of Supply for Unregistered Sellers | BillFlow",
+      "metaTitle": "Invoice Format Without GST – Free PDF | BillFlow",
       "metaDescription": "Not registered under GST? Create a simple invoice without GST online and download it as a PDF. Free invoice format for small businesses and freelancers.",
       "h1": "Invoice Format Without GST",
       "intro": "If you're not registered under GST, you can still issue a clean, professional invoice. Leave tax off and list your services and the amount due.",
@@ -488,12 +558,19 @@
           "q": "What is a bill of supply?",
           "a": "A bill of supply is issued by composition dealers or for exempt supplies, where no GST is charged. Change the document title to “Bill of Supply” if that applies to you."
         }
+      ],
+      "highlights": [
+        "No GSTIN or tax lines, for unregistered sellers",
+        "“Supplier not registered under GST” note",
+        "Simple single-line or multi-line billing",
+        "Amount in words in rupees",
+        "Option to retitle it as a Bill of Supply"
       ]
     },
     {
       "slug": "content-writer-invoice",
       "label": "Content Writer Invoice",
-      "metaTitle": "Content Writer Invoice Template — Free Invoice for Writers | BillFlow",
+      "metaTitle": "Content Writer Invoice Template – Free | BillFlow",
       "metaDescription": "Bill articles, blog posts and copywriting by the piece or by word count with a free content writer invoice template. Download as PDF.",
       "h1": "Content Writer Invoice Template",
       "intro": "Bill blog posts, articles and copywriting by the piece, and keep a clean record of what you delivered each month.",
@@ -527,12 +604,19 @@
           "q": "Should I list each article separately?",
           "a": "For a handful of pieces, yes: it makes approvals quicker. For large batches, group them into one line with a quantity."
         }
+      ],
+      "highlights": [
+        "Per-article pricing with word counts",
+        "Landing page and copy work as separate lines",
+        "No-GST setup for independent writers",
+        "Delivery note for shared drive links",
+        "15-day payment terms"
       ]
     },
     {
       "slug": "social-media-marketing-invoice",
       "label": "Marketing Agency Invoice",
-      "metaTitle": "Social Media Marketing Invoice Template — Free Agency Invoice | BillFlow",
+      "metaTitle": "Social Media Marketing Invoice – Free | BillFlow",
       "metaDescription": "Invoice social media management retainers, ad campaigns and creatives with a free marketing agency invoice template. GST ready, PDF download.",
       "h1": "Social Media Marketing Invoice Template",
       "intro": "Bill monthly social media retainers, ad campaign management and creatives, with GST and SAC codes ready for your client's accounts team.",
@@ -566,12 +650,19 @@
           "q": "What SAC code do marketing agencies use?",
           "a": "Advertising services generally fall under SAC 998361. Confirm with your accountant for your specific services."
         }
+      ],
+      "highlights": [
+        "Monthly retainer and campaign setup lines",
+        "Advertising SAC code 998361",
+        "GST at 18% with automatic split",
+        "Note that ad spend is billed separately at actuals",
+        "Tax Invoice title for agency accounts teams"
       ]
     },
     {
       "slug": "vat-invoice-generator",
       "label": "VAT Invoice (UAE)",
-      "metaTitle": "VAT Invoice Generator — Free Tax Invoice Template (UAE 5% VAT) | BillFlow",
+      "metaTitle": "VAT Invoice Generator (UAE 5% VAT) – Free | BillFlow",
       "metaDescription": "Create a VAT tax invoice online with TRN, 5% VAT and totals in AED. Free VAT invoice template for UAE freelancers and small businesses, PDF download.",
       "h1": "VAT Invoice Generator",
       "intro": "Create a VAT tax invoice in AED with your TRN, your customer's TRN and 5% VAT, then download it as a PDF. You can switch the currency or rate for other countries.",
@@ -605,6 +696,13 @@
           "q": "Can I use a different VAT rate?",
           "a": "Yes. Set the rate per line item, and rename the tax label if you need, for example “Sales Tax”."
         }
+      ],
+      "highlights": [
+        "Amounts in AED with 5% VAT",
+        "Your TRN and your customer’s TRN",
+        "Custom tax label (VAT, Sales Tax) and rate per line",
+        "Total in words in dirhams",
+        "Works for other countries by changing currency and rate"
       ]
     }
   ]

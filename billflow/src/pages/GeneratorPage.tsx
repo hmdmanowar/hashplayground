@@ -6,7 +6,7 @@ import InvoicePreview from '../components/InvoicePreview'
 import StylePicker from '../components/StylePicker'
 import UpgradeBanner from '../components/UpgradeBanner'
 import WaitlistDialog from '../components/WaitlistDialog'
-import { DownloadIcon, PrinterIcon } from '../components/Icons'
+import { CheckIcon, DownloadIcon, PrinterIcon } from '../components/Icons'
 import { useInvoiceDraft } from '../hooks/useInvoiceDraft'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
@@ -125,6 +125,24 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
           <UpgradeBanner onUpgrade={handleUpgrade} />
         </div>
       </div>
+
+      {template.highlights.length > 0 && (
+        <section className="mt-16 print:hidden" aria-labelledby="included">
+          <h2 id="included" className="text-xl font-semibold">
+            What this template includes
+          </h2>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {template.highlights.map((point) => (
+              <li key={point} className="bf-card flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-accent)]">
+                  <CheckIcon className="h-3.5 w-3.5" />
+                </span>
+                <span className="text-sm">{point}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-16 print:hidden" aria-labelledby="how-it-works">
         <h2 id="how-it-works" className="text-xl font-semibold">
