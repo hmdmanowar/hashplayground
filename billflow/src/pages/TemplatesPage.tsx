@@ -25,8 +25,6 @@ const FILTERS: { id: string; label: string; match: (template: InvoiceTemplate) =
   { id: 'services', label: 'Services', match: (t) => SERVICES.has(t.slug) },
 ]
 
-// Give each card a different PDF style so the gallery shows the variety.
-const CARD_STYLES = ['classic', 'bold', 'vibrant', 'modern', 'genz', 'fresh', 'studio', 'service', 'minimal', 'vintage', 'compact'] as const
 
 const PREVIEW_WIDTH = 640
 
@@ -59,8 +57,10 @@ function ScaledPreview({ template, styleId }: { template: InvoiceTemplate; style
   )
 }
 
-function GalleryCard({ template, index }: { template: InvoiceTemplate; index: number }) {
-  const styleId = CARD_STYLES[index % CARD_STYLES.length]
+function GalleryCard({ template }: { template: InvoiceTemplate }) {
+  // The gallery shows every template in the standard Classic style; styles
+  // are chosen in step 2.
+  const styleId: InvoiceStyleId = 'classic'
   const badges = [
     isGst(template.taxMode) ? 'GST' : template.taxMode === 'custom' ? template.taxLabel || 'Tax' : 'No tax',
     template.currency,
@@ -308,7 +308,7 @@ function TemplatesPage() {
         {visible.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visible.map((template) => (
-              <GalleryCard key={template.slug} template={template} index={TEMPLATES.indexOf(template)} />
+              <GalleryCard key={template.slug} template={template} />
             ))}
           </div>
         ) : (
