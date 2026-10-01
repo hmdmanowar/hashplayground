@@ -31,6 +31,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
 import { EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft } from '../lib/invoice'
 import { INVOICE_STYLES } from '../lib/invoiceStyles'
+import { SAMPLE_LOGO } from '../lib/sampleLogo'
 import { GENERATOR_PATH, LANDING_PAGE, TEMPLATES, findTemplate } from '../lib/templates'
 
 // ---------------------------------------------------------------- data
@@ -61,7 +62,7 @@ function sampleDraft(): InvoiceDraft {
     ],
     notes: '',
     payment: { ...EMPTY_PAYMENT, upi: true, upiId: 'yourstudio@billflow' },
-    logoDataUrl: '',
+    logoDataUrl: SAMPLE_LOGO,
     style: 'classic',
   }
 }
@@ -253,7 +254,7 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
             </div>
           ))}
         </div>
-        <div className="bf-float absolute -top-4 left-2 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 shadow-xl sm:-left-10">
+        <div className="bf-float absolute top-[38%] left-2 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 shadow-xl sm:-left-10">
           <p className="text-[11px] text-[var(--color-muted)]">GST worked out</p>
           <p className="text-sm font-semibold">CGST 9% + SGST 9%</p>
         </div>

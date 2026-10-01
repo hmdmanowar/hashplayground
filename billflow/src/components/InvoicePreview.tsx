@@ -47,7 +47,15 @@ function PartyBlock({ title, party, taxLabel, labelColor }: { title: string; par
 
 // printable=false for scaled-down samples (style gallery) so Print only
 // ever picks up the real invoice sheet.
-function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; printable?: boolean }) {
+function InvoicePreview({
+  draft,
+  printable = true,
+  logoPlaceholder = false,
+}: {
+  draft: InvoiceDraft
+  printable?: boolean
+  logoPlaceholder?: boolean
+}) {
   const totals = computeTotals(draft)
   const taxed = hasTax(draft.taxMode)
   const showHsn = draft.items.some((item) => item.hsn.trim())
@@ -96,9 +104,24 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
     </dl>
   )
 
+  // With logoPlaceholder (the generator's live preview) an empty logo slot
+  // shows a dashed "Your logo" hint. It is screen-only: never printed and
+  // never part of the PDF.
+  const logoPlaceholderEl = logoPlaceholder ? (
+    <div
+      className={`flex h-12 w-28 items-center justify-center rounded-md border-2 border-dashed text-[10px] font-medium print:hidden ${
+        look.layout === 'banner' ? 'border-white/60 text-white/80' : 'border-gray-300 text-gray-400'
+      }`}
+    >
+      Your logo
+    </div>
+  ) : null
+
   const logoEl = draft.logoDataUrl ? (
     <img src={draft.logoDataUrl} alt="" className="max-h-14 max-w-[160px] object-contain" />
-  ) : null
+  ) : (
+    logoPlaceholderEl
+  )
 
   return (
     <article
@@ -116,8 +139,14 @@ function InvoicePreview({ draft, printable = true }: { draft: InvoiceDraft; prin
             className="-mx-5 -mt-5 mb-3 rounded-t-xl px-5 pt-5 pb-4 sm:-mx-7 sm:-mt-7 sm:px-7 sm:pt-6"
             style={{ backgroundColor: look.bannerBg ?? look.accent }}
           >
-            {draft.logoDataUrl && (
-              <img src={draft.logoDataUrl} alt="" className="mb-2 max-h-9 max-w-[140px] object-contain" />
+            {/* Logo sits on a white chip so any logo stays legible on the
+                coloured banner (the PDF draws the same chip). */}
+            {draft.logoDataUrl ? (
+              <span className="mb-2 inline-block rounded-md bg-white px-1.5 py-1">
+                <img src={draft.logoDataUrl} alt="" className="max-h-8 max-w-[140px] object-contain" />
+              </span>
+            ) : (
+              logoPlaceholderEl && <div className="mb-2">{logoPlaceholderEl}</div>
             )}
             {titleEl}
           </header>

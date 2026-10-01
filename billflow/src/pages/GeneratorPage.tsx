@@ -116,7 +116,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
           </div>
 
           <StylePicker draft={draft} value={draft.style} onChange={(style) => update({ style })} />
-          <InvoicePreview draft={draft} />
+          <InvoicePreview draft={draft} logoPlaceholder />
           <UpgradeBanner onUpgrade={handleUpgrade} />
         </div>
       </div>

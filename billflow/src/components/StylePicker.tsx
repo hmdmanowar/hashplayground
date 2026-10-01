@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { InvoiceDraft } from '../lib/invoice'
 import { getInvoiceStyle, INVOICE_STYLES, type InvoiceStyle, type InvoiceStyleId } from '../lib/invoiceStyles'
 import InvoicePreview from './InvoicePreview'
+import { SAMPLE_LOGO } from '../lib/sampleLogo'
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons'
 
 // A tiny page sketch drawn from the style config, for the compact bar.
@@ -50,7 +51,7 @@ function StyleSample({ draft, look }: { draft: InvoiceDraft; look: InvoiceStyle 
         className="pointer-events-none absolute top-0 left-0 origin-top-left"
         style={{ width: PREVIEW_WIDTH, transform: `scale(${CARD_WIDTH / PREVIEW_WIDTH})` }}
       >
-        <InvoicePreview draft={{ ...draft, style: look.id }} printable={false} />
+        <InvoicePreview draft={{ ...draft, style: look.id, logoDataUrl: draft.logoDataUrl || SAMPLE_LOGO }} printable={false} />
       </div>
     </div>
   )

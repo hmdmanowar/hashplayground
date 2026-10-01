@@ -135,6 +135,11 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
       const logoX = banner ? MARGIN : centered ? RIGHT - width : MARGIN
       const logoTop = banner ? 7 : centered ? blockTop - 3 : y - 4
       try {
+        if (banner) {
+          // White chip keeps any logo legible on the coloured banner
+          doc.setFillColor(255, 255, 255)
+          doc.roundedRect(logoX - 1.5, logoTop - 1.2, width + 3, height + 2.4, 1.5, 1.5, 'F')
+        }
         doc.addImage(draft.logoDataUrl, format, logoX, logoTop, width, height, 'logo', 'FAST')
         if (!banner) logoBottom = logoTop + height
       } catch {
