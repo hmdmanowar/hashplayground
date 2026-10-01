@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import InvoiceForm from '../components/InvoiceForm'
 import InvoicePreview from '../components/InvoicePreview'
 import UpgradeBanner from '../components/UpgradeBanner'
@@ -7,7 +8,7 @@ import { DownloadIcon, PrinterIcon } from '../components/Icons'
 import { useInvoiceDraft } from '../hooks/useInvoiceDraft'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
-import type { InvoiceTemplate } from '../lib/templates'
+import { TEMPLATES, type InvoiceTemplate } from '../lib/templates'
 
 const HOW_IT_WORKS = [
   { title: 'Fill in your details', body: 'Add your business, your client and the items you’re billing. Your details are remembered in this browser.' },
@@ -58,9 +59,26 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="max-w-3xl print:hidden">
-        <p className="text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase">Free · No sign-up · GST ready</p>
+        {template.slug ? (
+          <Link
+            to="/templates/"
+            className="text-xs font-semibold text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+          >
+            ← All templates
+          </Link>
+        ) : (
+          <p className="text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase">Free · No sign-up · GST ready</p>
+        )}
         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{template.h1}</h1>
         <p className="mt-3 text-sm text-[var(--color-muted)] sm:text-base">{template.intro}</p>
+        {!template.slug && (
+          <p className="mt-3 text-sm">
+            Need a GST, proforma, freelance or export format?{' '}
+            <Link to="/templates/" className="font-semibold text-[var(--color-accent)] hover:underline">
+              Browse {TEMPLATES.length - 1} ready-made templates →
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">

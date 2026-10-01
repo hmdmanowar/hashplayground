@@ -31,9 +31,10 @@ const escapeHtml = (value) =>
 const jsonLd = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
 
 const pageUrl = (slug) => `${data.siteOrigin}${data.basePath}${slug ? `${slug}/` : ''}`
+const gallery = data.galleryPage
 const ogImage = `${data.siteOrigin}${data.basePath}billflow-logo.png`
 
-function head(template) {
+function head(template, extraStructured = []) {
   const url = pageUrl(template.slug)
   const title = escapeHtml(template.metaTitle)
   const description = escapeHtml(template.metaDescription)
@@ -48,15 +49,20 @@ function head(template) {
       description: template.metaDescription,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: template.faq.map((item) => ({
-        '@type': 'Question',
-        name: item.q,
-        acceptedAnswer: { '@type': 'Answer', text: item.a },
-      })),
-    },
+    ...(template.faq?.length
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: template.faq.map((item) => ({
+              '@type': 'Question',
+              name: item.q,
+              acceptedAnswer: { '@type': 'Answer', text: item.a },
+            })),
+          },
+        ]
+      : []),
+    ...extraStructured,
   ]
   return [
     `<title>${title}</title>`,
@@ -93,7 +99,24 @@ function body(template) {
       <p>${escapeHtml(template.intro)}</p>
       <p>Loading the invoice generator…</p>
       <h2>Frequently asked questions</h2>${faq}
-      <h2>Free invoice templates</h2><ul>${links}</ul>
+      <h2><a href="${pageUrl(gallery.slug)}">Free invoice templates</a></h2><ul>${links}</ul>
+    </div>`
+}
+
+const templateName = (template) => (template.slug ? template.h1 : 'Standard Invoice')
+
+function galleryBody() {
+  const cards = data.templates
+    .map(
+      (template) =>
+        `<li><h2><a href="${pageUrl(template.slug)}">${escapeHtml(templateName(template))}</a></h2><p>${escapeHtml(template.intro)}</p></li>`,
+    )
+    .join('')
+  return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+      <p><a href="${pageUrl('')}">BillFlow</a></p>
+      <h1>${escapeHtml(gallery.h1)}</h1>
+      <p>${escapeHtml(gallery.intro)}</p>
+      <ul>${cards}</ul>
     </div>`
 }
 
@@ -106,16 +129,35 @@ for (const template of data.templates) {
   writeFileSync(outFile, html)
 }
 
+// The /billflow/templates/ gallery, with an ItemList of every template.
+const itemList = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  itemListElement: data.templates.map((template, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: templateName(template),
+    url: pageUrl(template.slug),
+  })),
+}
+const galleryFile = join(dist, gallery.slug, 'index.html')
+mkdirSync(dirname(galleryFile), { recursive: true })
+writeFileSync(
+  galleryFile,
+  shell.replace(HEAD_PATTERN, () => head(gallery, [itemList])).replace(BODY_MARKER, () => galleryBody()),
+)
+
+const sitemapPages = [data.templates[0], gallery, ...data.templates.slice(1)]
 const today = new Date().toISOString().slice(0, 10)
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${data.templates
+${sitemapPages
   .map(
     (template) => `  <url>
     <loc>${pageUrl(template.slug)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>${template.slug ? '0.8' : '0.9'}</priority>
+    <priority>${template.slug && template.slug !== gallery.slug ? '0.8' : '0.9'}</priority>
   </url>`,
   )
   .join('\n')}
@@ -123,4 +165,4 @@ ${data.templates
 `
 writeFileSync(join(dist, 'sitemap.xml'), sitemap)
 
-console.log(`prerender: wrote ${data.templates.length} pages + sitemap.xml`)
+console.log(`prerender: wrote ${data.templates.length} template pages + templates gallery + sitemap.xml`)

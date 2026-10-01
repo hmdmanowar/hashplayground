@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { canonicalUrl, type InvoiceTemplate } from '../lib/templates'
+import { canonicalUrl, type PageMeta } from '../lib/templates'
 
 function setMeta(selector: string, attribute: string, value: string) {
   document.head.querySelector(selector)?.setAttribute(attribute, value)
@@ -7,7 +7,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 
 // Direct loads already get the right <head> from the prerendered HTML; this
 // keeps it correct when moving between templates client-side.
-export function usePageMeta(template: InvoiceTemplate) {
+export function usePageMeta(template: PageMeta) {
   useEffect(() => {
     const url = canonicalUrl(template.slug)
     document.title = template.metaTitle

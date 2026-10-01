@@ -81,6 +81,47 @@ body {
   }
 }
 
+/* Background grid glow — mirrored from frontend/src/index.css (.grid-glow)
+   so the page backdrop matches the Hash Playground home page. */
+@keyframes grid-glow-move {
+  0% {
+    transform: translate(-10%, -10%);
+  }
+  25% {
+    transform: translate(70%, 15%);
+  }
+  50% {
+    transform: translate(40%, 75%);
+  }
+  75% {
+    transform: translate(-15%, 45%);
+  }
+  100% {
+    transform: translate(-10%, -10%);
+  }
+}
+
+.grid-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50vmax;
+  height: 50vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 55%, transparent), transparent 70%);
+  mix-blend-mode: var(--grid-glow-blend, overlay);
+  filter: blur(20px);
+  animation: grid-glow-move 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-glow {
+    animation: none;
+    display: none;
+  }
+}
+
 /* "Print" fallback for the jsPDF download — prints only the invoice sheet. */
 @media print {
   @page {

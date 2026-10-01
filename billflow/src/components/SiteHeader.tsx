@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useTheme } from '../hooks/useTheme'
 import { MoonIcon, SunIcon } from './Icons'
 
@@ -24,12 +24,16 @@ function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-1 sm:gap-3">
-          <a
-            href="#templates"
-            className="rounded px-2 py-1 text-sm font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
+          <NavLink
+            to="/templates/"
+            className={({ isActive }) =>
+              `rounded px-2 py-1 text-sm font-medium transition-colors hover:text-[var(--color-primary)] ${
+                isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)]'
+              }`
+            }
           >
             Templates
-          </a>
+          </NavLink>
           <button
             type="button"
             onClick={toggleTheme}

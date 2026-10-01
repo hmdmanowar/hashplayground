@@ -1,6 +1,13 @@
 {
   "siteOrigin": "https://hashplayground.in",
   "basePath": "/billflow/",
+  "galleryPage": {
+    "slug": "templates",
+    "metaTitle": "Free Invoice Templates (GST, Proforma, Freelance & More) | BillFlow",
+    "metaDescription": "Pick a free invoice template for your business: GST tax invoice, proforma, freelance, consulting, photography, tuition, export and VAT invoices. Fill in online and download as PDF.",
+    "h1": "Free invoice templates",
+    "intro": "Pick the template closest to your work. Each one opens in the invoice generator with sample items, the right tax setup and wording already filled in, so you only change the details."
+  },
   "templates": [
     {
       "slug": "",
@@ -14,16 +21,43 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Website design and development", "hsn": "998314", "quantity": "1", "rate": "40000", "taxRate": "18" },
-        { "description": "Monthly maintenance", "hsn": "998316", "quantity": "3", "rate": "2500", "taxRate": "18" }
+        {
+          "description": "Website design and development",
+          "hsn": "998314",
+          "quantity": "1",
+          "rate": "40000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Monthly maintenance",
+          "hsn": "998316",
+          "quantity": "3",
+          "rate": "2500",
+          "taxRate": "18"
+        }
       ],
       "notes": "Thank you for your business. Please pay by the due date.",
       "faq": [
-        { "q": "Is this invoice generator really free?", "a": "Yes. You can create and download as many invoices as you like as a PDF, with no account and no credit card." },
-        { "q": "Does it support GST invoices?", "a": "Yes. Add your and your client's GSTIN, HSN/SAC codes and a GST rate per line. Choose intra-state to split tax into CGST and SGST, or inter-state for IGST." },
-        { "q": "Is my data stored on your servers?", "a": "No. Your invoice is built entirely in your browser and your draft is saved only in this browser's local storage." },
-        { "q": "Can I add my logo?", "a": "Yes. Upload a PNG or JPG logo and it appears on both the preview and the downloaded PDF." },
-        { "q": "Can BillFlow remind my clients to pay?", "a": "Automatic payment reminders, a paid/unpaid dashboard and client history are coming in BillFlow Pro. Join the early access list from the banner below the invoice preview." }
+        {
+          "q": "Is this invoice generator really free?",
+          "a": "Yes. You can create and download as many invoices as you like as a PDF, with no account and no credit card."
+        },
+        {
+          "q": "Does it support GST invoices?",
+          "a": "Yes. Add your and your client's GSTIN, HSN/SAC codes and a GST rate per line. Choose intra-state to split tax into CGST and SGST, or inter-state for IGST."
+        },
+        {
+          "q": "Is my data stored on your servers?",
+          "a": "No. Your invoice is built entirely in your browser and your draft is saved only in this browser's local storage."
+        },
+        {
+          "q": "Can I add my logo?",
+          "a": "Yes. Upload a PNG or JPG logo and it appears on both the preview and the downloaded PDF."
+        },
+        {
+          "q": "Can BillFlow remind my clients to pay?",
+          "a": "Automatic payment reminders, a paid/unpaid dashboard and client history are coming in BillFlow Pro. Join the early access list from the banner below the invoice preview."
+        }
       ]
     },
     {
@@ -38,13 +72,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "IT consulting services", "hsn": "998313", "quantity": "10", "rate": "3000", "taxRate": "18" },
-        { "description": "Software licence (annual)", "hsn": "997331", "quantity": "1", "rate": "12000", "taxRate": "18" }
+        {
+          "description": "IT consulting services",
+          "hsn": "998313",
+          "quantity": "10",
+          "rate": "3000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Software licence (annual)",
+          "hsn": "997331",
+          "quantity": "1",
+          "rate": "12000",
+          "taxRate": "18"
+        }
       ],
       "notes": "Certified that the particulars given above are true and correct.",
       "faq": [
-        { "q": "What must a GST invoice contain?", "a": "Supplier name, address and GSTIN; a unique invoice number and date; recipient details (and GSTIN if registered); HSN/SAC codes; taxable value; GST rate and amount (CGST+SGST or IGST); place of supply and the total." },
-        { "q": "When do I charge CGST + SGST instead of IGST?", "a": "Charge CGST + SGST when you and your client are in the same state (intra-state supply). Charge IGST when the supply is to another state (inter-state). BillFlow suggests the right option from the first two digits of both GSTINs." }
+        {
+          "q": "What must a GST invoice contain?",
+          "a": "Supplier name, address and GSTIN; a unique invoice number and date; recipient details (and GSTIN if registered); HSN/SAC codes; taxable value; GST rate and amount (CGST+SGST or IGST); place of supply and the total."
+        },
+        {
+          "q": "When do I charge CGST + SGST instead of IGST?",
+          "a": "Charge CGST + SGST when you and your client are in the same state (intra-state supply). Charge IGST when the supply is to another state (inter-state). BillFlow suggests the right option from the first two digits of both GSTINs."
+        }
       ]
     },
     {
@@ -59,13 +111,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Project work — milestone 1", "hsn": "", "quantity": "1", "rate": "25000", "taxRate": "0" },
-        { "description": "Additional revisions (hours)", "hsn": "", "quantity": "4", "rate": "1500", "taxRate": "0" }
+        {
+          "description": "Project work — milestone 1",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "25000",
+          "taxRate": "0"
+        },
+        {
+          "description": "Additional revisions (hours)",
+          "hsn": "",
+          "quantity": "4",
+          "rate": "1500",
+          "taxRate": "0"
+        }
       ],
       "notes": "Payment due within 15 days. Thank you!",
       "faq": [
-        { "q": "Do freelancers in India need to charge GST?", "a": "Only if you're registered under GST, which is mandatory once your aggregate turnover crosses the threshold (₹20 lakh for most service providers). Otherwise leave tax set to “No tax”." },
-        { "q": "How do I get paid faster as a freelancer?", "a": "Set a clear due date, include your UPI ID or bank details, and follow up the day an invoice becomes overdue. BillFlow Pro will send those follow-ups automatically." }
+        {
+          "q": "Do freelancers in India need to charge GST?",
+          "a": "Only if you're registered under GST, which is mandatory once your aggregate turnover crosses the threshold (₹20 lakh for most service providers). Otherwise leave tax set to “No tax”."
+        },
+        {
+          "q": "How do I get paid faster as a freelancer?",
+          "a": "Set a clear due date, include your UPI ID or bank details, and follow up the day an invoice becomes overdue. BillFlow Pro will send those follow-ups automatically."
+        }
       ]
     },
     {
@@ -80,13 +150,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Ergonomic office chair", "hsn": "9401", "quantity": "10", "rate": "6500", "taxRate": "18" },
-        { "description": "Delivery and installation", "hsn": "996511", "quantity": "1", "rate": "3000", "taxRate": "18" }
+        {
+          "description": "Ergonomic office chair",
+          "hsn": "9401",
+          "quantity": "10",
+          "rate": "6500",
+          "taxRate": "18"
+        },
+        {
+          "description": "Delivery and installation",
+          "hsn": "996511",
+          "quantity": "1",
+          "rate": "3000",
+          "taxRate": "18"
+        }
       ],
       "notes": "This is a proforma invoice and not a demand for payment. Prices are valid for 15 days.",
       "faq": [
-        { "q": "What is a proforma invoice?", "a": "A proforma invoice is a preliminary bill sent before a sale is completed. It describes the goods or services and the expected price, but it is not a tax invoice and isn't recorded as revenue." },
-        { "q": "Is a proforma invoice legally binding?", "a": "No. It is an estimate or commitment of terms. Once the sale happens, you issue a regular (tax) invoice." }
+        {
+          "q": "What is a proforma invoice?",
+          "a": "A proforma invoice is a preliminary bill sent before a sale is completed. It describes the goods or services and the expected price, but it is not a tax invoice and isn't recorded as revenue."
+        },
+        {
+          "q": "Is a proforma invoice legally binding?",
+          "a": "No. It is an estimate or commitment of terms. Once the sale happens, you issue a regular (tax) invoice."
+        }
       ]
     },
     {
@@ -101,13 +189,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Strategy consulting (hours)", "hsn": "998311", "quantity": "12", "rate": "4000", "taxRate": "18" },
-        { "description": "Workshop facilitation (day)", "hsn": "998311", "quantity": "1", "rate": "20000", "taxRate": "18" }
+        {
+          "description": "Strategy consulting (hours)",
+          "hsn": "998311",
+          "quantity": "12",
+          "rate": "4000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Workshop facilitation (day)",
+          "hsn": "998311",
+          "quantity": "1",
+          "rate": "20000",
+          "taxRate": "18"
+        }
       ],
       "notes": "Payment due within 30 days of invoice date.",
       "faq": [
-        { "q": "Which SAC code applies to consulting services?", "a": "Management consulting services usually fall under SAC 998311, and IT consulting under 998313. Check with your accountant for your exact service." },
-        { "q": "Should I bill hourly or by retainer?", "a": "Either works on this template. Use quantity for hours or days, or add a single “Monthly retainer” line." }
+        {
+          "q": "Which SAC code applies to consulting services?",
+          "a": "Management consulting services usually fall under SAC 998311, and IT consulting under 998313. Check with your accountant for your exact service."
+        },
+        {
+          "q": "Should I bill hourly or by retainer?",
+          "a": "Either works on this template. Use quantity for hours or days, or add a single “Monthly retainer” line."
+        }
       ]
     },
     {
@@ -122,14 +228,38 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Website design (5 pages)", "hsn": "998314", "quantity": "1", "rate": "30000", "taxRate": "18" },
-        { "description": "Frontend + CMS development", "hsn": "998314", "quantity": "1", "rate": "45000", "taxRate": "18" },
-        { "description": "Hosting setup (annual)", "hsn": "998315", "quantity": "1", "rate": "6000", "taxRate": "18" }
+        {
+          "description": "Website design (5 pages)",
+          "hsn": "998314",
+          "quantity": "1",
+          "rate": "30000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Frontend + CMS development",
+          "hsn": "998314",
+          "quantity": "1",
+          "rate": "45000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Hosting setup (annual)",
+          "hsn": "998315",
+          "quantity": "1",
+          "rate": "6000",
+          "taxRate": "18"
+        }
       ],
       "notes": "50% advance received. Balance due on handover.",
       "faq": [
-        { "q": "What SAC code should web developers use?", "a": "IT design and development services typically use SAC 998314, and hosting/IT infrastructure services 998315." },
-        { "q": "How should I invoice a website project in milestones?", "a": "Send one invoice per milestone (for example design, development, launch), and add a note about any advance already received." }
+        {
+          "q": "What SAC code should web developers use?",
+          "a": "IT design and development services typically use SAC 998314, and hosting/IT infrastructure services 998315."
+        },
+        {
+          "q": "How should I invoice a website project in milestones?",
+          "a": "Send one invoice per milestone (for example design, development, launch), and add a note about any advance already received."
+        }
       ]
     },
     {
@@ -144,14 +274,38 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Logo design (3 concepts)", "hsn": "", "quantity": "1", "rate": "15000", "taxRate": "0" },
-        { "description": "Brand guidelines document", "hsn": "", "quantity": "1", "rate": "10000", "taxRate": "0" },
-        { "description": "Social media creatives", "hsn": "", "quantity": "10", "rate": "800", "taxRate": "0" }
+        {
+          "description": "Logo design (3 concepts)",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "15000",
+          "taxRate": "0"
+        },
+        {
+          "description": "Brand guidelines document",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "10000",
+          "taxRate": "0"
+        },
+        {
+          "description": "Social media creatives",
+          "hsn": "",
+          "quantity": "10",
+          "rate": "800",
+          "taxRate": "0"
+        }
       ],
       "notes": "Final files are delivered after full payment.",
       "faq": [
-        { "q": "Should designers charge for revisions?", "a": "Agree on included revision rounds up front and invoice extra rounds as a separate line item, as shown in this template." },
-        { "q": "Can I add my own logo to the invoice?", "a": "Yes. Upload a PNG or JPG in the “Your business” section and it appears on the preview and the PDF." }
+        {
+          "q": "Should designers charge for revisions?",
+          "a": "Agree on included revision rounds up front and invoice extra rounds as a separate line item, as shown in this template."
+        },
+        {
+          "q": "Can I add my own logo to the invoice?",
+          "a": "Yes. Upload a PNG or JPG in the “Your business” section and it appears on the preview and the PDF."
+        }
       ]
     },
     {
@@ -166,13 +320,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Wedding photography — full day", "hsn": "998381", "quantity": "1", "rate": "60000", "taxRate": "18" },
-        { "description": "Edited photo album (40 pages)", "hsn": "998381", "quantity": "1", "rate": "15000", "taxRate": "18" }
+        {
+          "description": "Wedding photography — full day",
+          "hsn": "998381",
+          "quantity": "1",
+          "rate": "60000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Edited photo album (40 pages)",
+          "hsn": "998381",
+          "quantity": "1",
+          "rate": "15000",
+          "taxRate": "18"
+        }
       ],
       "notes": "Advance of ₹20,000 received. Balance due before album delivery.",
       "faq": [
-        { "q": "What SAC code applies to photography?", "a": "Photography and videography services generally fall under SAC 998381." },
-        { "q": "How do I show an advance on the invoice?", "a": "Mention it in the notes, or add a line item with a negative rate for the advance amount." }
+        {
+          "q": "What SAC code applies to photography?",
+          "a": "Photography and videography services generally fall under SAC 998381."
+        },
+        {
+          "q": "How do I show an advance on the invoice?",
+          "a": "Mention it in the notes, or add a line item with a negative rate for the advance amount."
+        }
       ]
     },
     {
@@ -187,13 +359,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Mathematics tuition — 12 sessions", "hsn": "", "quantity": "1", "rate": "6000", "taxRate": "0" },
-        { "description": "Study material", "hsn": "", "quantity": "1", "rate": "500", "taxRate": "0" }
+        {
+          "description": "Mathematics tuition — 12 sessions",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "6000",
+          "taxRate": "0"
+        },
+        {
+          "description": "Study material",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "500",
+          "taxRate": "0"
+        }
       ],
       "notes": "Fees for the month are payable by the 5th.",
       "faq": [
-        { "q": "Can I use this for coaching classes or online courses?", "a": "Yes. Rename the line items to your sessions, batches or course modules." },
-        { "q": "How do I bill several students at once?", "a": "Create one invoice per student or parent so each payment can be tracked separately." }
+        {
+          "q": "Can I use this for coaching classes or online courses?",
+          "a": "Yes. Rename the line items to your sessions, batches or course modules."
+        },
+        {
+          "q": "How do I bill several students at once?",
+          "a": "Create one invoice per student or parent so each payment can be tracked separately."
+        }
       ]
     },
     {
@@ -208,13 +398,31 @@
       "taxLabel": "",
       "currency": "USD",
       "items": [
-        { "description": "Software development (hours)", "hsn": "998314", "quantity": "40", "rate": "30", "taxRate": "0" },
-        { "description": "Code review and deployment", "hsn": "998314", "quantity": "1", "rate": "250", "taxRate": "0" }
+        {
+          "description": "Software development (hours)",
+          "hsn": "998314",
+          "quantity": "40",
+          "rate": "30",
+          "taxRate": "0"
+        },
+        {
+          "description": "Code review and deployment",
+          "hsn": "998314",
+          "quantity": "1",
+          "rate": "250",
+          "taxRate": "0"
+        }
       ],
       "notes": "Supply meant for export of services under LUT without payment of IGST.",
       "faq": [
-        { "q": "Do I charge GST to foreign clients?", "a": "Export of services is zero-rated. If you've filed a Letter of Undertaking (LUT), you invoice without IGST and add the LUT declaration shown in the notes." },
-        { "q": "Which currencies are supported?", "a": "INR, USD, EUR, GBP and AED. The amount in words follows the chosen currency." }
+        {
+          "q": "Do I charge GST to foreign clients?",
+          "a": "Export of services is zero-rated. If you've filed a Letter of Undertaking (LUT), you invoice without IGST and add the LUT declaration shown in the notes."
+        },
+        {
+          "q": "Which currencies are supported?",
+          "a": "INR, USD, EUR, GBP and AED. The amount in words follows the chosen currency."
+        }
       ]
     },
     {
@@ -229,12 +437,24 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Services rendered", "hsn": "", "quantity": "1", "rate": "15000", "taxRate": "0" }
+        {
+          "description": "Services rendered",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "15000",
+          "taxRate": "0"
+        }
       ],
       "notes": "Supplier not registered under GST.",
       "faq": [
-        { "q": "Can I issue an invoice without a GST number?", "a": "Yes. Businesses below the GST registration threshold can issue a normal invoice without GSTIN or tax. Just don't show any GST amount." },
-        { "q": "What is a bill of supply?", "a": "A bill of supply is issued by composition dealers or for exempt supplies, where no GST is charged. Change the document title to “Bill of Supply” if that applies to you." }
+        {
+          "q": "Can I issue an invoice without a GST number?",
+          "a": "Yes. Businesses below the GST registration threshold can issue a normal invoice without GSTIN or tax. Just don't show any GST amount."
+        },
+        {
+          "q": "What is a bill of supply?",
+          "a": "A bill of supply is issued by composition dealers or for exempt supplies, where no GST is charged. Change the document title to “Bill of Supply” if that applies to you."
+        }
       ]
     },
     {
@@ -249,13 +469,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Blog articles (1,500 words)", "hsn": "", "quantity": "8", "rate": "2500", "taxRate": "0" },
-        { "description": "Landing page copy", "hsn": "", "quantity": "1", "rate": "6000", "taxRate": "0" }
+        {
+          "description": "Blog articles (1,500 words)",
+          "hsn": "",
+          "quantity": "8",
+          "rate": "2500",
+          "taxRate": "0"
+        },
+        {
+          "description": "Landing page copy",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "6000",
+          "taxRate": "0"
+        }
       ],
       "notes": "Articles delivered via shared drive. Payment due within 15 days.",
       "faq": [
-        { "q": "How should writers price their invoices?", "a": "Per piece, per word or per hour all work. Use the quantity column for pieces, words (in thousands) or hours." },
-        { "q": "Should I list each article separately?", "a": "For a handful of pieces, yes: it makes approvals quicker. For large batches, group them into one line with a quantity." }
+        {
+          "q": "How should writers price their invoices?",
+          "a": "Per piece, per word or per hour all work. Use the quantity column for pieces, words (in thousands) or hours."
+        },
+        {
+          "q": "Should I list each article separately?",
+          "a": "For a handful of pieces, yes: it makes approvals quicker. For large batches, group them into one line with a quantity."
+        }
       ]
     },
     {
@@ -270,13 +508,31 @@
       "taxLabel": "",
       "currency": "INR",
       "items": [
-        { "description": "Social media management — monthly retainer", "hsn": "998361", "quantity": "1", "rate": "30000", "taxRate": "18" },
-        { "description": "Ad campaign setup and management", "hsn": "998361", "quantity": "1", "rate": "8000", "taxRate": "18" }
+        {
+          "description": "Social media management — monthly retainer",
+          "hsn": "998361",
+          "quantity": "1",
+          "rate": "30000",
+          "taxRate": "18"
+        },
+        {
+          "description": "Ad campaign setup and management",
+          "hsn": "998361",
+          "quantity": "1",
+          "rate": "8000",
+          "taxRate": "18"
+        }
       ],
       "notes": "Ad spend is billed separately at actuals.",
       "faq": [
-        { "q": "Should ad spend be on the same invoice?", "a": "It's cleaner to bill your management fee separately from ad spend (pass-through), as noted on this template." },
-        { "q": "What SAC code do marketing agencies use?", "a": "Advertising services generally fall under SAC 998361. Confirm with your accountant for your specific services." }
+        {
+          "q": "Should ad spend be on the same invoice?",
+          "a": "It's cleaner to bill your management fee separately from ad spend (pass-through), as noted on this template."
+        },
+        {
+          "q": "What SAC code do marketing agencies use?",
+          "a": "Advertising services generally fall under SAC 998361. Confirm with your accountant for your specific services."
+        }
       ]
     },
     {
@@ -291,13 +547,31 @@
       "taxLabel": "VAT",
       "currency": "AED",
       "items": [
-        { "description": "Consulting services", "hsn": "", "quantity": "10", "rate": "400", "taxRate": "5" },
-        { "description": "Travel expenses", "hsn": "", "quantity": "1", "rate": "350", "taxRate": "5" }
+        {
+          "description": "Consulting services",
+          "hsn": "",
+          "quantity": "10",
+          "rate": "400",
+          "taxRate": "5"
+        },
+        {
+          "description": "Travel expenses",
+          "hsn": "",
+          "quantity": "1",
+          "rate": "350",
+          "taxRate": "5"
+        }
       ],
       "notes": "TRN shown above. Please quote the invoice number with your payment.",
       "faq": [
-        { "q": "Where do I enter my TRN?", "a": "Use the tax ID field in “Your business” and “Bill to”. It's labelled GSTIN by default but is printed as “Tax ID” for non-GST invoices." },
-        { "q": "Can I use a different VAT rate?", "a": "Yes. Set the rate per line item, and rename the tax label if you need, for example “Sales Tax”." }
+        {
+          "q": "Where do I enter my TRN?",
+          "a": "Use the tax ID field in “Your business” and “Bill to”. It's labelled GSTIN by default but is printed as “Tax ID” for non-GST invoices."
+        },
+        {
+          "q": "Can I use a different VAT rate?",
+          "a": "Yes. Set the rate per line item, and rename the tax label if you need, for example “Sales Tax”."
+        }
       ]
     }
   ]
