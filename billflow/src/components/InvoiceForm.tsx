@@ -6,16 +6,19 @@ import {
   formatMoney,
   hasTax,
   isGst,
+  isValidAccountNumber,
   isValidGstin,
+  isValidIfsc,
   suggestedGstMode,
   taxIdLabel,
   type CurrencyCode,
   type InvoiceDraft,
   type LineItem,
   type Party,
+  type PaymentInfo,
   type TaxMode,
 } from '../lib/invoice'
-import { findUpiId, findUpiPhoneWithoutHandle } from '../lib/upi'
+import { barePhoneNumber, isValidUpiId } from '../lib/upi'
 import { CheckIcon, PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
 
 const MAX_LOGO_BYTES = 500_000
@@ -24,6 +27,7 @@ interface InvoiceFormProps {
   draft: InvoiceDraft
   update: (patch: Partial<InvoiceDraft>) => void
   updateParty: (side: 'from' | 'to', patch: Partial<Party>) => void
+  updatePayment: (patch: Partial<PaymentInfo>) => void
   updateItem: (id: string, patch: Partial<LineItem>) => void
   addItem: () => void
   removeItem: (id: string) => void
@@ -57,37 +61,154 @@ function GstinHint({ value, mode }: { value: string; mode: TaxMode }) {
   return <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">This doesn’t look like a valid 15-character GSTIN.</span>
 }
 
-function UpiHint({ draft }: { draft: InvoiceDraft }) {
-  const upiId = findUpiId(draft.paymentDetails)
-  const phone = findUpiPhoneWithoutHandle(draft.paymentDetails)
+const WARN = 'mt-1 block text-xs text-amber-600 dark:text-amber-400'
+const MUTED = 'mt-1 block text-xs text-[var(--color-muted)]'
+
+function UpiHint({ upiId, currency }: { upiId: string; currency: CurrencyCode }) {
+  const value = upiId.trim()
+  const phone = barePhoneNumber(value)
+  if (!value) return <span className={MUTED}>Your UPI ID puts a scan-to-pay QR code on the invoice.</span>
   if (phone) {
     return (
-      <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">
-        Looks like a UPI phone number. Add your app’s handle to get a scan-to-pay QR code, e.g.{' '}
-        <strong>{phone}@ybl</strong> (PhonePe), <strong>{phone}@paytm</strong> (Paytm) or{' '}
-        <strong>@okaxis</strong> (Google Pay). You’ll find your exact UPI ID in your UPI app’s profile.
+      <span className={WARN}>
+        Add your app’s handle to get a scan-to-pay QR code, e.g. <strong>{phone}@ybl</strong> (PhonePe),{' '}
+        <strong>{phone}@paytm</strong> (Paytm) or <strong>@okaxis</strong> (Google Pay). You’ll find your exact UPI
+        ID in your UPI app’s profile.
       </span>
     )
   }
-  if (!upiId) {
-    return (
-      <span className="mt-1 block text-xs text-[var(--color-muted)]">
-        Add your UPI ID (e.g. name@okaxis) to put a scan-to-pay QR code on the invoice.
-      </span>
-    )
-  }
-  if (draft.currency !== 'INR') {
-    return (
-      <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">
-        UPI only works in INR, so no QR code is added to {draft.currency} invoices.
-      </span>
-    )
-  }
+  if (!isValidUpiId(value)) return <span className={WARN}>Enter a full UPI ID, like name@okaxis.</span>
+  if (currency !== 'INR') return <span className={WARN}>UPI only works in INR, so no QR code is added to {currency} invoices.</span>
   return (
     <span className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
-      <CheckIcon className="h-3.5 w-3.5" />
-      A UPI QR code for {upiId} with the invoice total is added to the invoice.
+      <CheckIcon className="h-3.5 w-3.5 shrink-0" />
+      A scan-to-pay QR code with the invoice total is added to the invoice.
     </span>
+  )
+}
+
+const PAYMENT_METHODS: { key: 'upi' | 'bank' | 'other'; label: string }[] = [
+  { key: 'upi', label: 'UPI' },
+  { key: 'bank', label: 'Bank transfer' },
+  { key: 'other', label: 'Other' },
+]
+
+function PaymentFields({
+  payment,
+  currency,
+  updatePayment,
+}: {
+  payment: PaymentInfo
+  currency: CurrencyCode
+  updatePayment: (patch: Partial<PaymentInfo>) => void
+}) {
+  const accountNumber = payment.accountNumber.trim()
+  const ifsc = payment.ifsc.trim()
+  return (
+    <div className="space-y-3">
+      <div>
+        <span className="bf-label">How can your client pay you?</span>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Payment methods">
+          {PAYMENT_METHODS.map((method) => {
+            const active = payment[method.key]
+            return (
+              <button
+                key={method.key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => updatePayment({ [method.key]: !active })}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  active
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-accent)]'
+                    : 'border-[var(--border-panel)] text-[var(--color-muted)] hover:border-[var(--color-primary)]'
+                }`}
+              >
+                {active && <CheckIcon className="h-3.5 w-3.5" />}
+                {method.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {payment.upi && (
+        <Field label="UPI ID" hint={<UpiHint upiId={payment.upiId} currency={currency} />}>
+          <input
+            className="bf-input"
+            placeholder="yourname@okaxis"
+            autoComplete="off"
+            spellCheck={false}
+            value={payment.upiId}
+            onChange={(e) => updatePayment({ upiId: e.target.value })}
+          />
+        </Field>
+      )}
+
+      {payment.bank && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field label="Account holder name (optional)">
+              <input
+                className="bf-input"
+                value={payment.accountName}
+                onChange={(e) => updatePayment({ accountName: e.target.value })}
+              />
+            </Field>
+          </div>
+          <Field
+            label="Account number"
+            hint={
+              accountNumber && !isValidAccountNumber(accountNumber) ? (
+                <span className={WARN}>Account numbers are usually 9–18 digits.</span>
+              ) : undefined
+            }
+          >
+            <input
+              className="bf-input"
+              inputMode="numeric"
+              autoComplete="off"
+              value={payment.accountNumber}
+              onChange={(e) => updatePayment({ accountNumber: e.target.value })}
+            />
+          </Field>
+          <Field
+            label="IFSC"
+            hint={
+              ifsc && !isValidIfsc(ifsc) ? (
+                <span className={WARN}>IFSC is 11 characters, like HDFC0001234.</span>
+              ) : undefined
+            }
+          >
+            <input
+              className="bf-input uppercase"
+              maxLength={11}
+              autoComplete="off"
+              spellCheck={false}
+              value={payment.ifsc}
+              onChange={(e) => updatePayment({ ifsc: e.target.value.toUpperCase() })}
+            />
+          </Field>
+          <Field label="Bank name (optional)">
+            <input className="bf-input" value={payment.bankName} onChange={(e) => updatePayment({ bankName: e.target.value })} />
+          </Field>
+          <Field label="Branch (optional)">
+            <input className="bf-input" value={payment.branch} onChange={(e) => updatePayment({ branch: e.target.value })} />
+          </Field>
+        </div>
+      )}
+
+      {payment.other && (
+        <Field label="Other payment details">
+          <textarea
+            className="bf-input resize-y"
+            rows={2}
+            placeholder="PayPal, cheque, cash on delivery…"
+            value={payment.otherText}
+            onChange={(e) => updatePayment({ otherText: e.target.value })}
+          />
+        </Field>
+      )}
+    </div>
   )
 }
 
@@ -140,7 +261,16 @@ function PartyFields({
   )
 }
 
-function InvoiceForm({ draft, update, updateParty, updateItem, addItem, removeItem, reset }: InvoiceFormProps) {
+function InvoiceForm({
+  draft,
+  update,
+  updateParty,
+  updatePayment,
+  updateItem,
+  addItem,
+  removeItem,
+  reset,
+}: InvoiceFormProps) {
   const [logoError, setLogoError] = useState('')
   const totals = computeTotals(draft)
   const taxed = hasTax(draft.taxMode)
@@ -353,16 +483,8 @@ function InvoiceForm({ draft, update, updateParty, updateItem, addItem, removeIt
       </Section>
 
       <Section title="Payment details & notes">
-        <div className="space-y-3">
-          <Field label="Payment details (UPI ID, bank account, IFSC…)" hint={<UpiHint draft={draft} />}>
-            <textarea
-              className="bf-input resize-y"
-              rows={3}
-              placeholder={'UPI: yourname@okbank\nA/c 1234567890 · IFSC ABCD0123456'}
-              value={draft.paymentDetails}
-              onChange={(e) => update({ paymentDetails: e.target.value })}
-            />
-          </Field>
+        <div className="space-y-4">
+          <PaymentFields payment={draft.payment} currency={draft.currency} updatePayment={updatePayment} />
           <Field label="Notes / terms">
             <textarea
               className="bf-input resize-y"

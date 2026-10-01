@@ -19,7 +19,7 @@ const HOW_IT_WORKS = [
 const viewedSlugs = new Set<string>()
 
 function GeneratorPage({ template }: { template: InvoiceTemplate }) {
-  const { draft, update, updateParty, updateItem, addItem, removeItem, reset } = useInvoiceDraft(template)
+  const { draft, update, updateParty, updatePayment, updateItem, addItem, removeItem, reset } = useInvoiceDraft(template)
   const [downloading, setDownloading] = useState(false)
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -69,6 +69,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
             draft={draft}
             update={update}
             updateParty={updateParty}
+            updatePayment={updatePayment}
             updateItem={updateItem}
             addItem={addItem}
             removeItem={removeItem}

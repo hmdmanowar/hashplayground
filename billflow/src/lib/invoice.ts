@@ -51,8 +51,64 @@ export interface InvoiceDraft {
   to: Party
   items: LineItem[]
   notes: string
-  paymentDetails: string
+  payment: PaymentInfo
   logoDataUrl: string
+}
+
+// How the client can pay. Methods are independent toggles — freelancers
+// commonly list both UPI and a bank account.
+export interface PaymentInfo {
+  upi: boolean
+  upiId: string
+  bank: boolean
+  accountName: string
+  accountNumber: string
+  ifsc: string
+  bankName: string
+  branch: string
+  other: boolean
+  otherText: string
+}
+
+export const EMPTY_PAYMENT: PaymentInfo = {
+  upi: true,
+  upiId: '',
+  bank: false,
+  accountName: '',
+  accountNumber: '',
+  ifsc: '',
+  bankName: '',
+  branch: '',
+  other: false,
+  otherText: '',
+}
+
+const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/
+
+export function isValidIfsc(value: string): boolean {
+  return IFSC_PATTERN.test(value.trim().toUpperCase())
+}
+
+// Indian bank account numbers are 9–18 digits.
+export function isValidAccountNumber(value: string): boolean {
+  return /^\d{9,18}$/.test(value.replace(/\s/g, ''))
+}
+
+// The printed "Payment details" lines, shared by the preview and the PDF.
+export function paymentLines(payment: PaymentInfo): string[] {
+  const lines: string[] = []
+  if (payment.upi && payment.upiId.trim()) lines.push(`UPI: ${payment.upiId.trim()}`)
+  if (payment.bank) {
+    const bankName = payment.bankName.trim()
+    const branch = payment.branch.trim()
+    if (payment.accountName.trim()) lines.push(`Account name: ${payment.accountName.trim()}`)
+    if (payment.accountNumber.trim()) lines.push(`A/c no.: ${payment.accountNumber.replace(/\s/g, '')}`)
+    if (payment.ifsc.trim()) lines.push(`IFSC: ${payment.ifsc.trim().toUpperCase()}`)
+    if (bankName) lines.push(`Bank: ${bankName}${branch ? `, ${branch} branch` : ''}`)
+    else if (branch) lines.push(`Branch: ${branch}`)
+  }
+  if (payment.other && payment.otherText.trim()) lines.push(...payment.otherText.trim().split('\n'))
+  return lines
 }
 
 export interface LineTotals {

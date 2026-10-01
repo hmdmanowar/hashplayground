@@ -6,6 +6,7 @@ import {
   formatMoney,
   formatQuantity,
   hasTax,
+  paymentLines,
   taxIdLabel,
   toMinor,
   type InvoiceDraft,
@@ -283,7 +284,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
         caption: [upi.amountMinor > 0 ? `Scan to pay ${money(upi.amountMinor)}` : 'Scan to pay', 'with any UPI app'],
       }
     : undefined
-  block('PAYMENT DETAILS', draft.paymentDetails, upiQr)
+  block('PAYMENT DETAILS', paymentLines(draft.payment).join('\n'), upiQr)
   block('NOTES', draft.notes)
 
   // ------------------------------------------------------------ footer

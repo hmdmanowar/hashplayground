@@ -5,6 +5,7 @@ import {
   formatMoney,
   formatQuantity,
   hasTax,
+  paymentLines,
   taxIdLabel,
   toMinor,
   type InvoiceDraft,
@@ -46,6 +47,7 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
   const money = (minor: number) => formatMoney(minor, draft.currency)
   const taxLabel = taxIdLabel(draft.taxMode)
   const upi = useUpiQr(draft)
+  const payLines = paymentLines(draft.payment)
 
   return (
     <article
@@ -152,11 +154,15 @@ function InvoicePreview({ draft }: { draft: InvoiceDraft }) {
 
       <p className="mt-4 text-xs text-gray-500 italic">Amount in words: {amountInWords(totals.total, draft.currency)}</p>
 
-      {draft.paymentDetails.trim() && (
+      {payLines.length > 0 && (
         <section className="mt-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-[10px] font-semibold tracking-wider text-gray-500">PAYMENT DETAILS</h3>
-            <p className="mt-1 text-xs break-words whitespace-pre-line">{draft.paymentDetails}</p>
+            <div className="mt-1 space-y-0.5 text-xs break-words">
+              {payLines.map((line, index) => (
+                <p key={index}>{line}</p>
+              ))}
+            </div>
           </div>
           {upi.payment && upi.dataUrl && (
             <figure className="shrink-0 text-center">

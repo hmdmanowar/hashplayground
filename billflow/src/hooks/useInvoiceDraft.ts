@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { newId, toIsoDate, type InvoiceDraft, type LineItem, type Party } from '../lib/invoice'
+import { EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft, type LineItem, type Party, type PaymentInfo } from '../lib/invoice'
+import { findUpiId } from '../lib/upi'
 import type { InvoiceTemplate } from '../lib/templates'
 import { readJson, removeKey, writeJson } from '../lib/storage'
 
@@ -11,7 +12,24 @@ const BUSINESS_KEY = 'billflow:business'
 const draftKey = (slug: string) => `billflow:draft:${slug || 'main'}`
 const SAVE_DELAY_MS = 400
 
-type BusinessFields = Pick<InvoiceDraft, 'from' | 'logoDataUrl' | 'paymentDetails'>
+type BusinessFields = Pick<InvoiceDraft, 'from' | 'logoDataUrl' | 'payment'>
+type StoredBusiness = Partial<BusinessFields> & { paymentDetails?: string }
+
+// Drafts saved before payment details became structured stored one free-text
+// "paymentDetails" string — lift its UPI ID into the UPI field and keep the
+// rest as "Other" text so nothing the user typed is lost.
+function migratePayment(stored: StoredBusiness | null): PaymentInfo {
+  if (stored?.payment) return { ...EMPTY_PAYMENT, ...stored.payment }
+  const text = stored?.paymentDetails?.trim() ?? ''
+  if (!text) return { ...EMPTY_PAYMENT }
+  const upiId = findUpiId(text)
+  const rest = text
+    .split('\n')
+    .filter((line) => !upiId || !line.includes(upiId))
+    .join('\n')
+    .trim()
+  return { ...EMPTY_PAYMENT, upi: Boolean(upiId), upiId: upiId ?? '', other: Boolean(rest), otherText: rest }
+}
 
 const EMPTY_PARTY: Party = { name: '', address: '', taxId: '', email: '', phone: '' }
 
@@ -36,7 +54,7 @@ function buildDefault(template: InvoiceTemplate): InvoiceDraft {
     to: { ...EMPTY_PARTY },
     items: template.items.map((item) => ({ ...item, id: newId() })),
     notes: template.notes,
-    paymentDetails: '',
+    payment: { ...EMPTY_PAYMENT },
     logoDataUrl: '',
   }
 }
@@ -44,7 +62,7 @@ function buildDefault(template: InvoiceTemplate): InvoiceDraft {
 function loadInitial(template: InvoiceTemplate): InvoiceDraft {
   const base = buildDefault(template)
   const saved = readJson<Partial<InvoiceDraft>>(draftKey(template.slug))
-  const business = readJson<Partial<BusinessFields>>(BUSINESS_KEY)
+  const business = readJson<StoredBusiness>(BUSINESS_KEY)
   return {
     ...base,
     ...saved,
@@ -52,20 +70,20 @@ function loadInitial(template: InvoiceTemplate): InvoiceDraft {
     to: { ...EMPTY_PARTY, ...saved?.to },
     items: saved?.items?.length ? saved.items : base.items,
     logoDataUrl: business?.logoDataUrl ?? '',
-    paymentDetails: business?.paymentDetails ?? '',
+    payment: migratePayment(business),
   }
 }
 
 export function useInvoiceDraft(template: InvoiceTemplate) {
   const [draft, setDraft] = useState<InvoiceDraft>(() => loadInitial(template))
 
-  const { from, logoDataUrl, paymentDetails, ...body } = draft
+  const { from, logoDataUrl, payment, ...body } = draft
   const bodyJson = JSON.stringify(body)
 
   useEffect(() => {
-    const timer = setTimeout(() => writeJson(BUSINESS_KEY, { from, logoDataUrl, paymentDetails }), SAVE_DELAY_MS)
+    const timer = setTimeout(() => writeJson(BUSINESS_KEY, { from, logoDataUrl, payment }), SAVE_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [from, logoDataUrl, paymentDetails])
+  }, [from, logoDataUrl, payment])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -84,6 +102,10 @@ export function useInvoiceDraft(template: InvoiceTemplate) {
 
   const updateParty = useCallback((side: 'from' | 'to', patch: Partial<Party>) => {
     setDraft((prev) => ({ ...prev, [side]: { ...prev[side], ...patch } }))
+  }, [])
+
+  const updatePayment = useCallback((patch: Partial<PaymentInfo>) => {
+    setDraft((prev) => ({ ...prev, payment: { ...prev.payment, ...patch } }))
   }, [])
 
   const updateItem = useCallback((id: string, patch: Partial<LineItem>) => {
@@ -108,9 +130,9 @@ export function useInvoiceDraft(template: InvoiceTemplate) {
       ...buildDefault(template),
       from: prev.from,
       logoDataUrl: prev.logoDataUrl,
-      paymentDetails: prev.paymentDetails,
+      payment: prev.payment,
     }))
   }, [template])
 
-  return { draft, update, updateParty, updateItem, addItem, removeItem, reset }
+  return { draft, update, updateParty, updatePayment, updateItem, addItem, removeItem, reset }
 }

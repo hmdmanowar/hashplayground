@@ -3,22 +3,26 @@ import { computeTotals, type InvoiceDraft } from './invoice'
 
 // A UPI ID is handle@psp, e.g. "name@okaxis" or "98765@ybl". The PSP part
 // never contains a dot, which is how "name@gmail.com" is told apart from it.
-const UPI_ID_PATTERN = /(?<![\w.@-])([a-zA-Z0-9][a-zA-Z0-9._-]{1,255}@[a-zA-Z][a-zA-Z0-9]{1,63})(?![\w.@-])/
+const UPI_ID = '[a-zA-Z0-9][a-zA-Z0-9._-]{1,255}@[a-zA-Z][a-zA-Z0-9]{1,63}'
+const UPI_ID_IN_TEXT = new RegExp(`(?<![\\w.@-])(${UPI_ID})(?![\\w.@-])`)
+const UPI_ID_EXACT = new RegExp(`^${UPI_ID}$`)
 
+// Pulls a UPI ID out of free text (used to migrate old free-text drafts).
 export function findUpiId(text: string): string | null {
-  return UPI_ID_PATTERN.exec(text)?.[1] ?? null
+  return UPI_ID_IN_TEXT.exec(text)?.[1] ?? null
 }
 
-const UPI_MENTION = /\b(upi|gpay|google pay|phonepe|paytm|bhim)\b/i
-// Indian mobile (optionally +91 / 0 prefixed), not part of a longer number
-// and not already followed by an @handle.
-const MOBILE_PATTERN = /(?<![\d@])(?:\+?91[\s-]?|0)?([6-9]\d{4}[\s-]?\d{5})(?![\d@])/
+export function isValidUpiId(value: string): boolean {
+  return UPI_ID_EXACT.test(value.trim())
+}
+
+// Indian mobile, optionally +91 / 0 prefixed, with optional space or dash.
+const MOBILE_EXACT = /^(?:\+?91[\s-]?|0)?([6-9]\d{4}[\s-]?\d{5})$/
 
 // A bare phone number can't go into a UPI QR: the @handle depends on the
 // payer's app and can't be guessed. Detect it so the form can ask for it.
-export function findUpiPhoneWithoutHandle(text: string): string | null {
-  if (findUpiId(text) || !UPI_MENTION.test(text)) return null
-  const match = MOBILE_PATTERN.exec(text)
+export function barePhoneNumber(value: string): string | null {
+  const match = MOBILE_EXACT.exec(value.trim())
   return match ? match[1].replace(/[\s-]/g, '') : null
 }
 
@@ -30,8 +34,8 @@ export interface UpiPayment {
 
 // UPI only settles in INR, so a USD/EUR invoice gets no QR.
 export function upiPaymentFor(draft: InvoiceDraft): UpiPayment | null {
-  const upiId = findUpiId(draft.paymentDetails)
-  if (!upiId || draft.currency !== 'INR') return null
+  const upiId = draft.payment.upiId.trim()
+  if (!draft.payment.upi || !isValidUpiId(upiId) || draft.currency !== 'INR') return null
   const amountMinor = computeTotals(draft).total
   // NPCI's standard deep link: every UPI app (GPay, PhonePe, Paytm, BHIM…)
   // opens it with payee, amount and note prefilled.
