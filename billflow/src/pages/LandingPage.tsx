@@ -170,7 +170,7 @@ function SectionHeading({ eyebrow, title, accent, body }: { eyebrow?: string; ti
   )
 }
 
-const STYLE_ROTATE_MS = 3200
+const STYLE_ROTATE_MS = 4500
 
 function Hero({ draft }: { draft: InvoiceDraft }) {
   const [styleIndex, setStyleIndex] = useState(0)
@@ -246,8 +246,8 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
           {INVOICE_STYLES.map((style, index) => (
             <div
               key={style.id}
-              className={`[grid-area:1/1] transition-opacity duration-700 ease-out motion-reduce:transition-none [&>article]:h-full ${
-                index === styleIndex ? 'opacity-100' : 'opacity-0'
+              className={`[grid-area:1/1] transition-[opacity,filter] duration-[1400ms] ease-in-out motion-reduce:transition-none [&>article]:h-full ${
+                index === styleIndex ? 'opacity-100 blur-0' : 'opacity-0 blur-[3px]'
               }`}
             >
               <InvoicePreview draft={{ ...draft, style: style.id }} printable={false} />
