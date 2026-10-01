@@ -83,6 +83,12 @@ function Sidebar({ collapsed, onCloseOverlay }: SidebarProps) {
       </NavLink>
 
       <div className="mt-auto border-t border-[var(--border-panel)] pt-4 max-[1281px]:pt-3">
+        {isTopAdminUser && (
+          <NavLink to="/admin/billflow" title="BillFlow" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
+            <WalletIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
+            {!collapsed && <span className="min-w-0 flex-1 truncate">BillFlow</span>}
+          </NavLink>
+        )}
         {user.role === 'admin' && (
           <NavLink to="/admin/feedback" title="Feedback" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
             <ClipboardListIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
@@ -99,12 +105,6 @@ function Sidebar({ collapsed, onCloseOverlay }: SidebarProps) {
           <NavLink to="/admin/autonomous-worker" title="Autonomous Worker" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
             <BotIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
             {!collapsed && <span className="min-w-0 flex-1 truncate">Autonomous Worker</span>}
-          </NavLink>
-        )}
-        {isTopAdminUser && (
-          <NavLink to="/admin/billflow" title="BillFlow" onClick={handleNavigate} className={(state) => linkClass(state, true)}>
-            <WalletIcon className="h-5 w-5 shrink-0 max-[1281px]:h-4 max-[1281px]:w-4" />
-            {!collapsed && <span className="min-w-0 flex-1 truncate">BillFlow</span>}
           </NavLink>
         )}
         <NavLink to="/settings" title="Account Settings" onClick={handleNavigate} className={(state) => linkClass(state, true)}>

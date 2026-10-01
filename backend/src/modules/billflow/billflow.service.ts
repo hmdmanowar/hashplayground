@@ -6,7 +6,34 @@ export const BILLFLOW_PRICE_INTENTS = [199, 299, 499] as const
 export const BILLFLOW_EVENT_TYPES = ['page_view', 'pdf_downloaded', 'upgrade_clicked'] as const
 export type BillflowEventType = (typeof BILLFLOW_EVENT_TYPES)[number]
 
-const STATS_WINDOW_DAYS = 30
+const GATE_WINDOW_DAYS = 30
+
+// Dashboard ranges: how far back to look and how to bucket the series.
+export const BILLFLOW_STATS_RANGES = ['day', 'month', 'year'] as const
+export type BillflowStatsRange = (typeof BILLFLOW_STATS_RANGES)[number]
+
+const RANGE_CONFIG: Record<BillflowStatsRange, { buckets: number; label: string }> = {
+  day: { buckets: 30, label: 'last 30 days' },
+  month: { buckets: 12, label: 'last 12 months' },
+  year: { buckets: 5, label: 'last 5 years' },
+}
+
+// Start of each bucket (UTC), oldest first — matches Postgres date_trunc on
+// the UTC "createdAt" column, so buckets line up exactly.
+function bucketStarts(range: BillflowStatsRange, now = new Date()): Date[] {
+  const y = now.getUTCFullYear()
+  const m = now.getUTCMonth()
+  const d = now.getUTCDate()
+  const count = RANGE_CONFIG[range].buckets
+  return Array.from({ length: count }, (_, i) => {
+    const back = count - 1 - i
+    if (range === 'day') return new Date(Date.UTC(y, m, d - back))
+    if (range === 'month') return new Date(Date.UTC(y, m - back, 1))
+    return new Date(Date.UTC(y - back, 0, 1))
+  })
+}
+
+const bucketKey = (date: Date) => date.toISOString().slice(0, 10)
 
 export interface JoinWaitlistInput {
   email: string
@@ -32,34 +59,57 @@ export async function recordEvent(type: BillflowEventType, slug?: string): Promi
 }
 
 export interface BillflowStatsDto {
-  windowDays: number
+  range: BillflowStatsRange
+  rangeLabel: string
+  // Fixed 30-day downloads for the go/no-go gate, independent of the range.
+  gateDownloads: number
+  gateWindowDays: number
   waitlistTotal: number
   priceIntents: { priceIntent: number; count: number }[]
   recentSignups: { email: string; priceIntent: number; source: string | null; createdAt: string }[]
   eventTotals: { type: string; count: number }[]
   eventsBySlug: { slug: string; type: string; count: number }[]
-  eventsByDay: { day: string; type: string; count: number }[]
+  // One count per bucket (oldest first) for each event type.
+  buckets: string[]
+  series: Record<BillflowEventType, number[]>
 }
 
-export async function getStats(): Promise<BillflowStatsDto> {
-  const since = new Date(Date.now() - STATS_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+export async function getStats(range: BillflowStatsRange = 'day'): Promise<BillflowStatsDto> {
+  const starts = bucketStarts(range)
+  const since = starts[0]
+  const gateSince = new Date(Date.now() - GATE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
 
-  const [waitlistTotal, intents, recent, totals, bySlug, byDay] = await Promise.all([
+  const [waitlistTotal, intents, recent, totals, bySlug, byBucket, gateDownloads] = await Promise.all([
     prisma.billflowWaitlist.count(),
     prisma.billflowWaitlist.groupBy({ by: ['priceIntent'], _count: { _all: true }, orderBy: { priceIntent: 'asc' } }),
     prisma.billflowWaitlist.findMany({ orderBy: { createdAt: 'desc' }, take: 25 }),
     prisma.billflowEvent.groupBy({ by: ['type'], where: { createdAt: { gte: since } }, _count: { _all: true } }),
     prisma.billflowEvent.groupBy({ by: ['slug', 'type'], where: { createdAt: { gte: since } }, _count: { _all: true } }),
-    prisma.$queryRaw<{ day: Date; type: string; count: number }[]>`
-      SELECT date_trunc('day', "createdAt") AS day, "type", COUNT(*)::int AS count
+    prisma.$queryRaw<{ bucket: Date; type: string; count: number }[]>`
+      SELECT date_trunc(${range}::text, "createdAt") AS bucket, "type", COUNT(*)::int AS count
       FROM "BillflowEvent"
       WHERE "createdAt" >= ${since}
-      GROUP BY 1, 2
-      ORDER BY 1 ASC`,
+      GROUP BY 1, 2`,
+    prisma.billflowEvent.count({ where: { type: 'pdf_downloaded', createdAt: { gte: gateSince } } }),
   ])
 
+  const keys = starts.map(bucketKey)
+  const index = new Map(keys.map((key, i) => [key, i]))
+  const series = Object.fromEntries(BILLFLOW_EVENT_TYPES.map((type) => [type, keys.map(() => 0)])) as Record<
+    BillflowEventType,
+    number[]
+  >
+  for (const row of byBucket) {
+    const i = index.get(bucketKey(row.bucket))
+    const type = row.type as BillflowEventType
+    if (i !== undefined && series[type]) series[type][i] = row.count
+  }
+
   return {
-    windowDays: STATS_WINDOW_DAYS,
+    range,
+    rangeLabel: RANGE_CONFIG[range].label,
+    gateDownloads,
+    gateWindowDays: GATE_WINDOW_DAYS,
     waitlistTotal,
     priceIntents: intents.map((row) => ({ priceIntent: row.priceIntent, count: row._count._all })),
     recentSignups: recent.map((row) => ({
@@ -72,7 +122,8 @@ export async function getStats(): Promise<BillflowStatsDto> {
     eventsBySlug: bySlug
       .map((row) => ({ slug: row.slug ?? '', type: row.type, count: row._count._all }))
       .sort((a, b) => b.count - a.count),
-    eventsByDay: byDay.map((row) => ({ day: row.day.toISOString().slice(0, 10), type: row.type, count: row.count })),
+    buckets: keys,
+    series,
   }
 }
 

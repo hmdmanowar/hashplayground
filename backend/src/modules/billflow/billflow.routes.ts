@@ -1,7 +1,14 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { joinWaitlist, recordEvent, getStats, resetAllData, BILLFLOW_EVENT_TYPES } from './billflow.service.js'
+import {
+  joinWaitlist,
+  recordEvent,
+  getStats,
+  resetAllData,
+  BILLFLOW_EVENT_TYPES,
+  BILLFLOW_STATS_RANGES,
+} from './billflow.service.js'
 import { requireTopAdmin } from '../../middleware/auth.js'
 
 // Template slugs are lowercase-kebab (see billflow/src/data/templates.json);
@@ -13,7 +20,10 @@ const slugSchema = z
   .optional()
 
 const statsDtoSchema = z.object({
-  windowDays: z.number(),
+  range: z.enum(BILLFLOW_STATS_RANGES),
+  rangeLabel: z.string(),
+  gateDownloads: z.number(),
+  gateWindowDays: z.number(),
   waitlistTotal: z.number(),
   priceIntents: z.array(z.object({ priceIntent: z.number(), count: z.number() })),
   recentSignups: z.array(
@@ -21,7 +31,8 @@ const statsDtoSchema = z.object({
   ),
   eventTotals: z.array(z.object({ type: z.string(), count: z.number() })),
   eventsBySlug: z.array(z.object({ slug: z.string(), type: z.string(), count: z.number() })),
-  eventsByDay: z.array(z.object({ day: z.string(), type: z.string(), count: z.number() })),
+  buckets: z.array(z.string()),
+  series: z.object({ page_view: z.array(z.number()), pdf_downloaded: z.array(z.number()), upgrade_clicked: z.array(z.number()) }),
 })
 
 export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
@@ -79,9 +90,15 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
 
   app.get(
     '/admin/stats',
-    { preHandler: requireTopAdmin, schema: { response: { 200: statsDtoSchema } } },
-    async (_request, reply) => {
-      reply.send(await getStats())
+    {
+      preHandler: requireTopAdmin,
+      schema: {
+        querystring: z.object({ range: z.enum(BILLFLOW_STATS_RANGES).default('day') }),
+        response: { 200: statsDtoSchema },
+      },
+    },
+    async (request, reply) => {
+      reply.send(await getStats(request.query.range))
     },
   )
 }

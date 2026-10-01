@@ -1,12 +1,30 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
-import { getBillflowStats, resetBillflowData, type BillflowStats } from '../../services/billflowService'
+import Sparkline from '../../components/Sparkline/Sparkline'
+import { getBillflowStats, resetBillflowData, type BillflowRange, type BillflowStats } from '../../services/billflowService'
 import { useToast } from '../../context/ToastContext'
 
 // Milestone-1 go/no-go gate for building BillFlow's paid tier (Razorpay,
 // dashboard, reminders) — see the BillFlow plan. Tune here if the bar moves.
 const GATE_PDF_DOWNLOADS = 150
 const GATE_WAITLIST = 15
+
+const RANGES: { id: BillflowRange; label: string }[] = [
+  { id: 'day', label: 'Daily' },
+  { id: 'month', label: 'Monthly' },
+  { id: 'year', label: 'Yearly' },
+]
+
+// Bucket starts arrive as UTC dates (YYYY-MM-DD); label them per range.
+function formatBucket(bucket: string, range: BillflowRange): string {
+  const [y, m, d] = bucket.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d))
+  if (range === 'year') return String(y)
+  return date.toLocaleDateString('en-IN', {
+    timeZone: 'UTC',
+    ...(range === 'day' ? { day: 'numeric', month: 'short' } : { month: 'short', year: 'numeric' }),
+  })
+}
 
 function countOf(stats: BillflowStats, type: string): number {
   return stats.eventTotals.find((row) => row.type === type)?.count ?? 0
@@ -129,16 +147,22 @@ function AdminBillflow() {
   const [stats, setStats] = useState<BillflowStats | null>(null)
   const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [resetOpen, setResetOpen] = useState(false)
+  const [range, setRange] = useState<BillflowRange>('day')
+  // While a new range loads, the previous numbers stay on screen (dimmed)
+  // instead of flashing a spinner.
+  const [refreshing, setRefreshing] = useState(false)
   const { showToast } = useToast()
 
   const loadStats = useCallback(() => {
-    getBillflowStats()
+    setRefreshing(true)
+    getBillflowStats(range)
       .then((data) => {
         setStats(data)
         setLoadStatus('ready')
       })
-      .catch(() => setLoadStatus('error'))
-  }, [])
+      .catch(() => setLoadStatus((prev) => (prev === 'ready' ? prev : 'error')))
+      .finally(() => setRefreshing(false))
+  }, [range])
 
   useEffect(() => {
     loadStats()
@@ -166,6 +190,11 @@ function AdminBillflow() {
   const downloads = countOf(stats, 'pdf_downloaded')
   const upgradeClicks = countOf(stats, 'upgrade_clicked')
   const intentTotal = stats.priceIntents.reduce((sum, row) => sum + row.count, 0)
+  const bucketLabels = stats.buckets.map((bucket) => formatBucket(bucket, stats.range))
+  // Per-period download rate (downloads / views); periods with no views read 0.
+  const rateSeries = stats.series.page_view.map((viewCount, i) =>
+    viewCount ? (stats.series.pdf_downloaded[i] / viewCount) * 100 : 0,
+  )
 
   const pages = new Map<string, Record<string, number>>()
   for (const row of stats.eventsBySlug) {
@@ -182,51 +211,81 @@ function AdminBillflow() {
         <a href="/billflow/" className="text-[var(--color-primary)] hover:underline">
           BillFlow
         </a>{' '}
-        over the last {stats.windowDays} days (the waitlist is all-time).
+        (the go/no-go gate is always the last {stats.gateWindowDays} days; the waitlist is all-time).
       </p>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <GateMeter label={`PDF downloads (${stats.windowDays}d)`} value={downloads} target={GATE_PDF_DOWNLOADS} />
+        <GateMeter
+          label={`PDF downloads (${stats.gateWindowDays}d)`}
+          value={stats.gateDownloads}
+          target={GATE_PDF_DOWNLOADS}
+        />
         <GateMeter label="Pro waitlist signups" value={stats.waitlistTotal} target={GATE_WAITLIST} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          { label: 'Page views', value: views },
-          { label: 'PDF downloads', value: downloads },
-          { label: 'Upgrade clicks', value: upgradeClicks },
-          { label: 'Download rate', value: views ? `${Math.round((downloads / views) * 100)}%` : '—' },
-        ].map((tile) => (
-          <div key={tile.label} className="rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-4">
-            <p className="text-xs text-[var(--color-muted)]">{tile.label}</p>
-            <p className="mt-1 text-2xl font-semibold">{tile.value}</p>
-          </div>
-        ))}
+      {/* Range filter scopes the tiles and the Pages table below it */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div
+          className="inline-flex rounded-full border border-[var(--border-panel)] bg-[var(--bg-panel)] p-1"
+          role="group"
+          aria-label="Time range"
+        >
+          {RANGES.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={range === option.id}
+              onClick={() => setRange(option.id)}
+              className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                range === option.id
+                  ? 'bg-[var(--color-primary-strong)] text-white'
+                  : 'text-[var(--color-muted)] hover:text-[var(--text-app)]'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm text-[var(--color-muted)]">Showing the {stats.rangeLabel}</span>
       </div>
 
-      <section>
-        <h2 className="text-sm font-semibold">Price intent</h2>
-        {intentTotal === 0 ? (
-          <p className="mt-2 text-sm text-[var(--color-muted)]">No waitlist signups yet.</p>
-        ) : (
-          <div className="mt-2 space-y-2">
-            {stats.priceIntents.map((row) => (
-              <div key={row.priceIntent} className="flex items-center gap-3 text-sm">
-                <span className="w-24 shrink-0">₹{row.priceIntent}/mo</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-app)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--color-primary)]"
-                    style={{ width: `${(row.count / intentTotal) * 100}%` }}
-                  />
-                </div>
-                <span className="w-20 shrink-0 text-right text-[var(--color-muted)]">
-                  {row.count} ({Math.round((row.count / intentTotal) * 100)}%)
-                </span>
+      <div className={`space-y-6 transition-opacity duration-200 ${refreshing ? 'opacity-60' : ''}`}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: 'Page views', value: String(views), series: stats.series.page_view, format: (v: number) => String(v) },
+            {
+              label: 'PDF downloads',
+              value: String(downloads),
+              series: stats.series.pdf_downloaded,
+              format: (v: number) => String(v),
+            },
+            {
+              label: 'Upgrade clicks',
+              value: String(upgradeClicks),
+              series: stats.series.upgrade_clicked,
+              format: (v: number) => String(v),
+            },
+            {
+              label: 'Download rate',
+              value: views ? `${Math.round((downloads / views) * 100)}%` : '—',
+              series: rateSeries,
+              format: (v: number) => `${Math.round(v)}%`,
+            },
+          ].map((tile) => (
+            <div
+              key={tile.label}
+              className="flex items-center gap-4 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-4"
+            >
+              <div className="shrink-0">
+                <p className="text-xs text-[var(--color-muted)]">{tile.label}</p>
+                <p className="mt-1 text-2xl font-semibold">{tile.value}</p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+              <div className="min-w-0 flex-1">
+                <Sparkline values={tile.series} labels={bucketLabels} format={tile.format} label={tile.label} />
+              </div>
+            </div>
+          ))}
+        </div>
 
       <section>
         <h2 className="text-sm font-semibold">Pages</h2>
@@ -264,6 +323,32 @@ function AdminBillflow() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      </div>
+
+      <section>
+        <h2 className="text-sm font-semibold">Price intent</h2>
+        {intentTotal === 0 ? (
+          <p className="mt-2 text-sm text-[var(--color-muted)]">No waitlist signups yet.</p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {stats.priceIntents.map((row) => (
+              <div key={row.priceIntent} className="flex items-center gap-3 text-sm">
+                <span className="w-24 shrink-0">₹{row.priceIntent}/mo</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-app)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--color-primary)]"
+                    style={{ width: `${(row.count / intentTotal) * 100}%` }}
+                  />
+                </div>
+                <span className="w-20 shrink-0 text-right text-[var(--color-muted)]">
+                  {row.count} ({Math.round((row.count / intentTotal) * 100)}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section>
