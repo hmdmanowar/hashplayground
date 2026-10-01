@@ -17,7 +17,7 @@ function SiteHeader() {
           <img
             src={theme === 'dark' ? LOGO_DARK : LOGO_LIGHT}
             alt="BillFlow"
-            width={542}
+            width={539}
             height={120}
             className="h-8 w-auto sm:h-9"
           />

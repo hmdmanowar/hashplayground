@@ -21,6 +21,7 @@ const PAGE_HEIGHT = 297
 const MARGIN = 14
 const RIGHT = PAGE_WIDTH - MARGIN
 const LINE = 4.6
+const PT_TO_MM = 25.4 / 72
 const COLOR_TEXT: [number, number, number] = [30, 32, 38]
 const COLOR_MUTED: [number, number, number] = [100, 104, 115]
 const COLOR_ACCENT: [number, number, number] = [61, 82, 160]
@@ -127,7 +128,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     if (data.name) {
       setText(11, 'bold')
       const nameLines = doc.splitTextToSize(pdfSafe(data.name), width) as string[]
-      doc.text(nameLines, x, py)
+      doc.text(nameLines, x, py, { lineHeightFactor: 5 / (11 * PT_TO_MM) })
       py += nameLines.length * 5
     }
     setText(9.5, 'normal', COLOR_MUTED)
@@ -139,7 +140,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     ].filter(Boolean)
     for (const row of rows) {
       const lines = doc.splitTextToSize(pdfSafe(row), width) as string[]
-      doc.text(lines, x, py)
+      doc.text(lines, x, py, { lineHeightFactor: LINE / (9.5 * PT_TO_MM) })
       py += lines.length * LINE
     }
     return py
@@ -167,19 +168,28 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   const cellX = (index: number) =>
     columns[index].align === 'right' ? columnX(index) + columns[index].width - 1.5 : columnX(index) + 1.5
 
+  // Table layout works from each row's top edge (y) rather than a text
+  // baseline, so text can be centred vertically between the row rules:
+  // baseline = top + padding + cap height of the font.
+  const capHeight = (size: number) => size * PT_TO_MM * 0.72
+  const HEADER_HEIGHT = 7
+  const CELL_PAD = 2.3
+
   function tableHeader() {
     doc.setFillColor(COLOR_BAND[0], COLOR_BAND[1], COLOR_BAND[2])
-    doc.rect(MARGIN, y - 4.5, RIGHT - MARGIN, 7, 'F')
+    doc.rect(MARGIN, y, RIGHT - MARGIN, HEADER_HEIGHT, 'F')
     setText(8.5, 'bold', COLOR_MUTED)
-    columns.forEach((col, index) => doc.text(col.label, cellX(index), y, { align: col.align }))
-    y += 6
+    const baseline = y + (HEADER_HEIGHT + capHeight(8.5)) / 2
+    columns.forEach((col, index) => doc.text(col.label, cellX(index), baseline, { align: col.align }))
+    y += HEADER_HEIGHT
   }
 
+  y -= 4.5 // previous blocks leave y on a text baseline; the table starts at its top edge
   tableHeader()
   draft.items.forEach((item, itemIndex) => {
     setText(9.5)
     const descLines = doc.splitTextToSize(pdfSafe(item.description || '-'), descriptionWidth - 3) as string[]
-    const rowHeight = descLines.length * LINE + 2.4
+    const rowHeight = CELL_PAD * 2 + capHeight(9.5) + (descLines.length - 1) * LINE
     if (ensureSpace(rowHeight)) tableHeader()
     const values: Record<Column['key'], string | string[]> = {
       index: String(itemIndex + 1),
@@ -191,11 +201,14 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
       amount: money(totals.lines[itemIndex].amount),
     }
     setText(9.5)
-    columns.forEach((col, index) => doc.text(values[col.key], cellX(index), y, { align: col.align }))
+    const baseline = y + CELL_PAD + capHeight(9.5)
+    columns.forEach((col, index) =>
+      doc.text(values[col.key], cellX(index), baseline, { align: col.align, lineHeightFactor: LINE / (9.5 * PT_TO_MM) }),
+    )
     y += rowHeight
-    rule(y - 3.4)
+    rule(y)
   })
-  y += 3
+  y += 6.4
 
   // ------------------------------------------------------------ totals
   const summary: { label: string; value: string; strong?: boolean }[] = [
@@ -227,7 +240,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   setText(9, 'italic', COLOR_MUTED)
   const words = doc.splitTextToSize(`Amount in words: ${amountInWords(totals.total, draft.currency)}`, RIGHT - MARGIN) as string[]
   ensureSpace(words.length * LINE)
-  doc.text(words, MARGIN, y)
+  doc.text(words, MARGIN, y, { lineHeightFactor: LINE / (9 * PT_TO_MM) })
   y += words.length * LINE + 4
 
   // ------------------------------------------------------------ notes
@@ -240,7 +253,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     doc.text(title, MARGIN, y)
     y += LINE + 0.4
     setText(9.5)
-    doc.text(lines, MARGIN, y)
+    doc.text(lines, MARGIN, y, { lineHeightFactor: LINE / (9.5 * PT_TO_MM) })
     y += lines.length * LINE + 4
   }
   block('PAYMENT DETAILS', draft.paymentDetails)
