@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import {
   CURRENCIES,
   TAX_MODES,
@@ -19,6 +19,7 @@ import {
   type TaxMode,
 } from '../lib/invoice'
 import { barePhoneNumber, isValidUpiId } from '../lib/upi'
+import { useIfscLookup } from '../lib/ifsc'
 import { CheckIcon, PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
 
 const MAX_LOGO_BYTES = 500_000
@@ -104,6 +105,37 @@ function PaymentFields({
 }) {
   const accountNumber = payment.accountNumber.trim()
   const ifsc = payment.ifsc.trim()
+  const ifscLookup = useIfscLookup(payment.bank ? ifsc : '')
+
+  // Fill bank name / branch from the IFSC, but never clobber something the
+  // user typed: only fields that are empty or still hold our last auto-fill.
+  const lastAutofill = useRef({ bank: '', branch: '' })
+  const found = ifscLookup.status === 'found' ? ifscLookup.info : null
+  useEffect(() => {
+    if (!found) return
+    const patch: Partial<PaymentInfo> = {}
+    const bankName = payment.bankName.trim()
+    const branch = payment.branch.trim()
+    if (!bankName || bankName === lastAutofill.current.bank) patch.bankName = found.bank
+    if (!branch || branch === lastAutofill.current.branch) patch.branch = found.branch
+    lastAutofill.current = { bank: found.bank, branch: found.branch }
+    if (patch.bankName !== undefined || patch.branch !== undefined) updatePayment(patch)
+    // Runs once per looked-up IFSC; current field values are read, not watched.
+  }, [found])
+
+  let ifscHint: ReactNode
+  if (ifsc && !isValidIfsc(ifsc)) ifscHint = <span className={WARN}>IFSC is 11 characters, like HDFC0001234.</span>
+  else if (ifscLookup.status === 'loading') ifscHint = <span className={MUTED}>Looking up bank…</span>
+  else if (ifscLookup.status === 'not_found')
+    ifscHint = <span className={WARN}>IFSC not found. Please check the code.</span>
+  else if (found)
+    ifscHint = (
+      <span className="mt-1 flex items-start gap-1 text-xs text-green-700 dark:text-green-400">
+        <CheckIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+        {found.bank}, {found.branch}
+      </span>
+    )
+
   return (
     <div className="space-y-3">
       <div>
@@ -171,14 +203,7 @@ function PaymentFields({
               onChange={(e) => updatePayment({ accountNumber: e.target.value })}
             />
           </Field>
-          <Field
-            label="IFSC"
-            hint={
-              ifsc && !isValidIfsc(ifsc) ? (
-                <span className={WARN}>IFSC is 11 characters, like HDFC0001234.</span>
-              ) : undefined
-            }
-          >
+          <Field label="IFSC" hint={ifscHint}>
             <input
               className="bf-input uppercase"
               maxLength={11}

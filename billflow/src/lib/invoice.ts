@@ -104,8 +104,8 @@ export function paymentLines(payment: PaymentInfo): string[] {
     if (payment.accountName.trim()) lines.push(`Account name: ${payment.accountName.trim()}`)
     if (payment.accountNumber.trim()) lines.push(`A/c no.: ${payment.accountNumber.replace(/\s/g, '')}`)
     if (payment.ifsc.trim()) lines.push(`IFSC: ${payment.ifsc.trim().toUpperCase()}`)
-    if (bankName) lines.push(`Bank: ${bankName}${branch ? `, ${branch} branch` : ''}`)
-    else if (branch) lines.push(`Branch: ${branch}`)
+    if (bankName) lines.push(`Bank: ${bankName}`)
+    if (branch) lines.push(`Branch: ${branch}`)
   }
   if (payment.other && payment.otherText.trim()) lines.push(...payment.otherText.trim().split('\n'))
   return lines
