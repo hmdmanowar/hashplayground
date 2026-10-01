@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import FaqList from '../components/FaqList'
 import InvoicePreview from '../components/InvoicePreview'
@@ -6,6 +6,7 @@ import TemplateCard from '../components/TemplateCard'
 import WaitlistDialog from '../components/WaitlistDialog'
 import HowItWorks from '../components/landing/HowItWorks'
 import ProofStrip from '../components/landing/ProofStrip'
+import PrivacyBand from '../components/landing/PrivacyBand'
 import TypewriterWords from '../components/landing/TypewriterWords'
 import {
   ArrowRightIcon,
@@ -173,8 +174,6 @@ const STYLE_ROTATE_MS = 3200
 function Hero({ draft }: { draft: InvoiceDraft }) {
   const [styleIndex, setStyleIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [sheetHeight, setSheetHeight] = useState(0)
-  const sheetRef = useRef<HTMLDivElement>(null)
   const look = INVOICE_STYLES[styleIndex]
 
   // Auto-advance through every style; hover pauses, reduced motion opts out
@@ -184,14 +183,6 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
     const timer = setTimeout(() => setStyleIndex((prev) => (prev + 1) % INVOICE_STYLES.length), STYLE_ROTATE_MS)
     return () => clearTimeout(timer)
   }, [paused, styleIndex])
-
-  useEffect(() => {
-    const node = sheetRef.current
-    if (!node) return
-    const observer = new ResizeObserver(() => setSheetHeight((prev) => Math.max(prev, node.offsetHeight)))
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [styleIndex])
 
   return (
     <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 pt-12 pb-20 lg:grid-cols-[1.05fr_1fr] lg:pt-20">
@@ -246,12 +237,21 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
         onMouseLeave={() => setPaused(false)}
       >
         <div className="absolute -inset-8 rounded-[3rem] bg-[var(--color-primary)]/20 blur-3xl" aria-hidden="true" />
-        {/* Holds the tallest style seen so far, so switching styles never
-            makes the hero jump up and down. */}
-        <div className="relative" style={{ minHeight: sheetHeight || undefined }} aria-hidden="true">
-          <div ref={sheetRef} key={look.id} className="bf-fade-in pointer-events-none rotate-1 select-none">
-            <InvoicePreview draft={{ ...draft, style: look.id }} />
-          </div>
+        {/* Every style is rendered into the same grid cell and only the
+            active one is visible. The cell is always as tall as the tallest
+            style, so switching never changes the height, and styles crossfade
+            instead of popping. */}
+        <div className="pointer-events-none relative grid rotate-1 select-none" aria-hidden="true">
+          {INVOICE_STYLES.map((style, index) => (
+            <div
+              key={style.id}
+              className={`[grid-area:1/1] transition-opacity duration-700 ease-out motion-reduce:transition-none [&>article]:h-full ${
+                index === styleIndex ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <InvoicePreview draft={{ ...draft, style: style.id }} printable={false} />
+            </div>
+          ))}
         </div>
         <div className="bf-float absolute -top-4 left-2 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 shadow-xl sm:-left-10">
           <p className="text-[11px] text-[var(--color-muted)]">GST worked out</p>
@@ -527,6 +527,7 @@ function LandingPage() {
       <Facts />
       <HowItWorks />
       <Features />
+      <PrivacyBand />
       <TemplateShowcase />
       <Personas />
       <ProBand onJoin={openWaitlist} />

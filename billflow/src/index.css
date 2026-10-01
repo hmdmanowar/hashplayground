@@ -159,6 +159,39 @@ body {
   animation: bf-caret-blink 1s step-end infinite;
 }
 
+/* Privacy band: ciphertext slowly drifting upward (content is doubled in
+   markup so -50% loops seamlessly) and a padlock that clicks shut. */
+@keyframes bf-cipher-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.bf-cipher-drift {
+  animation: bf-cipher-drift 40s linear infinite;
+}
+
+@keyframes bf-lock-click {
+  0%,
+  55% {
+    transform: translateY(-7px);
+  }
+  70%,
+  92% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-7px);
+  }
+}
+
+.bf-lock-shackle {
+  animation: bf-lock-click 4s ease-in-out infinite;
+}
+
 .bf-float {
   animation: bf-float 5s ease-in-out infinite;
 }
@@ -214,6 +247,8 @@ body {
     display: none !important;
   }
 
+  .bf-cipher-drift,
+  .bf-lock-shackle,
   .bf-float,
   .bf-float-delayed,
   .bf-fade-in {
