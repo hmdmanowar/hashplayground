@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft, type LineItem, type Party, type PaymentInfo } from '../lib/invoice'
 import { findUpiId } from '../lib/upi'
-import type { InvoiceTemplate } from '../lib/templates'
+import { GENERATOR_SLUG, type InvoiceTemplate } from '../lib/templates'
 import { readJson, removeKey, writeJson } from '../lib/storage'
 
 // Two storage scopes: the seller's own details (business, logo, payment
@@ -9,7 +9,9 @@ import { readJson, removeKey, writeJson } from '../lib/storage'
 // per template — so opening a different template prefills its sample lines
 // without wiping the user's business details.
 const BUSINESS_KEY = 'billflow:business'
-const draftKey = (slug: string) => `billflow:draft:${slug || 'main'}`
+// The standard generator used to live at /billflow/ (slug ''), saved under
+// "main" — keep that key so existing drafts survive its move.
+const draftKey = (slug: string) => `billflow:draft:${!slug || slug === GENERATOR_SLUG ? 'main' : slug}`
 const SAVE_DELAY_MS = 400
 
 type BusinessFields = Pick<InvoiceDraft, 'from' | 'logoDataUrl' | 'payment'>

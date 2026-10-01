@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import FaqList from '../components/FaqList'
 import InvoiceForm from '../components/InvoiceForm'
 import InvoicePreview from '../components/InvoicePreview'
 import UpgradeBanner from '../components/UpgradeBanner'
@@ -8,7 +9,7 @@ import { DownloadIcon, PrinterIcon } from '../components/Icons'
 import { useInvoiceDraft } from '../hooks/useInvoiceDraft'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
-import { TEMPLATES, type InvoiceTemplate } from '../lib/templates'
+import { GENERATOR_SLUG, TEMPLATES, type InvoiceTemplate } from '../lib/templates'
 
 const HOW_IT_WORKS = [
   { title: 'Fill in your details', body: 'Add your business, your client and the items you’re billing. Your details are remembered in this browser.' },
@@ -59,19 +60,15 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="max-w-3xl print:hidden">
-        {template.slug ? (
-          <Link
-            to="/templates/"
-            className="text-xs font-semibold text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
-          >
-            ← All templates
-          </Link>
-        ) : (
-          <p className="text-xs font-semibold tracking-widest text-[var(--color-primary)] uppercase">Free · No sign-up · GST ready</p>
-        )}
+        <Link
+          to="/templates/"
+          className="text-xs font-semibold text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+        >
+          ← All templates
+        </Link>
         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{template.h1}</h1>
         <p className="mt-3 text-sm text-[var(--color-muted)] sm:text-base">{template.intro}</p>
-        {!template.slug && (
+        {template.slug === GENERATOR_SLUG && (
           <p className="mt-3 text-sm">
             Need a GST, proforma, freelance or export format?{' '}
             <Link to="/templates/" className="font-semibold text-[var(--color-accent)] hover:underline">
@@ -143,18 +140,8 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         <h2 id="faq" className="text-xl font-semibold">
           Frequently asked questions
         </h2>
-        <div className="mt-4 divide-y divide-[var(--border-panel)] rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)]">
-          {template.faq.map((item) => (
-            <details key={item.q} className="group px-4 py-3">
-              <summary className="cursor-pointer list-none text-sm font-medium marker:hidden">
-                <span className="flex items-center justify-between gap-3">
-                  {item.q}
-                  <span className="text-[var(--color-muted)] transition-transform group-open:rotate-45">+</span>
-                </span>
-              </summary>
-              <p className="mt-2 text-sm text-[var(--color-muted)]">{item.a}</p>
-            </details>
-          ))}
+        <div className="mt-4">
+          <FaqList items={template.faq} />
         </div>
       </section>
 

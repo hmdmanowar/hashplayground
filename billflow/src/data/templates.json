@@ -1,6 +1,39 @@
 {
   "siteOrigin": "https://hashplayground.in",
   "basePath": "/billflow/",
+  "landingPage": {
+    "slug": "",
+    "metaTitle": "BillFlow — Free GST Invoice Generator for Freelancers & Small Businesses",
+    "metaDescription": "Create GST-ready invoices in under a minute, add a scan-to-pay UPI QR and download a professional PDF. Free, no sign-up. Built for Indian freelancers, consultants and small businesses.",
+    "h1": "Free GST invoicing for freelancers and small businesses",
+    "intro": "Create a professional invoice in under a minute, with GST worked out for you, a UPI QR your client can scan to pay, and a clean PDF ready to send. No sign-up, no limits.",
+    "faq": [
+      {
+        "q": "Is this invoice generator really free?",
+        "a": "Yes. You can create and download as many invoices as you like as a PDF, with no account and no credit card."
+      },
+      {
+        "q": "Does it support GST invoices?",
+        "a": "Yes. Add your and your client's GSTIN, HSN/SAC codes and a GST rate per line. Choose intra-state to split tax into CGST and SGST, or inter-state for IGST."
+      },
+      {
+        "q": "Is my data stored on your servers?",
+        "a": "No. Your invoice is built entirely in your browser and your draft is saved only in this browser's local storage."
+      },
+      {
+        "q": "Can I add my logo?",
+        "a": "Yes. Upload a PNG or JPG logo and it appears on both the preview and the downloaded PDF."
+      },
+      {
+        "q": "Can BillFlow remind my clients to pay?",
+        "a": "Automatic payment reminders, a paid/unpaid dashboard and client history are coming in BillFlow Pro. Join the early access list from the banner below the invoice preview."
+      },
+      {
+        "q": "Do I need to create an account?",
+        "a": "No. BillFlow works straight in your browser without an account. Your business details are remembered on this device so your next invoice is even quicker."
+      }
+    ]
+  },
   "galleryPage": {
     "slug": "templates",
     "metaTitle": "Free Invoice Templates (GST, Proforma, Freelance & More) | BillFlow",
@@ -10,10 +43,10 @@
   },
   "templates": [
     {
-      "slug": "",
-      "label": "Invoice Generator",
-      "metaTitle": "Free Online Invoice Generator (GST Ready) — BillFlow by Hash Playground",
-      "metaDescription": "Create a professional invoice in under a minute and download it as a PDF. Free, no sign-up, GST ready with CGST/SGST/IGST, HSN/SAC codes and amount in words.",
+      "slug": "invoice-generator",
+      "label": "Standard Invoice",
+      "metaTitle": "Free Online Invoice Generator (GST Ready) — Create PDF Invoices | BillFlow",
+      "metaDescription": "Fill in a simple form, see your invoice update live and download a professional PDF. GST ready with CGST/SGST/IGST, HSN/SAC codes, UPI QR and amount in words. Free, no sign-up.",
       "h1": "Free Invoice Generator",
       "intro": "Fill in your details, watch the invoice update live, and download a clean PDF. No sign-up and no limits. Built for freelancers, consultants and small businesses, with full GST support.",
       "documentTitle": "Invoice",

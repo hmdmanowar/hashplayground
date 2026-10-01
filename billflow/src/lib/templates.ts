@@ -26,8 +26,13 @@ export interface InvoiceTemplate extends PageMeta {
 export const SITE_ORIGIN = data.siteOrigin
 export const TEMPLATES = data.templates as InvoiceTemplate[]
 
-// The /billflow/templates/ gallery page.
+// The /billflow/ landing page and the /billflow/templates/ gallery page.
+export const LANDING_PAGE = data.landingPage
 export const GALLERY_PAGE = data.galleryPage
+
+// The plain, all-purpose generator every "Create invoice" button opens.
+export const GENERATOR_SLUG = 'invoice-generator'
+export const GENERATOR_PATH = `/${GENERATOR_SLUG}/`
 
 export function findTemplate(slug: string): InvoiceTemplate | undefined {
   return TEMPLATES.find((template) => template.slug === slug)

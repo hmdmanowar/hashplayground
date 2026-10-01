@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useTheme } from '../hooks/useTheme'
+import { GENERATOR_PATH } from '../lib/templates'
 import { MoonIcon, SunIcon } from './Icons'
 
 const LOGO_LIGHT = `${import.meta.env.BASE_URL}billflow-logo.png`
@@ -19,7 +20,7 @@ function SiteHeader() {
             alt="BillFlow"
             width={539}
             height={120}
-            className="h-8 w-auto sm:h-9"
+            className="h-7 w-auto sm:h-9"
           />
         </Link>
 
@@ -34,6 +35,12 @@ function SiteHeader() {
           >
             Templates
           </NavLink>
+          <Link
+            to={GENERATOR_PATH}
+            className="rounded-full bg-[var(--color-primary-strong)] px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-white transition-opacity hover:opacity-90 sm:px-4"
+          >
+            Create<span className="hidden sm:inline"> invoice</span>
+          </Link>
           <button
             type="button"
             onClick={toggleTheme}

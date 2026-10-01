@@ -122,6 +122,90 @@ body {
   }
 }
 
+/* Landing page motion: gentle float for hero callouts, fade-in on reveal. */
+@keyframes bf-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes bf-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bf-float {
+  animation: bf-float 5s ease-in-out infinite;
+}
+
+.bf-float-delayed {
+  animation: bf-float 5s ease-in-out 1.5s infinite;
+}
+
+.bf-fade-in {
+  animation: bf-fade-in 0.45s ease-out both;
+}
+
+/* Landing template showcase: endless auto-scroll, paused on hover/focus.
+   Content is duplicated in markup and moved by -50% for a seamless loop. */
+@keyframes bf-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bf-marquee-track {
+  overflow: hidden;
+  padding-top: 0.25rem;
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.bf-marquee {
+  width: max-content;
+  animation: bf-marquee 50s linear infinite;
+}
+
+.bf-marquee-track:hover .bf-marquee,
+.bf-marquee-track:focus-within .bf-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-marquee-track {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .bf-marquee {
+    animation: none;
+  }
+
+  .bf-marquee-dup {
+    display: none !important;
+  }
+
+  .bf-float,
+  .bf-float-delayed,
+  .bf-fade-in {
+    animation: none;
+  }
+}
+
 /* "Print" fallback for the jsPDF download — prints only the invoice sheet. */
 @media print {
   @page {

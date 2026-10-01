@@ -12,11 +12,7 @@ const TAX_BADGE: Record<InvoiceTemplate['taxMode'], string> = {
 const PREVIEW_ROWS = 3
 
 export function templatePath(slug: string): string {
-  return slug ? `/${slug}/` : '/'
-}
-
-export function templateTitle(template: InvoiceTemplate): string {
-  return template.slug ? template.label : 'Standard Invoice'
+  return `/${slug}/`
 }
 
 // Just the fields computeTotals reads — enough to price the sample items.
@@ -29,13 +25,14 @@ function sampleTotal(template: InvoiceTemplate): number {
   } as InvoiceDraft).total
 }
 
-function TemplateCard({ template }: { template: InvoiceTemplate }) {
+function TemplateCard({ template, focusable = true }: { template: InvoiceTemplate; focusable?: boolean }) {
   const money = (minor: number) => formatMoney(minor, template.currency)
   const taxBadge = template.taxMode === 'custom' ? template.taxLabel || 'Tax' : TAX_BADGE[template.taxMode]
 
   return (
     <Link
       to={templatePath(template.slug)}
+      tabIndex={focusable ? undefined : -1}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] transition-all hover:-translate-y-0.5 hover:border-[var(--color-primary)] hover:shadow-lg focus-visible:border-[var(--color-primary)] focus-visible:outline-none"
     >
       {/* Miniature of the invoice this template produces */}
@@ -66,7 +63,7 @@ function TemplateCard({ template }: { template: InvoiceTemplate }) {
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <h2 className="text-sm font-semibold">{templateTitle(template)}</h2>
+        <h2 className="text-sm font-semibold">{template.label}</h2>
         <p className="mt-1 line-clamp-3 text-xs text-[var(--color-muted)]">{template.intro}</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {[taxBadge, template.currency].map((badge) => (

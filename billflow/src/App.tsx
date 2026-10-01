@@ -4,6 +4,7 @@ import SiteHeader from './components/SiteHeader'
 import SiteFooter from './components/SiteFooter'
 import SiteBackground from './components/SiteBackground'
 import GeneratorPage from './pages/GeneratorPage'
+import LandingPage from './pages/LandingPage'
 import TemplatesPage from './pages/TemplatesPage'
 import { findTemplate } from './lib/templates'
 
@@ -34,7 +35,7 @@ function App() {
         <SiteHeader />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<TemplateRoute />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/:slug" element={<TemplateRoute />} />
             <Route path="*" element={<Navigate to="/" replace />} />

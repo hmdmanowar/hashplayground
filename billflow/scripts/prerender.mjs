@@ -88,7 +88,7 @@ function head(template, extraStructured = []) {
 function body(template) {
   const links = data.templates
     .filter((other) => other.slug !== template.slug)
-    .map((other) => `<li><a href="${pageUrl(other.slug)}">${escapeHtml(other.slug ? other.h1 : 'Free Invoice Generator')}</a></li>`)
+    .map((other) => `<li><a href="${pageUrl(other.slug)}">${escapeHtml(other.h1)}</a></li>`)
     .join('')
   const faq = template.faq
     .map((item) => `<h3>${escapeHtml(item.q)}</h3><p>${escapeHtml(item.a)}</p>`)
@@ -103,15 +103,17 @@ function body(template) {
     </div>`
 }
 
-const templateName = (template) => (template.slug ? template.h1 : 'Standard Invoice')
-
-function galleryBody() {
-  const cards = data.templates
+function templateList() {
+  return data.templates
     .map(
       (template) =>
-        `<li><h2><a href="${pageUrl(template.slug)}">${escapeHtml(templateName(template))}</a></h2><p>${escapeHtml(template.intro)}</p></li>`,
+        `<li><h3><a href="${pageUrl(template.slug)}">${escapeHtml(template.label)}</a></h3><p>${escapeHtml(template.intro)}</p></li>`,
     )
     .join('')
+}
+
+function galleryBody() {
+  const cards = templateList()
   return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(gallery.h1)}</h1>
@@ -120,11 +122,32 @@ function galleryBody() {
     </div>`
 }
 
+// The /billflow/ landing page.
+const landing = data.landingPage
+const generator = data.templates.find((template) => template.slug === 'invoice-generator')
+
+function landingBody() {
+  const faq = landing.faq.map((item) => `<h3>${escapeHtml(item.q)}</h3><p>${escapeHtml(item.a)}</p>`).join('')
+  return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+      <p><a href="${pageUrl('')}">BillFlow</a></p>
+      <h1>${escapeHtml(landing.h1)}</h1>
+      <p>${escapeHtml(landing.intro)}</p>
+      <p><a href="${pageUrl(generator.slug)}">Create an invoice, free</a> · <a href="${pageUrl(gallery.slug)}">Browse templates</a></p>
+      <h2>Invoice templates</h2><ul>${templateList()}</ul>
+      <h2>Frequently asked questions</h2>${faq}
+    </div>`
+}
+
+writeFileSync(
+  join(dist, 'index.html'),
+  shell.replace(HEAD_PATTERN, () => head(landing)).replace(BODY_MARKER, () => landingBody()),
+)
+
 for (const template of data.templates) {
   const html = shell
     .replace(HEAD_PATTERN, () => head(template))
     .replace(BODY_MARKER, () => body(template))
-  const outFile = template.slug ? join(dist, template.slug, 'index.html') : join(dist, 'index.html')
+  const outFile = join(dist, template.slug, 'index.html')
   mkdirSync(dirname(outFile), { recursive: true })
   writeFileSync(outFile, html)
 }
@@ -136,7 +159,7 @@ const itemList = {
   itemListElement: data.templates.map((template, index) => ({
     '@type': 'ListItem',
     position: index + 1,
-    name: templateName(template),
+    name: template.label,
     url: pageUrl(template.slug),
   })),
 }
@@ -147,7 +170,8 @@ writeFileSync(
   shell.replace(HEAD_PATTERN, () => head(gallery, [itemList])).replace(BODY_MARKER, () => galleryBody()),
 )
 
-const sitemapPages = [data.templates[0], gallery, ...data.templates.slice(1)]
+const sitemapPages = [landing, gallery, ...data.templates]
+const priority = (page) => (page === landing ? '1.0' : page === gallery || page === generator ? '0.9' : '0.8')
 const today = new Date().toISOString().slice(0, 10)
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -157,7 +181,7 @@ ${sitemapPages
     <loc>${pageUrl(template.slug)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>${template.slug && template.slug !== gallery.slug ? '0.8' : '0.9'}</priority>
+    <priority>${priority(template)}</priority>
   </url>`,
   )
   .join('\n')}
@@ -165,4 +189,4 @@ ${sitemapPages
 `
 writeFileSync(join(dist, 'sitemap.xml'), sitemap)
 
-console.log(`prerender: wrote ${data.templates.length} template pages + templates gallery + sitemap.xml`)
+console.log(`prerender: wrote landing + ${data.templates.length} template pages + templates gallery + sitemap.xml`)
