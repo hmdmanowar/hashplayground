@@ -3,6 +3,7 @@ import { EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft, type LineItem, type
 import { findUpiId } from '../lib/upi'
 import { GENERATOR_SLUG, type InvoiceTemplate } from '../lib/templates'
 import { readJson, removeKey, writeJson } from '../lib/storage'
+import { getInvoiceStyle } from '../lib/invoiceStyles'
 
 // Two storage scopes: the seller's own details (business, logo, payment
 // info) are shared by every template page, while the invoice body is saved
@@ -14,7 +15,7 @@ const BUSINESS_KEY = 'billflow:business'
 const draftKey = (slug: string) => `billflow:draft:${!slug || slug === GENERATOR_SLUG ? 'main' : slug}`
 const SAVE_DELAY_MS = 400
 
-type BusinessFields = Pick<InvoiceDraft, 'from' | 'logoDataUrl' | 'payment'>
+type BusinessFields = Pick<InvoiceDraft, 'from' | 'logoDataUrl' | 'payment' | 'style'>
 type StoredBusiness = Partial<BusinessFields> & { paymentDetails?: string }
 
 // Drafts saved before payment details became structured stored one free-text
@@ -58,6 +59,7 @@ function buildDefault(template: InvoiceTemplate): InvoiceDraft {
     notes: template.notes,
     payment: { ...EMPTY_PAYMENT },
     logoDataUrl: '',
+    style: getInvoiceStyle(undefined).id,
   }
 }
 
@@ -72,6 +74,7 @@ function loadInitial(template: InvoiceTemplate): InvoiceDraft {
     to: { ...EMPTY_PARTY, ...saved?.to },
     items: saved?.items?.length ? saved.items : base.items,
     logoDataUrl: business?.logoDataUrl ?? '',
+    style: getInvoiceStyle(business?.style).id,
     payment: migratePayment(business),
   }
 }
@@ -79,13 +82,13 @@ function loadInitial(template: InvoiceTemplate): InvoiceDraft {
 export function useInvoiceDraft(template: InvoiceTemplate) {
   const [draft, setDraft] = useState<InvoiceDraft>(() => loadInitial(template))
 
-  const { from, logoDataUrl, payment, ...body } = draft
+  const { from, logoDataUrl, payment, style, ...body } = draft
   const bodyJson = JSON.stringify(body)
 
   useEffect(() => {
-    const timer = setTimeout(() => writeJson(BUSINESS_KEY, { from, logoDataUrl, payment }), SAVE_DELAY_MS)
+    const timer = setTimeout(() => writeJson(BUSINESS_KEY, { from, logoDataUrl, payment, style }), SAVE_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [from, logoDataUrl, payment])
+  }, [from, logoDataUrl, payment, style])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,6 +135,7 @@ export function useInvoiceDraft(template: InvoiceTemplate) {
       ...buildDefault(template),
       from: prev.from,
       logoDataUrl: prev.logoDataUrl,
+      style: prev.style,
       payment: prev.payment,
     }))
   }, [template])

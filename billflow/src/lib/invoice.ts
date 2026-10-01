@@ -3,6 +3,8 @@
 // cents) — inputs stay strings while editing and are converted here, which
 // avoids float drift like 0.1 + 0.2 on totals.
 
+import type { InvoiceStyleId } from './invoiceStyles'
+
 export type TaxMode = 'none' | 'gst_intra' | 'gst_inter' | 'custom'
 export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'AED'
 
@@ -53,6 +55,7 @@ export interface InvoiceDraft {
   notes: string
   payment: PaymentInfo
   logoDataUrl: string
+  style: InvoiceStyleId
 }
 
 // How the client can pay. Methods are independent toggles — freelancers

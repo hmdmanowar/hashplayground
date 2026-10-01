@@ -58,6 +58,7 @@ function sampleDraft(): InvoiceDraft {
     notes: '',
     payment: { ...EMPTY_PAYMENT, upi: true, upiId: 'yourstudio@billflow' },
     logoDataUrl: '',
+    style: 'classic',
   }
 }
 

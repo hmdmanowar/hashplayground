@@ -13,6 +13,7 @@ import {
   type Party,
 } from './invoice'
 import { qrDataUrl, upiPaymentFor } from './upi'
+import { getInvoiceStyle, hexToRgb } from './invoiceStyles'
 
 // Draws the invoice directly with jsPDF (same approach as the main app's
 // Portfolio/generateResumePdf.ts) rather than screenshotting the preview:
@@ -26,9 +27,6 @@ const LINE = 4.6
 const PT_TO_MM = 25.4 / 72
 const COLOR_TEXT: [number, number, number] = [30, 32, 38]
 const COLOR_MUTED: [number, number, number] = [100, 104, 115]
-const COLOR_ACCENT: [number, number, number] = [61, 82, 160]
-const COLOR_RULE: [number, number, number] = [214, 217, 224]
-const COLOR_BAND: [number, number, number] = [240, 242, 248]
 const FOOTER_TEXT = 'Created with BillFlow, the free invoice generator at hashplayground.in/billflow'
 
 // Helvetica (the only font jsPDF ships) covers Latin-1 only; swap the common
@@ -63,10 +61,21 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   const totals = computeTotals(draft)
   const taxed = hasTax(draft.taxMode)
   const money = (minor: number) => formatMoney(minor, draft.currency, 'pdf')
+  const look = getInvoiceStyle(draft.style)
+  const font = look.serif ? 'times' : 'helvetica'
+  const COLOR_ACCENT = hexToRgb(look.accent)
+  const COLOR_RULE = hexToRgb(look.rule)
+  const COLOR_LABEL = hexToRgb(look.label)
   let y = MARGIN + 4
 
+  function fill(hex: string, x: number, top: number, width: number, height: number) {
+    const [r, g, b] = hexToRgb(hex)
+    doc.setFillColor(r, g, b)
+    doc.rect(x, top, width, height, 'F')
+  }
+
   function setText(size: number, style: 'normal' | 'bold' | 'italic' = 'normal', color = COLOR_TEXT) {
-    doc.setFont('helvetica', style)
+    doc.setFont(font, style)
     doc.setFontSize(size)
     doc.setTextColor(color[0], color[1], color[2])
   }
@@ -85,7 +94,21 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   }
 
   // ------------------------------------------------------------ header
-  let logoBottom = y
+  const centered = look.layout === 'centered'
+  const title = pdfSafe(draft.documentTitle || 'Invoice').toUpperCase()
+  const meta: [string, string][] = [
+    ['Invoice no.', draft.invoiceNumber],
+    ['Date', formatDate(draft.issueDate)],
+    ['Due date', formatDate(draft.dueDate)],
+  ]
+
+  // "split": logo left, title + meta right-aligned. "centered": title across
+  // the top, then meta on the left and the logo on the right.
+  setText(look.title.size, look.title.bold ? 'bold' : 'normal', hexToRgb(look.title.color))
+  doc.text(title, centered ? PAGE_WIDTH / 2 : RIGHT, y + 2, { align: centered ? 'center' : 'right' })
+  const blockTop = centered ? y + 12 : y
+
+  let logoBottom = blockTop
   if (draft.logoDataUrl) {
     const size = await loadImageSize(draft.logoDataUrl)
     if (size && size.width > 0 && size.height > 0) {
@@ -93,30 +116,30 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
       const width = size.width * scale
       const height = size.height * scale
       const format = draft.logoDataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG'
+      const logoX = centered ? RIGHT - width : MARGIN
+      const logoTop = centered ? blockTop - 3 : y - 4
       try {
-        doc.addImage(draft.logoDataUrl, format, MARGIN, y - 4, width, height, 'logo', 'FAST')
-        logoBottom = y - 4 + height
+        doc.addImage(draft.logoDataUrl, format, logoX, logoTop, width, height, 'logo', 'FAST')
+        logoBottom = logoTop + height
       } catch {
         // unreadable image — skip the logo rather than fail the download
       }
     }
   }
 
-  setText(20, 'bold', COLOR_ACCENT)
-  doc.text(pdfSafe(draft.documentTitle || 'Invoice').toUpperCase(), RIGHT, y + 2, { align: 'right' })
-  let metaY = y + 9
-  setText(9.5, 'normal', COLOR_MUTED)
-  const meta: [string, string][] = [
-    ['Invoice no.', draft.invoiceNumber],
-    ['Date', formatDate(draft.issueDate)],
-    ['Due date', formatDate(draft.dueDate)],
-  ]
+  let metaY = centered ? blockTop : y + 9
   for (const [label, value] of meta) {
     if (!value) continue
     setText(9.5, 'normal', COLOR_MUTED)
-    doc.text(`${label}:`, RIGHT - 32, metaY, { align: 'right' })
-    setText(9.5, 'bold')
-    doc.text(pdfSafe(value), RIGHT, metaY, { align: 'right' })
+    if (centered) {
+      doc.text(`${label}:`, MARGIN, metaY)
+      setText(9.5, 'bold')
+      doc.text(pdfSafe(value), MARGIN + 24, metaY)
+    } else {
+      doc.text(`${label}:`, RIGHT - 32, metaY, { align: 'right' })
+      setText(9.5, 'bold')
+      doc.text(pdfSafe(value), RIGHT, metaY, { align: 'right' })
+    }
     metaY += LINE + 0.6
   }
   y = Math.max(logoBottom, metaY) + 6
@@ -124,7 +147,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   // ------------------------------------------------------------ parties
   function party(title: string, data: Party, x: number, width: number): number {
     let py = y
-    setText(8, 'bold', COLOR_MUTED)
+    setText(8, 'bold', COLOR_LABEL)
     doc.text(title, x, py)
     py += LINE + 0.6
     if (data.name) {
@@ -177,10 +200,19 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
   const HEADER_HEIGHT = 7
   const CELL_PAD = 2.3
 
+  // "grid" styles rule every cell: outer box plus a line at each column edge.
+  function cellBorders(top: number, height: number) {
+    if (!look.grid) return
+    doc.setDrawColor(COLOR_RULE[0], COLOR_RULE[1], COLOR_RULE[2])
+    doc.setLineWidth(0.3)
+    doc.rect(MARGIN, top, RIGHT - MARGIN, height)
+    for (let index = 1; index < columns.length; index++) doc.line(columnX(index), top, columnX(index), top + height)
+  }
+
   function tableHeader() {
-    doc.setFillColor(COLOR_BAND[0], COLOR_BAND[1], COLOR_BAND[2])
-    doc.rect(MARGIN, y, RIGHT - MARGIN, HEADER_HEIGHT, 'F')
-    setText(8.5, 'bold', COLOR_MUTED)
+    fill(look.head.bg, MARGIN, y, RIGHT - MARGIN, HEADER_HEIGHT)
+    cellBorders(y, HEADER_HEIGHT)
+    setText(8.5, 'bold', hexToRgb(look.head.text))
     const baseline = y + (HEADER_HEIGHT + capHeight(8.5)) / 2
     columns.forEach((col, index) => doc.text(col.label, cellX(index), baseline, { align: col.align }))
     y += HEADER_HEIGHT
@@ -202,13 +234,15 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
       taxRate: `${formatQuantity(item.taxRate)}%`,
       amount: money(totals.lines[itemIndex].amount),
     }
+    if (look.zebra && itemIndex % 2 === 1) fill(look.zebra, MARGIN, y, RIGHT - MARGIN, rowHeight)
+    cellBorders(y, rowHeight)
     setText(9.5)
     const baseline = y + CELL_PAD + capHeight(9.5)
     columns.forEach((col, index) =>
       doc.text(values[col.key], cellX(index), baseline, { align: col.align, lineHeightFactor: LINE / (9.5 * PT_TO_MM) }),
     )
     y += rowHeight
-    rule(y)
+    if (!look.grid) rule(y)
   })
   y += 6.4
 
@@ -230,14 +264,24 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     doc.text(row.value, RIGHT, y, { align: 'right' })
     y += 5.5
   }
-  doc.setDrawColor(COLOR_ACCENT[0], COLOR_ACCENT[1], COLOR_ACCENT[2])
-  doc.setLineWidth(0.5)
-  doc.line(RIGHT - 80, y - 2, RIGHT, y - 2)
-  y += 3.5
-  setText(12, 'bold')
-  doc.text(`Total (${draft.currency})`, RIGHT - 40, y, { align: 'right' })
-  doc.text(money(totals.total), RIGHT, y, { align: 'right' })
-  y += 8
+  if (look.totalBand) {
+    // Highlighted "balance due" band behind the total row
+    fill(look.totalBand.bg, RIGHT - 84, y - 1.5, 84, 9.5)
+    y += 4.5
+    setText(12, 'bold', hexToRgb(look.totalBand.text))
+    doc.text(`Total (${draft.currency})`, RIGHT - 40, y, { align: 'right' })
+    doc.text(money(totals.total), RIGHT - 2, y, { align: 'right' })
+    y += 9
+  } else {
+    doc.setDrawColor(COLOR_ACCENT[0], COLOR_ACCENT[1], COLOR_ACCENT[2])
+    doc.setLineWidth(0.5)
+    doc.line(RIGHT - 80, y - 2, RIGHT, y - 2)
+    y += 3.5
+    setText(12, 'bold')
+    doc.text(`Total (${draft.currency})`, RIGHT - 40, y, { align: 'right' })
+    doc.text(money(totals.total), RIGHT, y, { align: 'right' })
+    y += 8
+  }
 
   setText(9, 'italic', COLOR_MUTED)
   const words = doc.splitTextToSize(`Amount in words: ${amountInWords(totals.total, draft.currency)}`, RIGHT - MARGIN) as string[]
@@ -259,7 +303,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     const blockHeight = qr ? Math.max(textHeight, QR_SIZE + QR_CAPTION_HEIGHT) : textHeight
     ensureSpace(blockHeight + 4)
     const top = y
-    setText(8, 'bold', COLOR_MUTED)
+    setText(8, 'bold', COLOR_LABEL)
     doc.text(title, MARGIN, y)
     y += LINE + 0.4
     setText(9.5)

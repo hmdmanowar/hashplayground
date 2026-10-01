@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import FaqList from '../components/FaqList'
 import InvoiceForm from '../components/InvoiceForm'
 import InvoicePreview from '../components/InvoicePreview'
+import StylePicker from '../components/StylePicker'
 import UpgradeBanner from '../components/UpgradeBanner'
 import WaitlistDialog from '../components/WaitlistDialog'
 import { DownloadIcon, PrinterIcon } from '../components/Icons'
@@ -114,6 +115,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
             {downloadError && <p className="w-full text-sm text-red-600 dark:text-red-400">{downloadError}</p>}
           </div>
 
+          <StylePicker value={draft.style} onChange={(style) => update({ style })} />
           <InvoicePreview draft={draft} />
           <UpgradeBanner onUpgrade={handleUpgrade} />
         </div>
