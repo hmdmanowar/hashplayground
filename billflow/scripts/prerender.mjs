@@ -107,12 +107,21 @@ function body(template) {
   const faq = template.faq
     .map((item) => `<h3>${escapeHtml(item.q)}</h3><p>${escapeHtml(item.a)}</p>`)
     .join('')
+  const guide = (template.guide ?? [])
+    .map(
+      (section) =>
+        `<h2>${escapeHtml(section.h)}</h2>${section.p.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}${
+          section.list?.length ? `<ul>${section.list.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''
+        }`,
+    )
+    .join('')
   return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(template.h1)}</h1>
       <p>${escapeHtml(template.intro)}</p>
       ${template.highlights?.length ? `<h2>What this template includes</h2><ul>${template.highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
       <p>Loading the invoice generator…</p>
+      ${guide}
       <h2>Frequently asked questions</h2>${faq}
       <h2><a href="${pageUrl(gallery.slug)}">Free invoice templates</a></h2><ul>${links}</ul>
     </div>`

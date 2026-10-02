@@ -25,6 +25,10 @@ function LandingFooter() {
         <Logo />
         <p className="text-xs text-[var(--color-muted)]">Hash Playground &mdash; Build. Experiment. Learn. Ship.</p>
         <div className="flex items-center gap-4 text-xs text-[var(--color-muted)]">
+          {/* BillFlow is a separate app under /billflow/, so a plain link (full page load) */}
+          <a href="/billflow/" className="hover:text-[var(--color-primary)]">
+            Free GST invoice generator
+          </a>
           {!user && (
             <Link to="/login" className="hover:text-[var(--color-primary)]">
               Log in

@@ -90,6 +90,22 @@
         {
           "q": "Can BillFlow remind my clients to pay?",
           "a": "Automatic payment reminders, a paid/unpaid dashboard and client history are coming in BillFlow Pro. Join the early access list from the banner below the invoice preview."
+        },
+        {
+          "q": "Do I need to download any software to make an invoice?",
+          "a": "No. BillFlow runs in your web browser on a laptop or phone. Fill in the form, check the live preview and download the PDF or print it straight away."
+        },
+        {
+          "q": "Will BillFlow remember my business details next time?",
+          "a": "Yes. Your business name, address and other details are saved locally in this browser, so the next invoice starts with them filled in. Clearing your browser data removes them."
+        },
+        {
+          "q": "Can I bill clients in US dollars or other currencies?",
+          "a": "Yes. You can choose INR, USD, EUR, GBP or AED. Amount in words uses the Indian lakh and crore system when the currency is INR."
+        },
+        {
+          "q": "How should I number my invoices?",
+          "a": "Use a simple running sequence that never repeats, such as INV-2026-001, INV-2026-002 and so on. Many businesses restart the series each financial year, which is fine as long as each number stays unique."
         }
       ],
       "highlights": [
@@ -98,6 +114,50 @@
         "Automatic CGST + SGST or IGST split and amount in words",
         "Scan-to-pay UPI QR and bank details with IFSC auto-fill",
         "11 PDF styles and your own logo"
+      ],
+      "guide": [
+        {
+          "h": "How to make an invoice online in five minutes",
+          "p": [
+            "An invoice is the document that tells your client what you did, what it costs and how to pay you. Getting it right the first time means fewer follow-up emails and faster payment. Here is the quickest way to make one with BillFlow."
+          ],
+          "list": [
+            "Add your business name, address and logo. If you are GST registered, enter your GSTIN.",
+            "Add your client’s name, address and, for a registered business, their GSTIN.",
+            "Set the invoice number, invoice date and a due date so the client knows exactly when payment is expected.",
+            "List each service or product on its own line with quantity, rate and, if applicable, the HSN/SAC code and GST rate.",
+            "Add a discount if you agreed one, then check the totals and amount in words in the live preview.",
+            "Add your UPI ID or bank account, pick one of the 11 styles and download the PDF."
+          ]
+        },
+        {
+          "h": "What every invoice should include",
+          "p": [
+            "Even a simple invoice needs a few basics to look professional and hold up if a client questions it later. Make sure yours has a clear title, your full business name and contact details, the client’s name and address, a unique invoice number, the date of issue and a due date.",
+            "The line items should describe the work in words your client will recognise, for example “Logo design, 3 concepts and 2 revisions” rather than just “Design”. Show the quantity and rate so the maths is easy to follow, and finish with the total in figures and in words. If you are GST registered, the invoice also needs GST details, which BillFlow adds when you choose a GST tax mode."
+          ]
+        },
+        {
+          "h": "Getting paid faster",
+          "p": [
+            "Most payment delays come from friction, not from unwilling clients. The fewer steps it takes to pay you, the sooner the money arrives.",
+            "If you add a UPI ID, BillFlow prints a scan-to-pay QR code on the invoice, so a client can pay ₹25,000 from their phone in seconds. For larger B2B payments, add your bank account number and IFSC; BillFlow fills in the bank name and branch for you, which cuts down on typing mistakes. A short note such as “Payment due within 15 days of invoice date” sets expectations politely."
+          ]
+        },
+        {
+          "h": "Common invoicing mistakes to avoid",
+          "p": [
+            "Small errors are the usual reason an accounts team sends an invoice back. Run through this checklist before you hit download."
+          ],
+          "list": [
+            "Reusing an invoice number or skipping numbers without a reason.",
+            "Leaving out the due date, which gives the client no deadline.",
+            "Vague descriptions that make it hard for the client to approve the bill.",
+            "Typos in the client’s legal name or GSTIN, which can stop them claiming input tax credit.",
+            "Charging GST when you are not registered, or forgetting it when you are.",
+            "Sending an editable file instead of a PDF."
+          ]
+        }
       ]
     },
     {
@@ -136,6 +196,22 @@
         {
           "q": "When do I charge CGST + SGST instead of IGST?",
           "a": "Charge CGST + SGST when you and your client are in the same state (intra-state supply). Charge IGST when the supply is to another state (inter-state). BillFlow suggests the right option from the first two digits of both GSTINs."
+        },
+        {
+          "q": "Is it mandatory to write “Tax Invoice” on a GST invoice?",
+          "a": "Yes. A tax invoice issued by a GST-registered supplier should be clearly titled “Tax Invoice”. This template uses that title by default."
+        },
+        {
+          "q": "How many digits of HSN or SAC code do I need?",
+          "a": "For B2B invoices, businesses with aggregate turnover up to ₹5 crore must show at least a 4-digit HSN/SAC code, and those above ₹5 crore must show 6 digits. Check with your CA for B2C rules that apply to you."
+        },
+        {
+          "q": "How can I check if a GSTIN is valid?",
+          "a": "A GSTIN has 15 characters and starts with a two-digit state code. BillFlow checks the format as you type. To confirm the number is active and belongs to your client, search it on the official GST portal."
+        },
+        {
+          "q": "Can my client claim input tax credit on this invoice?",
+          "a": "Input tax credit depends on a valid tax invoice with correct GSTINs and on the invoice being reported in your GST returns. Make sure the details are accurate and file your returns on time."
         }
       ],
       "highlights": [
@@ -144,6 +220,44 @@
         "CGST + SGST for intra-state or IGST for inter-state supply",
         "Taxable value, tax amounts and total in words",
         "Declaration note: particulars are true and correct"
+      ],
+      "guide": [
+        {
+          "h": "GST invoice format: the required fields",
+          "p": [
+            "Rule 46 of the CGST Rules lists what a GST tax invoice must contain. If any of these are missing, your client may struggle to claim input tax credit and you may be asked to reissue the bill. The core fields are:"
+          ],
+          "list": [
+            "Supplier’s name, address and GSTIN",
+            "A unique, consecutive invoice number for the financial year, and the date of issue",
+            "Recipient’s name and address, and GSTIN if they are registered",
+            "Description of goods or services with the HSN or SAC code",
+            "Quantity, unit and taxable value after any discount",
+            "GST rate and tax amount, shown as CGST and SGST or as IGST",
+            "Place of supply for inter-state supplies",
+            "Signature or digital signature of the supplier or an authorised person"
+          ]
+        },
+        {
+          "h": "CGST + SGST or IGST: which one applies",
+          "p": [
+            "The split depends on where the supply happens. When you and the buyer are in the same state, the supply is intra-state and the GST is divided equally: an 18% rate becomes 9% CGST plus 9% SGST. When the supply crosses a state border, the full 18% is charged as IGST.",
+            "The first two digits of a GSTIN are the state code, for example 27 for Maharashtra and 29 for Karnataka. BillFlow compares the codes in your GSTIN and your client’s GSTIN and suggests intra-state or inter-state for you. BillFlow does not have a separate place of supply field, so if that needs to be printed, add it in the notes, for example “Place of supply: Karnataka (29)”."
+          ]
+        },
+        {
+          "h": "How to fill this GST invoice format",
+          "p": [
+            "Start with your GSTIN and your client’s GSTIN; the format check flags a number that is the wrong length or shape. Then add each line with its HSN or SAC code and GST rate. Different lines can carry different rates, so a 5% item and an 18% service can sit on the same invoice.",
+            "Add a discount percentage if you offered one, and the taxable value and tax are worked out on the discounted amount. The total is printed in figures and in words using lakh and crore. Keep the declaration note, sign the printed copy or add your signature, and download the PDF for your records."
+          ]
+        },
+        {
+          "h": "Mistakes that cause GST invoice rejections",
+          "p": [
+            "The most common problem is a wrong GSTIN, often a single swapped character. Next come the wrong tax type, such as charging IGST on a sale within the same state, and missing or mismatched HSN/SAC codes. Breaks in the invoice number series also attract questions during an audit. Finally, make sure the invoice values match what you report in your GST returns, because your client’s credit depends on it. If you are unsure about the rate for a particular item, confirm it with your CA before billing."
+          ]
+        }
       ]
     },
     {
@@ -182,6 +296,22 @@
         {
           "q": "How do I get paid faster as a freelancer?",
           "a": "Set a clear due date, include your UPI ID or bank details, and follow up the day an invoice becomes overdue. BillFlow Pro will send those follow-ups automatically."
+        },
+        {
+          "q": "Can I make an invoice without a GST number as a freelancer?",
+          "a": "Yes. If you aren’t registered under GST, you can issue a regular invoice without a GSTIN and without charging GST. Choose “No tax” in BillFlow and title the document “Invoice” rather than “Tax Invoice”."
+        },
+        {
+          "q": "How should I number my freelance invoices?",
+          "a": "Use one continuous sequence, such as 2026-001, 2026-002, and never reuse a number. A clean sequence keeps your records tidy for income tax and makes life easier if you register for GST later."
+        },
+        {
+          "q": "What if my client deducts TDS from my payment?",
+          "a": "Indian business clients may deduct TDS on professional fees and pay you the rest. Invoice the full amount as usual, then check the deduction appears against your PAN in Form 26AS and claim it when you file your income tax return."
+        },
+        {
+          "q": "Where are my invoice details stored?",
+          "a": "In your own browser. BillFlow needs no sign-up, and your business details are remembered locally on your device so the next invoice is quicker to fill in."
         }
       ],
       "highlights": [
@@ -190,6 +320,47 @@
         "UPI ID with a scan-to-pay QR so clients pay instantly",
         "15-day due date and polite payment note",
         "Clean PDF you can send over email or WhatsApp"
+      ],
+      "guide": [
+        {
+          "h": "How to write a freelance invoice",
+          "p": [
+            "A freelance invoice is a request for payment, but it also becomes your record of what was agreed and delivered. Many clients, especially companies with a finance team, will only release money against a proper invoice, so it’s worth getting the basics right from your very first project."
+          ],
+          "list": [
+            "Add your name or business name, address, email and phone at the top, plus your logo if you have one.",
+            "Enter the client’s name and billing address exactly as they want it in their books.",
+            "Give the invoice a unique number and set the invoice date and a due date.",
+            "List the work as line items: a milestone, a fixed-fee deliverable, or hours multiplied by your hourly rate.",
+            "Choose the tax mode. If you aren’t registered under GST, keep it on “No tax”.",
+            "Add how you’d like to be paid, then download the PDF and send it."
+          ]
+        },
+        {
+          "h": "What to include on a freelance invoice",
+          "p": [
+            "Clear line items save you a round of questions. Instead of “Design work”, write “Landing page design, milestone 1 of 3” or “Content edits, 4 hours at ₹1,500”. If you charge by the hour, put the hours in quantity and your rate in rate so the client can see exactly how the total was reached.",
+            "Number your invoices in a simple sequence you can keep for years and never reuse a number. If a client asks for changes after you’ve sent an invoice, issue a corrected one rather than quietly editing the old PDF. Short notes help too: your payment terms, a thank-you, or what the next milestone covers."
+          ]
+        },
+        {
+          "h": "Freelance invoicing mistakes to avoid",
+          "p": [],
+          "list": [
+            "Charging GST when you aren’t registered. Only GST-registered suppliers can collect it, so leave tax off until you register.",
+            "Missing the point where registration becomes mandatory: ₹20 lakh aggregate turnover for services, or ₹10 lakh in special category states. After registering, add your GSTIN and start charging GST.",
+            "Vague terms like “pay ASAP”. Pick a real date, such as 15 days from the invoice date.",
+            "Leaving out payment details, which forces the client to message you before they can pay.",
+            "Sending an editable document instead of a PDF."
+          ]
+        },
+        {
+          "h": "Getting paid faster as a freelancer",
+          "p": [
+            "Make paying you the easiest task on your client’s list. In BillFlow you can add your UPI ID, and a scan-to-pay QR code appears on the invoice so a client can pay from their phone in seconds. For larger amounts, add your bank account instead; type the IFSC and the bank and branch fill in automatically.",
+            "On bigger projects, ask for an advance and bill the rest by milestone, so you’re never carrying a month of unpaid work. Send each invoice the same day the milestone is approved, while the work is fresh in the client’s mind. BillFlow is free and remembers your business details in your browser, so the next invoice takes about a minute."
+          ]
+        }
       ]
     },
     {
@@ -228,6 +399,18 @@
         {
           "q": "Is a proforma invoice legally binding?",
           "a": "No. It is an estimate or commitment of terms. Once the sale happens, you issue a regular (tax) invoice."
+        },
+        {
+          "q": "Can I claim input tax credit on a proforma invoice?",
+          "a": "No. A proforma invoice is not a tax invoice, so neither the buyer nor the seller can use it to claim input tax credit. Credit is available only on the final tax invoice."
+        },
+        {
+          "q": "Does a proforma invoice need an invoice number?",
+          "a": "It is good practice to give it a reference number, but use a separate series such as PI-001 so it never mixes with your tax invoice numbers."
+        },
+        {
+          "q": "How long is a proforma invoice valid?",
+          "a": "There is no fixed legal period. You set the validity yourself, commonly 7 to 30 days, and state it clearly in the notes so the buyer knows when prices may change."
         }
       ],
       "highlights": [
@@ -236,6 +419,42 @@
         "IGST for inter-state supply",
         "Validity note: prices valid for 15 days",
         "Delivery and installation as a separate line"
+      ],
+      "guide": [
+        {
+          "h": "When to use a proforma invoice",
+          "p": [
+            "A proforma invoice is a quote dressed up as an invoice. It tells the buyer exactly what they will receive and what it will cost before anything is delivered, which makes it useful whenever money or approvals have to move first.",
+            "Typical situations include a client who wants advance payment before you order stock, a company whose purchase team needs a document to raise a purchase order, a buyer arranging a loan or internal budget sign-off, and an importer who needs a priced document for their bank. Because nothing has been supplied yet, no GST becomes due just because you sent it."
+          ]
+        },
+        {
+          "h": "How to make a proforma invoice",
+          "p": [
+            "For example, ten office chairs at ₹6,500 each plus ₹3,000 for delivery comes to ₹68,000 before tax. With 18% IGST the buyer sees a total of ₹80,240, which is the figure they need to approve or arrange funds for."
+          ],
+          "list": [
+            "Keep the document title as “Proforma Invoice” so nobody mistakes it for a tax invoice.",
+            "Use a separate number series, for example PI-2026-014.",
+            "Fill in your details and the buyer’s, including GSTINs if both are registered.",
+            "List each product or service with the HSN/SAC code, quantity and expected rate, and add delivery or installation as separate lines.",
+            "Show the GST that will apply, CGST + SGST or IGST, so the buyer sees the full landed cost.",
+            "Add validity, delivery timelines and payment terms in the notes, then download the PDF."
+          ]
+        },
+        {
+          "h": "Proforma invoice vs tax invoice",
+          "p": [
+            "A proforma invoice is sent before the sale and is not a tax invoice. It is not entered in your sales books, it is not reported in GST returns and it cannot be used to claim input tax credit. It is also not a demand for payment in the legal sense, though buyers often pay against it.",
+            "A tax invoice is issued when the supply actually happens. It records the sale, the GST you owe and the amount the buyer can claim as credit. Once the order is confirmed and you deliver, issue a fresh tax invoice with its own number from your regular series. The quantities and prices can differ from the proforma if the order changed."
+          ]
+        },
+        {
+          "h": "Tips for a proforma invoice that gets approved",
+          "p": [
+            "Be specific about what is included: brand, model, size or scope of work. State who pays for freight and whether installation is included. Mention the validity period so a price rise later does not cause a dispute. If you are asking for an advance, say how much and add your bank details or UPI ID so the buyer can pay right away. If you receive an advance, check with your CA about any GST paperwork it needs."
+          ]
+        }
       ]
     },
     {
@@ -274,6 +493,22 @@
         {
           "q": "Should I bill hourly or by retainer?",
           "a": "Either works on this template. Use quantity for hours or days, or add a single “Monthly retainer” line."
+        },
+        {
+          "q": "Can I bill travel and out-of-pocket expenses on a consulting invoice?",
+          "a": "Yes. Add expenses as separate lines, such as “Travel to client site, Pune”, so they aren’t mixed in with your fees. How GST applies to recovered expenses depends on how they’re arranged, so check the treatment with your CA."
+        },
+        {
+          "q": "How do I invoice a monthly consulting retainer?",
+          "a": "Add one line such as “Advisory retainer, October 2026” with quantity 1 and the agreed fee. If the client used hours beyond the retainer, add them as a separate hourly line so both are easy to see."
+        },
+        {
+          "q": "Should I charge IGST or CGST and SGST to my consulting client?",
+          "a": "It depends on whether you and your client are in the same state. Enter both GSTINs and BillFlow suggests CGST plus SGST for a same-state client or IGST for a client in another state, based on the state codes."
+        },
+        {
+          "q": "Can I show a discount on a consulting invoice?",
+          "a": "Yes. Enter a discount percentage and BillFlow recalculates the totals. It’s a tidy way to offer a goodwill or first-engagement discount without changing your standard rate on the line items."
         }
       ],
       "highlights": [
@@ -282,6 +517,46 @@
         "CGST + SGST split for same-state clients",
         "30-day payment terms",
         "Room for a retainer or workshop fee"
+      ],
+      "guide": [
+        {
+          "h": "How to write a consulting invoice",
+          "p": [
+            "Consulting is usually billed by the hour, by the day, as a fixed project fee or as a monthly retainer. Your invoice should mirror your engagement letter or contract, using the same rates and wording, so your client’s finance team can match the two documents and approve payment without coming back to you."
+          ],
+          "list": [
+            "Hourly: one line per type of work, with hours as quantity and your hourly rate as rate.",
+            "Day rate: workshops, on-site days or board sessions, with the number of days as quantity.",
+            "Retainer: a single line such as “Advisory retainer, October 2026” at the agreed monthly fee.",
+            "Fixed fee: one line per phase or deliverable, such as diagnostic, recommendations and implementation support."
+          ]
+        },
+        {
+          "h": "What a consulting tax invoice needs",
+          "p": [
+            "If you’re registered under GST, title the document “Tax Invoice” and include your GSTIN and your client’s. A GSTIN is 15 characters and its first two digits are the state code. BillFlow checks the format of both and uses those codes to suggest the split: CGST and SGST when you and your client are in the same state, IGST when you aren’t.",
+            "Add a SAC code on each line. Management consulting generally falls under 998311, but specialist advisory work can sit under a different code, so confirm yours with your CA once and reuse it. Set the tax rate per line so an invoice mixing fees and other items still adds up correctly."
+          ]
+        },
+        {
+          "h": "Hourly vs fixed fee vs retainer",
+          "p": [
+            "Hourly billing is fair when the scope is uncertain, but clients often ask what the hours were spent on, so keep brief notes and summarise them in the line description. Fixed fees reward you for working efficiently and are easier for clients to budget, but they need a tightly written scope. Retainers give you steady monthly income in return for guaranteed availability; say in the notes what the retainer covers and how extra hours will be charged."
+          ]
+        },
+        {
+          "h": "Getting consulting invoices approved and paid",
+          "p": [
+            "Finally, set clear payment terms, such as 30 days from the invoice date, and enter the actual due date so there’s no room for doubt."
+          ],
+          "list": [
+            "Quote the purchase order or contract reference in the notes if your client uses one.",
+            "Address the invoice to the legal entity named in the contract, not just the person who hired you.",
+            "Bill retainers at the start of the month and hourly work at the end, on the same date each time.",
+            "Expect that your client may deduct TDS on professional fees, so the amount received can be lower than the invoice total.",
+            "Add bank details for larger payments; enter the IFSC and BillFlow fills in the bank and branch."
+          ]
+        }
       ]
     },
     {
@@ -327,6 +602,22 @@
         {
           "q": "How should I invoice a website project in milestones?",
           "a": "Send one invoice per milestone (for example design, development, launch), and add a note about any advance already received."
+        },
+        {
+          "q": "Should I invoice website maintenance separately?",
+          "a": "A separate line or invoice is clearer. Describe what’s covered, such as updates, backups and minor fixes, and the period, for example “Website maintenance, July to September 2026”."
+        },
+        {
+          "q": "How do I bill extra pages or features the client asked for later?",
+          "a": "Treat them as a change request. Quote the extra work, get approval in writing, and add it to the next milestone invoice as its own line, such as “Additional pages (3)” at your per-page rate."
+        },
+        {
+          "q": "Can I put my bank details on a web development invoice?",
+          "a": "Yes. Choose bank account as the payment method and enter your account number and IFSC; BillFlow fills in the bank and branch. For smaller amounts you can add a UPI ID instead, which puts a scan-to-pay QR on the invoice."
+        },
+        {
+          "q": "My client is in another state. Do I charge IGST?",
+          "a": "If you’re GST-registered, yes: a client in a different state is charged IGST rather than CGST and SGST. Enter both GSTINs and BillFlow suggests the inter-state mode from the state codes."
         }
       ],
       "highlights": [
@@ -335,6 +626,47 @@
         "GST at 18% with automatic split",
         "Note for advance received and balance due on handover",
         "Bank transfer details with IFSC auto-fill"
+      ],
+      "guide": [
+        {
+          "h": "How to invoice a website project",
+          "p": [
+            "Website projects run for weeks and often change shape halfway through, so a single bill at the very end is risky. Most developers agree an advance and then invoice in milestones tied to something the client can see and sign off."
+          ],
+          "list": [
+            "Advance on signing, for example 30 to 50% of the quote.",
+            "Design approval: wireframes and page designs signed off.",
+            "Development complete: site built on a staging link for review.",
+            "Launch and handover: site live, logins and files handed over."
+          ]
+        },
+        {
+          "h": "Hosting, domain and third-party costs",
+          "p": [
+            "Clients often ask you to buy the domain, hosting, premium themes, plugins or paid APIs on their behalf. Bill these on separate lines from your own work and state the period they cover, such as “Domain renewal, 1 year” or “Shared hosting, Nov 2026 to Oct 2027”. The client can then see which amounts are recurring running costs and which were one-off fees for your time.",
+            "Where you can, register domains and hosting accounts in the client’s name so they own them outright. If you pay for them yourself and recover the cost, the GST treatment of these pass-through expenses can vary, so ask your CA how to show them."
+          ]
+        },
+        {
+          "h": "SAC codes and GST for web developers",
+          "p": [
+            "Website and software design and development generally fall under SAC 998314, IT design and development services. If you’re registered under GST, enter the code in the HSN/SAC column with the tax rate for each line. Add your GSTIN and your client’s, and BillFlow suggests CGST and SGST for a client in your own state or IGST for one elsewhere in India.",
+            "If your aggregate turnover is under the ₹20 lakh registration threshold and you haven’t registered, switch the tax mode to “No tax” and simply invoice your fees."
+          ]
+        },
+        {
+          "h": "Mistakes web developers should avoid",
+          "p": [
+            "Use the notes to record what has already been paid, as this template does with “50% advance received”, so the final invoice and the client’s records always agree."
+          ],
+          "list": [
+            "Handing over admin access or the final code before the last invoice is paid.",
+            "Absorbing change requests outside the quote instead of billing them as their own line.",
+            "Burying annual maintenance inside the build fee rather than invoicing it separately each period.",
+            "Forgetting that business clients may deduct TDS, leaving a gap between the invoice total and the amount received.",
+            "Leaving the advance out of the notes, so the client is unsure what balance remains."
+          ]
+        }
       ]
     },
     {
@@ -380,6 +712,22 @@
         {
           "q": "Can I add my own logo to the invoice?",
           "a": "Yes. Upload a PNG or JPG in the “Your business” section and it appears on the preview and the PDF."
+        },
+        {
+          "q": "How do I invoice a monthly social media design package?",
+          "a": "Add one line for the package, such as “Social media creatives, October 2026”, with the number of posts as quantity and your per-post rate. Bill extra posts or reels on a separate line so the monthly fee stays consistent."
+        },
+        {
+          "q": "Should I charge separately for editable source files?",
+          "a": "You can, as source files let the client reuse and modify the work themselves. If you do, add a line such as “Editable source files (AI, PSD)” and mention it in your quote so it isn’t a surprise."
+        },
+        {
+          "q": "Can I invoice printing or stock image costs I paid for?",
+          "a": "Yes. Add them as separate lines from your design fee with a short description. If you’re GST-registered, ask your CA how these recovered costs should be treated on the invoice."
+        },
+        {
+          "q": "What should a design invoice say about usage rights?",
+          "a": "State what the client may use the work for and when ownership passes to them, for example on full payment. Keep it to a short line in the notes and leave the full terms to your contract or quote."
         }
       ],
       "highlights": [
@@ -388,6 +736,41 @@
         "No-GST setup for independent designers",
         "Note that final files follow full payment",
         "Your own logo on the invoice"
+      ],
+      "guide": [
+        {
+          "h": "How to write a graphic design invoice",
+          "p": [
+            "A design invoice works best when it reads like a summary of the brief. Give each deliverable its own line with enough detail that the client recognises it straight away: “Logo design, 3 initial concepts, 2 revision rounds” says far more than “Logo”."
+          ],
+          "list": [
+            "Upload your own logo so the invoice looks like part of your brand.",
+            "Pick one of BillFlow’s 11 visual styles to suit the feel of your work.",
+            "Itemise deliverables, using quantity for repeat work such as social posts or banners.",
+            "Add a separate line for revision rounds beyond what you agreed.",
+            "Note how and when final files will be delivered."
+          ]
+        },
+        {
+          "h": "Revisions, usage rights and final files",
+          "p": [
+            "Revision rounds are where design projects quietly lose money. Agree the number of included rounds in your quote, say two, then bill further rounds as their own line, either per round or per hour. Mention the included rounds in the line description so an extra charge never feels unexpected.",
+            "Be clear about usage rights too. A logo for a company’s permanent identity is a different job from a one-off event poster, and you may want to price exclusive, full ownership differently from limited use. Write what the client receives in the notes, for example “Rights to the final logo transfer on full payment; working files and unused concepts remain with the designer”."
+          ]
+        },
+        {
+          "h": "GST for graphic designers",
+          "p": [
+            "If you work independently and your aggregate turnover is below ₹20 lakh (₹10 lakh in special category states), you don’t have to register for GST, which is why this template keeps tax on “No tax”. Once you register, add your GSTIN, pick the right GST mode and enter a SAC code on each line. Specialty design services are often classified under SAC 998391, but confirm the right code for your work with your CA once and reuse it."
+          ]
+        },
+        {
+          "h": "Getting paid before you hand over files",
+          "p": [
+            "Share watermarked or low-resolution previews for approval, and release the final high-resolution and source files once the invoice is settled. State this plainly in the notes, as the template does, so it reads as your standard policy rather than a negotiation. For larger branding projects, invoice an advance before you start on concepts.",
+            "Then make payment effortless. Add your UPI ID and a scan-to-pay QR appears on the PDF, which suits small businesses and quick social media jobs. For agencies and larger companies, add bank details; enter the IFSC and the bank and branch fill in automatically."
+          ]
+        }
       ]
     },
     {
@@ -421,11 +804,27 @@
       "faq": [
         {
           "q": "What SAC code applies to photography?",
-          "a": "Photography and videography services generally fall under SAC 998381."
+          "a": "Photography and videography services fall under SAC group 99838. Confirm the exact 6-digit code for your kind of shoot with your CA."
         },
         {
           "q": "How do I show an advance on the invoice?",
-          "a": "Mention it in the notes, or add a line item with a negative rate for the advance amount."
+          "a": "Bill the full package value and record the advance in the notes, e.g. “Advance received: ₹10,000. Balance due: ₹30,000.” That keeps the taxable value correct."
+        },
+        {
+          "q": "Should travel and stay for an outstation shoot be on the invoice?",
+          "a": "Yes, if the client agreed to cover them. Add travel, stay and any second-shooter charges as separate lines. If you are GST registered and bill these as part of your service, tax generally applies to them too, so check the treatment with your CA."
+        },
+        {
+          "q": "Can I bill a client abroad for a destination shoot?",
+          "a": "Yes. Switch the currency to USD, EUR, GBP or AED and the totals and amount in words follow that currency. GST rules for overseas clients are different, so confirm with your CA before choosing a tax mode."
+        },
+        {
+          "q": "When should a photographer send the invoice?",
+          "a": "Many photographers send one invoice at booking showing the advance and the balance, then a final one when the edits and album are ready. Set the due date to match the delivery milestone you promised."
+        },
+        {
+          "q": "Can I add my studio logo and branding?",
+          "a": "Yes. Upload your logo and pick from 11 visual styles. Your business details are remembered in your browser, so the next invoice starts already filled in."
         }
       ],
       "highlights": [
@@ -434,6 +833,48 @@
         "GST at 18% with CGST + SGST split",
         "Advance received noted against the balance",
         "Payment due before album delivery"
+      ],
+      "guide": [
+        {
+          "h": "How to make a photography invoice",
+          "p": [
+            "A photography invoice should read like a summary of the booking you agreed with the client. Fill in your studio name, contact details and logo, then the client’s name and the event or shoot the invoice is for. BillFlow keeps your business details in your browser, so you only type them once."
+          ],
+          "list": [
+            "Give the invoice a number, an invoice date and a due date that matches your terms",
+            "Add the shoot as one line: event type, date and hours or days of coverage",
+            "Add deliverables such as edited photos, albums, prints or a highlight video as separate lines",
+            "Add travel, stay or second-shooter charges if they were agreed",
+            "Choose the tax mode, add your UPI or bank details and download the PDF"
+          ]
+        },
+        {
+          "h": "What to include on a wedding or event photography invoice",
+          "p": [
+            "Clients compare your invoice with the quote they signed, so split it the same way. A wedding package might have one line for the full-day shoot, one for the pre-wedding session, one for a 40-page album and one for outstation travel. Separate lines let the family see exactly what they are paying for and save you a long phone call later.",
+            "If you are GST registered, add your GSTIN, SAC 998381 against each line and the tax rate. BillFlow checks the GSTIN format and suggests CGST plus SGST when you and the client are in the same state, or IGST when the client’s GSTIN shows another state. If your yearly turnover is below the ₹20 lakh registration threshold for services (₹10 lakh in special category states) and you aren’t registered, choose no tax and issue a simple invoice."
+          ]
+        },
+        {
+          "h": "Advance and balance payments",
+          "p": [
+            "Most photographers take a booking advance to block the date and collect the balance on the event day or before handing over the album. Whatever your policy is, write it on the invoice so nobody is confused about what is still due.",
+            "Say your package is ₹75,000 and the client paid ₹20,000 at booking. You can write “Advance of ₹20,000 received, balance ₹55,000 due before album delivery” in the notes. If you charge GST, it’s usually cleaner to keep the full package value on the invoice and record the advance in the notes, so tax is worked out on the whole amount. Add your UPI ID and the client can scan the QR on the invoice to pay the balance from their phone, or share bank details for larger transfers; BillFlow fills in the bank and branch from the IFSC."
+          ]
+        },
+        {
+          "h": "Mistakes to avoid",
+          "p": [
+            "Small gaps on a photography invoice tend to turn into disputes after the event, when everyone is tired and the album is late. Watch out for these:"
+          ],
+          "list": [
+            "Vague deliverables: write “300 edited photos, 40-page album” rather than just “photos”",
+            "Forgetting extra hours or travel the client approved on the day",
+            "Not stating when edited files or the album will be released if the balance is pending",
+            "Using a personal UPI ID for some bookings and a business one for others, which makes payments hard to match",
+            "Reusing invoice numbers; keep a simple running series such as PH-2026-014"
+          ]
+        }
       ]
     },
     {
@@ -472,6 +913,22 @@
         {
           "q": "How do I bill several students at once?",
           "a": "Create one invoice per student or parent so each payment can be tracked separately."
+        },
+        {
+          "q": "How do I show that a parent has already paid?",
+          "a": "Add a note such as “Paid ₹6,000 by UPI on 3 March” before downloading the PDF. The parent then has a clear record of the payment for that month."
+        },
+        {
+          "q": "What if a student misses classes in a month?",
+          "a": "You can bill only the sessions actually taken by changing the quantity, or keep a fixed monthly fee and write your make-up class policy in the notes. Pick one approach and use it for every student."
+        },
+        {
+          "q": "Can I give a sibling or early-payment discount?",
+          "a": "Yes. Use the discount % field and mention the reason in the notes, for example “10% sibling discount”, so parents understand the lower amount."
+        },
+        {
+          "q": "How can parents pay straight from the invoice?",
+          "a": "Add your UPI ID in the payment details. The invoice then shows a scan-to-pay QR code, so parents can pay from any UPI app on their phone."
         }
       ],
       "highlights": [
@@ -480,6 +937,49 @@
         "No-GST setup for private tutors",
         "Fee due date (by the 5th of the month)",
         "UPI QR so parents can pay from their phone"
+      ],
+      "guide": [
+        {
+          "h": "How to make a tuition fee invoice",
+          "p": [
+            "Parents usually want a simple fee slip that tells them which child, which subject, which month and how much. Keep it that clear and you will spend far less time answering messages about fees."
+          ],
+          "list": [
+            "Enter your name or coaching centre name, phone number and logo if you have one",
+            "Put the parent’s name as the client and the student’s name and class in the first line or in the notes",
+            "Add the tuition as a line, for example “Mathematics, Class 10, 12 sessions (March)”",
+            "Add extras like study material, test series or exam registration as separate lines",
+            "Set the due date, add your UPI ID and download or print the PDF"
+          ]
+        },
+        {
+          "h": "Monthly fee receipts and per-student billing",
+          "p": [
+            "Most home tutors and small coaching classes charge a fixed monthly fee, collected in the first week of the month. Create one invoice per student at the start of each month with a due date such as the 5th, and use a numbering pattern that tells you the month at a glance, like FEE-2026-03-07.",
+            "If you charge per session instead, enter the number of sessions as the quantity and your per-session rate, say 12 sessions at ₹500. For batch classes, one invoice per student still works best because every family pays separately and you can see who is pending. Siblings can share one invoice with a line for each child.",
+            "Because BillFlow saves your details in your browser, each new month only needs the student name, month and amount changed."
+          ]
+        },
+        {
+          "h": "Does a private tutor need to charge GST?",
+          "p": [
+            "If your total turnover is below ₹20 lakh a year (₹10 lakh in special category states), you generally don’t need to register for GST, and a plain fee invoice without tax is fine. That’s why this template is set to no tax.",
+            "Education services provided by recognised schools and institutions are exempt in general terms, but private tuition and coaching classes are generally taxable once you are registered. If your coaching centre is growing or you aren’t sure where you stand, check with your CA before you start adding GST. If you do register, switch the tax mode and add your GSTIN and the rate your CA confirms."
+          ]
+        },
+        {
+          "h": "Tips for tutors and coaching classes",
+          "p": [
+            "A few habits make fee collection much smoother:"
+          ],
+          "list": [
+            "Send fee invoices on the same day every month so parents expect them",
+            "Write your late fee or make-up class policy in the notes rather than explaining it on calls",
+            "Keep study material separate from tuition so parents see what each charge is for",
+            "Share the PDF on WhatsApp or email and keep a copy for your own records",
+            "Use the same invoice number series all year so you can total your income at year end"
+          ]
+        }
       ]
     },
     {
@@ -518,6 +1018,22 @@
         {
           "q": "Which currencies are supported?",
           "a": "INR, USD, EUR, GBP and AED. The amount in words follows the chosen currency."
+        },
+        {
+          "q": "Can I invoice a foreign client in rupees?",
+          "a": "You can, but the invoice currency should match what your contract says, and overseas clients usually find it simpler to pay in their own currency. BillFlow lets you switch between INR, USD, EUR, GBP and AED, and the amount in words updates to match."
+        },
+        {
+          "q": "What is a FIRA or FIRC and do I need one?",
+          "a": "It’s a Foreign Inward Remittance Advice or Certificate issued by your bank as proof that foreign money was received. Keep one for every export invoice, as it supports your claim that the supply was a zero-rated export."
+        },
+        {
+          "q": "Do I need to file a new LUT every year?",
+          "a": "Yes. An LUT applies for one financial year, so file a fresh one on the GST portal before you invoice exports without IGST in the new year."
+        },
+        {
+          "q": "Should I add a GSTIN for an overseas client?",
+          "a": "No. Foreign businesses don’t have an Indian GSTIN, so leave that field empty and enter their company name, address and country instead. Your own GSTIN still goes on the invoice if you’re registered."
         }
       ],
       "highlights": [
@@ -526,6 +1042,44 @@
         "LUT declaration wording in the notes",
         "Amount in words in the chosen currency",
         "Bank details for international transfers"
+      ],
+      "guide": [
+        {
+          "h": "How to invoice a foreign client from India",
+          "p": [],
+          "list": [
+            "Set the currency you agreed with the client: USD, EUR, GBP or AED. The amount in words follows that currency.",
+            "Enter the client’s company name and full overseas address, including country. Leave the client GSTIN empty.",
+            "Describe each service and add its SAC code, such as 998314 for software design and development.",
+            "If you’re GST-registered with a valid LUT, keep tax on “No tax” and add the LUT declaration in the notes, as this template does.",
+            "Add bank details for an international transfer, set a due date and download the PDF."
+          ]
+        },
+        {
+          "h": "GST on export of services and the LUT",
+          "p": [
+            "Services you supply from India to a client outside India, paid for in foreign exchange, generally count as an export of services. Exports are zero-rated: you can either pay IGST and claim a refund, or file a Letter of Undertaking (LUT) on the GST portal and invoice without paying IGST at all. The LUT route is usually simpler, as none of your money is locked up waiting for a refund.",
+            "An LUT covers one financial year, so renew it before each new year begins. If you aren’t registered under GST because your turnover is below the threshold, you simply invoice without GST. Whether a particular contract qualifies as an export can depend on its details, so check with your CA if you’re unsure."
+          ]
+        },
+        {
+          "h": "Getting paid from abroad",
+          "p": [
+            "Overseas clients usually pay by SWIFT bank transfer or through a payment platform. Put your account holder name, account number, bank, branch and IFSC on the invoice; type the IFSC into BillFlow and the bank and branch fill in automatically. A SWIFT transfer also needs your bank’s SWIFT code, so get it from your bank and add it in the notes.",
+            "When the money arrives, your bank can issue a FIRA or FIRC confirming the inward remittance. Keep it alongside a copy of the invoice. It’s your evidence that payment came in as foreign exchange, which matters for your GST records and returns."
+          ]
+        },
+        {
+          "h": "Mistakes to avoid on international invoices",
+          "p": [],
+          "list": [
+            "Adding 18% GST to an overseas client out of habit, when an LUT lets you invoice without IGST.",
+            "Forgetting the LUT declaration in the notes.",
+            "Invoicing in INR when the contract is in dollars or euros, leaving the client to guess the exchange rate.",
+            "Leaving out the client’s full address and country.",
+            "Not chasing a missing FIRA or FIRC until it’s time to file returns."
+          ]
+        }
       ]
     },
     {
@@ -557,6 +1111,22 @@
         {
           "q": "What is a bill of supply?",
           "a": "A bill of supply is issued by composition dealers or for exempt supplies, where no GST is charged. Change the document title to “Bill of Supply” if that applies to you."
+        },
+        {
+          "q": "Do I need GST registration as a freelancer?",
+          "a": "Usually only once your aggregate turnover from services crosses ₹20 lakh in a financial year (₹10 lakh in special category states). Some activities need registration regardless of turnover, so confirm your case with a CA."
+        },
+        {
+          "q": "Can I charge GST if I am not registered?",
+          "a": "No. Only GST-registered businesses can collect GST. If you are not registered, bill only your fee and do not add any tax line."
+        },
+        {
+          "q": "Should I mention my PAN on an invoice without GST?",
+          "a": "It isn’t required on every invoice, but many business clients ask for it for their records and tax deductions. You can add it in the notes, for example “PAN: ABCDE1234F”."
+        },
+        {
+          "q": "Can a composition dealer use this format?",
+          "a": "Composition-scheme taxpayers are registered but must issue a bill of supply, not a tax invoice. Change the document title to “Bill of Supply”, add your GSTIN and do not show any GST on the bill."
         }
       ],
       "highlights": [
@@ -565,6 +1135,44 @@
         "Simple single-line or multi-line billing",
         "Amount in words in rupees",
         "Option to retitle it as a Bill of Supply"
+      ],
+      "guide": [
+        {
+          "h": "Who can issue an invoice without GST",
+          "p": [
+            "If you are not registered under GST, you cannot charge GST, but you still need a proper invoice to get paid and to keep your own accounts in order. This applies to many freelancers, tutors, designers, consultants and home businesses.",
+            "GST registration generally becomes compulsory once your aggregate turnover crosses ₹20 lakh a year for services (₹10 lakh in special category states) or ₹40 lakh for goods in most states. Below that, registration is optional. Some situations, such as certain inter-state sales of goods or selling through e-commerce platforms, can require registration earlier, so check with your CA if you are close to the limit or sell online."
+          ]
+        },
+        {
+          "h": "How to make an invoice without GST",
+          "p": [
+            "For example, a ₹15,000 copywriting project is billed as exactly ₹15,000, with the amount in words reading “Rupees Fifteen Thousand Only”."
+          ],
+          "list": [
+            "Choose “No tax” as the tax mode so no GST lines appear.",
+            "Leave the GSTIN fields blank.",
+            "Enter your name or business name, address, email and phone number.",
+            "Add your client’s details and a unique invoice number and date.",
+            "Describe each service clearly with the quantity and your rate.",
+            "Keep the note “Supplier not registered under GST” so the client’s accounts team knows why no tax is shown.",
+            "Add your UPI ID or bank details and download the PDF."
+          ]
+        },
+        {
+          "h": "Invoice without GST vs bill of supply",
+          "p": [
+            "An invoice without GST is what an unregistered person issues. It carries no GSTIN because you don’t have one.",
+            "A bill of supply is a GST document issued by registered persons who cannot charge tax on a particular sale, such as composition-scheme taxpayers or businesses supplying exempt goods or services. It shows the supplier’s GSTIN but no GST amount. If that describes you, retitle the document “Bill of Supply” in BillFlow instead of “Invoice”."
+          ]
+        },
+        {
+          "h": "Mistakes to avoid when you are not registered",
+          "p": [
+            "Never add GST to your bill just because a client asks for it or because larger vendors do. Collecting tax without registration is not allowed, and it creates trouble for both of you. Do not print a made-up or borrowed GSTIN either.",
+            "Keep an eye on your total turnover across all clients, not just one. Once you approach the threshold, plan your registration in advance so you can switch to tax invoices from the right date. Until then, keep every invoice in a numbered series so your income record is complete when you file your income tax return."
+          ]
+        }
       ]
     },
     {
@@ -603,6 +1211,22 @@
         {
           "q": "Should I list each article separately?",
           "a": "For a handful of pieces, yes: it makes approvals quicker. For large batches, group them into one line with a quantity."
+        },
+        {
+          "q": "Should I charge for extra revision rounds?",
+          "a": "Agree on included revisions before you start, often one or two rounds. If the client asks for more, or changes the brief, add a separate line such as “Additional revision round” so the extra work is visible."
+        },
+        {
+          "q": "What do I bill if a client cancels an article halfway?",
+          "a": "Many writers agree a kill fee upfront, a share of the full rate for work already done. Add it as its own line with a short note on what was delivered."
+        },
+        {
+          "q": "Can I invoice a foreign client or agency?",
+          "a": "Yes. Change the currency to USD, EUR, GBP or AED and the totals and amount in words update. GST rules for overseas clients differ, so check with your CA if you are registered."
+        },
+        {
+          "q": "Will my client deduct TDS from my payment?",
+          "a": "Some Indian businesses deduct TDS on professional fees before paying you. Invoice the full amount; the client pays the balance and the deducted tax can usually be claimed when you file your return. Ask your CA if you’re unsure."
         }
       ],
       "highlights": [
@@ -611,6 +1235,43 @@
         "No-GST setup for independent writers",
         "Delivery note for shared drive links",
         "15-day payment terms"
+      ],
+      "guide": [
+        {
+          "h": "How to make an invoice as a content writer",
+          "p": [
+            "Your invoice is also a delivery record. Months later, when a client asks what they paid for, the line items should answer the question without you digging through emails."
+          ],
+          "list": [
+            "Add your name, email and payment details once; BillFlow remembers them in your browser",
+            "Give each invoice a number, date and due date, for example 15 days from delivery",
+            "Name each piece or batch clearly: “SEO blog posts, 1,500 words each (May)”",
+            "Use the quantity for pieces or words and the rate for your price per unit",
+            "Add a note with where the files were delivered, then download the PDF"
+          ]
+        },
+        {
+          "h": "Per-word vs per-article rates",
+          "p": [
+            "Per-word pricing suits agencies and publications that commission pieces of varying length. To keep the invoice readable, bill in units of 1,000 words: a 4,500-word batch at ₹1,500 per 1,000 words becomes quantity 4.5 at ₹1,500, which totals ₹6,750.",
+            "Per-article pricing is simpler for regular blog work. Eight posts at ₹2,500 each is one line with quantity 8. Copywriting jobs such as a landing page, email sequence or product descriptions are usually priced per project, so give them their own line with a quantity of 1.",
+            "Whichever way you price, mention the agreed word count in the description. It protects you if a client later says a piece was shorter than expected."
+          ]
+        },
+        {
+          "h": "Revision rounds and extra work",
+          "p": [
+            "Scope creep is the most common reason writers end up underpaid. Agree how many revision rounds are included in your rate before you start, and treat anything beyond that, or a brief that changes after the first draft, as extra work. Rush delivery, research-heavy pieces, interviews and uploading posts to the client’s CMS can all be separate lines.",
+            "If you give a long-term client a lower rate, apply it with the discount % field so they can see your standard price and what they saved."
+          ]
+        },
+        {
+          "h": "GST, TDS and payment terms",
+          "p": [
+            "If your yearly turnover from writing is below ₹20 lakh (₹10 lakh in special category states) and you aren’t registered, a simple invoice without GST is fine, which is how this template is set up. Once registered, switch the tax mode, add your GSTIN and charge the applicable rate, usually 18% for professional services. BillFlow suggests CGST plus SGST or IGST from the state codes in the two GSTINs.",
+            "Some business clients deduct TDS on professional fees, so the amount you receive may be a little lower than the invoice total. Write clear payment terms such as “Payment due within 15 days” and add your UPI ID or bank account so there is no reason to delay."
+          ]
+        }
       ]
     },
     {
@@ -649,6 +1310,22 @@
         {
           "q": "What SAC code do marketing agencies use?",
           "a": "Advertising services generally fall under SAC 998361. Confirm with your accountant for your specific services."
+        },
+        {
+          "q": "Should I invoice a retainer at the start or end of the month?",
+          "a": "Many agencies bill retainers in advance at the start of the month, while one-off work is billed on completion. Whichever you choose, state the period covered in the line description, for example “Social media management, April 2026”."
+        },
+        {
+          "q": "How do I bill a client in another state?",
+          "a": "Enter both GSTINs and BillFlow reads the state codes and suggests IGST instead of CGST plus SGST. You can still choose the tax mode yourself if needed."
+        },
+        {
+          "q": "Can I use this for a one-time campaign or influencer project?",
+          "a": "Yes. Replace the retainer line with the campaign, for example strategy, creatives and influencer coordination as separate lines, and set a due date that matches your agreement."
+        },
+        {
+          "q": "Will clients deduct TDS from my agency invoice?",
+          "a": "Many business clients deduct TDS before paying for professional or advertising services. Invoice the full amount and check the deduction in your tax records; your CA can confirm what applies to your services."
         }
       ],
       "highlights": [
@@ -657,6 +1334,48 @@
         "GST at 18% with automatic split",
         "Note that ad spend is billed separately at actuals",
         "Tax Invoice title for agency accounts teams"
+      ],
+      "guide": [
+        {
+          "h": "How to make a social media marketing invoice",
+          "p": [
+            "Your client’s accounts team will match your invoice against a purchase order or the retainer agreement, so it needs to be precise. A clear tax invoice also gets approved and paid faster."
+          ],
+          "list": [
+            "Add your agency name, logo, address and GSTIN; BillFlow checks the GSTIN format",
+            "Enter the client’s legal name, address and GSTIN exactly as in their records",
+            "Add the retainer as a line with the month it covers",
+            "Add campaign setup, creatives, shoots or influencer work as separate lines with SAC codes",
+            "Choose GST intra-state or inter-state, add bank details and download the PDF"
+          ]
+        },
+        {
+          "h": "Monthly retainers and what to list",
+          "p": [
+            "Most social media agencies work on a monthly retainer that covers a fixed scope, such as content calendars, a set number of posts and reels per platform, community management and a monthly report. Put the retainer on one line, for example “Instagram and LinkedIn management, 20 posts, April 2026” at ₹30,000, so the client can see what the fee includes.",
+            "Anything outside the scope belongs on its own line: extra reels, a product shoot, a festive campaign or paid ad management. This makes it easy to discuss scope at renewal time, and it helps the client’s finance team approve each charge. If you offer a discount for a longer commitment, use the discount % field rather than quietly lowering the rate."
+          ]
+        },
+        {
+          "h": "Ad spend vs management fee",
+          "p": [
+            "Your management fee is what you earn for running campaigns. Ad spend is the money that goes to Meta, Google or other platforms. Keeping the two apart makes the invoice easier to understand and avoids arguments about what your work actually costs.",
+            "The simplest arrangement is for the client to pay the platform directly from their own ad account, with you billing only the management fee. If you pay for ads on the client’s behalf, you can show the spend separately from your fee, but whether it counts as a pure reimbursement or as part of your taxable service depends on how the arrangement is set up. Ask your CA before deciding how to bill it."
+          ]
+        },
+        {
+          "h": "Mistakes to avoid",
+          "p": [
+            "These slip-ups are behind most delayed agency payments:"
+          ],
+          "list": [
+            "Missing or wrong client GSTIN, which stops the client claiming input tax credit",
+            "Charging CGST plus SGST to a client in another state, where IGST applies",
+            "Not mentioning the month or campaign period on retainer lines",
+            "Mixing ad spend and fees in one line with no breakdown",
+            "Leaving out the SAC code; this template uses 998361 for advertising services"
+          ]
+        }
       ]
     },
     {
@@ -695,6 +1414,18 @@
         {
           "q": "Can I use a different VAT rate?",
           "a": "Yes. Set the rate per line item, and rename the tax label if you need, for example “Sales Tax”."
+        },
+        {
+          "q": "Do I have to register for VAT in the UAE?",
+          "a": "Registration is mandatory once your taxable supplies and imports exceed AED 375,000 in the past 12 months, or are expected to in the next 30 days. Below that, speak to a tax adviser about whether voluntary registration suits you."
+        },
+        {
+          "q": "Can I issue a VAT invoice if I am not registered?",
+          "a": "No. Only VAT-registered businesses with a TRN can issue a tax invoice and charge VAT. If you are not registered, bill your price without VAT and choose the no tax mode."
+        },
+        {
+          "q": "How is 5% VAT calculated on the invoice?",
+          "a": "VAT is worked out on each line’s value after any discount. For example, AED 4,000 of consulting at 5% adds AED 200 of VAT, for a total of AED 4,200."
         }
       ],
       "highlights": [
@@ -703,6 +1434,43 @@
         "Custom tax label (VAT, Sales Tax) and rate per line",
         "Total in words in dirhams",
         "Works for other countries by changing currency and rate"
+      ],
+      "guide": [
+        {
+          "h": "What a UAE VAT tax invoice should show",
+          "p": [
+            "The UAE charges VAT at a standard rate of 5%. When a VAT-registered business makes a taxable supply, its invoice must be clearly marked “Tax Invoice” and show the supplier’s Tax Registration Number (TRN). A complete invoice usually includes:"
+          ],
+          "list": [
+            "The words “Tax Invoice” at the top",
+            "Supplier’s name, address and TRN",
+            "Customer’s name and address, and their TRN if they are registered",
+            "A sequential invoice number and the date of issue",
+            "A description of each item with quantity and unit price",
+            "The VAT rate and VAT amount for each line",
+            "The total payable, including VAT"
+          ]
+        },
+        {
+          "h": "How to create a VAT invoice with BillFlow",
+          "p": [
+            "This template is already set up with AED as the currency, “Tax Invoice” as the title and a custom tax mode labelled VAT at 5%. Enter your business name and address, then type your TRN in the tax ID field. Do the same for your customer under “Bill to”.",
+            "Add each service or product as a line with quantity and rate. The VAT rate sits on every line, so you can set 0% for a line where VAT is not charged and keep 5% elsewhere. Add your logo, bank details and any notes, then pick a style and download the PDF. The total is printed in words in dirhams, which many finance teams like to see."
+          ]
+        },
+        {
+          "h": "Using the template for other countries",
+          "p": [
+            "VAT and sales tax invoices follow a similar pattern around the world: a tax ID, a tax rate and a tax amount on each line. Because BillFlow lets you rename the tax label and set any rate, you can adapt this template for another country by changing the currency to USD, EUR or GBP, editing the label to VAT or Sales Tax and entering the local rate.",
+            "Rules on what must appear differ from country to country, so check the local requirements or ask an accountant before relying on the format for a new market."
+          ]
+        },
+        {
+          "h": "Tips for Indian businesses billing UAE clients",
+          "p": [
+            "If you are based in India and provide services to a client in Dubai, you generally do not charge UAE VAT, since you are not registered there. From the Indian side, exports of services are zero-rated under GST, and a registered exporter can supply without paying IGST under a LUT. In that case, use an export invoice in INR or USD rather than this VAT template, and confirm the treatment with your CA."
+          ]
+        }
       ]
     }
   ]

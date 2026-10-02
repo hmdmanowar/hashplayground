@@ -18,6 +18,14 @@ const HOW_IT_WORKS = [
   { title: 'Download and send', body: 'Download a clean A4 PDF and email or WhatsApp it to your client. No account needed.' },
 ]
 
+// A handful of other templates to link to from each page (internal links
+// help both visitors and crawlers find the long-tail pages).
+function relatedTemplates(slug: string, count = 6): InvoiceTemplate[] {
+  const others = TEMPLATES.filter((other) => other.slug !== slug && other.slug !== GENERATOR_SLUG)
+  const start = Math.max(0, TEMPLATES.findIndex((other) => other.slug === slug))
+  return Array.from({ length: Math.min(count, others.length) }, (_, i) => others[(start + i) % others.length])
+}
+
 // StrictMode runs mount effects twice in dev; count each page once per load.
 const viewedSlugs = new Set<string>()
 
@@ -144,6 +152,28 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         </section>
       )}
 
+      {template.guide.length > 0 && (
+        <article className="mt-16 max-w-3xl space-y-8 print:hidden">
+          {template.guide.map((section) => (
+            <section key={section.h}>
+              <h2 className="text-xl font-semibold">{section.h}</h2>
+              {section.p.map((paragraph) => (
+                <p key={paragraph} className="mt-3 text-sm leading-relaxed text-[var(--color-muted)] sm:text-base">
+                  {paragraph}
+                </p>
+              ))}
+              {section.list && (
+                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-[var(--color-muted)] sm:text-base">
+                  {section.list.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          ))}
+        </article>
+      )}
+
       <section className="mt-16 print:hidden" aria-labelledby="how-it-works">
         <h2 id="how-it-works" className="text-xl font-semibold">
           How it works
@@ -168,6 +198,25 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         <div className="mt-4">
           <FaqList items={template.faq} />
         </div>
+      </section>
+
+      <section className="mt-12 print:hidden" aria-labelledby="related">
+        <h2 id="related" className="text-xl font-semibold">
+          More free invoice templates
+        </h2>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {relatedTemplates(template.slug).map((other) => (
+            <li key={other.slug}>
+              <Link
+                to={`/${other.slug}/`}
+                className="bf-card block h-full transition-colors hover:border-[var(--color-primary)]"
+              >
+                <span className="text-sm font-semibold">{other.h1}</span>
+                <span className="mt-1 line-clamp-2 block text-xs text-[var(--color-muted)]">{other.intro}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <WaitlistDialog open={waitlistOpen} source={template.slug} defaultEmail={draft.from.email} onClose={closeWaitlist} />

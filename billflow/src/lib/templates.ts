@@ -24,6 +24,15 @@ export interface InvoiceTemplate extends PageMeta {
   // Template-specific "what's included" points (shown on the page and in
   // the prerendered HTML, so each template page has its own content).
   highlights: string[]
+  // Long-form how-to guide below the generator (also prerendered), so each
+  // long-tail page has enough unique text to rank.
+  guide: GuideSection[]
+}
+
+export interface GuideSection {
+  h: string
+  p: string[]
+  list?: string[]
 }
 
 export const SITE_ORIGIN = data.siteOrigin
