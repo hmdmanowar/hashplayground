@@ -362,3 +362,27 @@ model Notification {
 
   @@index([toUsername, createdAt])
 }
+
+// BillFlow (hashplayground.in/billflow) — Milestone 1 demand validation.
+// Email-keyed rather than User-linked: most sign-ups come from anonymous
+// visitors of the free invoice generator, not logged-in Hash Playground users.
+model BillflowWaitlist {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  // Monthly price (INR) the visitor said they'd pay — 199 / 299 / 499.
+  priceIntent Int
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Anonymous funnel counters (page_view / pdf_downloaded / upgrade_clicked)
+// — no PII, just enough to judge the go/no-go gate for the paid tier.
+model BillflowEvent {
+  id        String   @id @default(uuid())
+  type      String
+  slug      String?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+}

@@ -10,3 +10,4 @@ Disallow: /forgot-password
 Disallow: /reset-password
 
 Sitemap: https://hashplayground.in/sitemap.xml
+Sitemap: https://hashplayground.in/billflow/sitemap.xml

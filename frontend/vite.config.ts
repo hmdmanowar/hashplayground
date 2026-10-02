@@ -18,6 +18,13 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      // BillFlow is a separate Vite app (../billflow, port 5174) mounted at
+      // /billflow/ — proxied so local dev matches production's single origin.
+      '/billflow': {
+        target: 'http://localhost:5174',
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 })

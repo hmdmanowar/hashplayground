@@ -1,0 +1,297 @@
+@import "tailwindcss";
+
+/* dark: utilities follow the .dark class (set by useTheme), not the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens mirrored from frontend/src/index.css so BillFlow looks native
+   to Hash Playground. Keep the two in sync when the brand palette changes. */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --color-primary: #7091e6;
+  --color-primary-strong: #3d52a0;
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 15%, transparent);
+
+  --bg-panel: #ede8f5;
+  --bg-app: color-mix(in srgb, var(--bg-panel) 55%, white);
+  --text-app: #111827;
+  --color-muted: #48567a;
+  --border-panel: #adbbda;
+  --hover-overlay: rgba(0, 0, 0, 0.05);
+  --color-accent: var(--color-primary-strong);
+  --color-accent-soft: var(--color-primary-soft);
+}
+
+.dark {
+  --bg-app: #1e1e1e;
+  --text-app: #d4d4d4;
+  --bg-panel: #252526;
+  --color-muted: #8697c4;
+  --border-panel: #3c3c3c;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --color-accent: #818cf8;
+  --color-accent-soft: rgba(129, 140, 248, 0.15);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  color: var(--text-app);
+}
+
+@layer components {
+  .bf-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+
+  .bf-input {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-panel);
+    background: var(--bg-app);
+    color: var(--text-app);
+    padding: 0.45rem 0.65rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .bf-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  .bf-card {
+    border-radius: 1rem;
+    border: 1px solid var(--border-panel);
+    background: var(--bg-panel);
+    padding: 1rem;
+  }
+}
+
+/* Background grid glow — mirrored from frontend/src/index.css (.grid-glow)
+   so the page backdrop matches the Hash Playground home page. */
+@keyframes grid-glow-move {
+  0% {
+    transform: translate(-10%, -10%);
+  }
+  25% {
+    transform: translate(70%, 15%);
+  }
+  50% {
+    transform: translate(40%, 75%);
+  }
+  75% {
+    transform: translate(-15%, 45%);
+  }
+  100% {
+    transform: translate(-10%, -10%);
+  }
+}
+
+.grid-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50vmax;
+  height: 50vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 55%, transparent), transparent 70%);
+  mix-blend-mode: var(--grid-glow-blend, overlay);
+  filter: blur(20px);
+  animation: grid-glow-move 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-glow {
+    animation: none;
+    display: none;
+  }
+}
+
+/* Landing page motion: gentle float for hero callouts, fade-in on reveal. */
+@keyframes bf-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes bf-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bf-caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.bf-caret {
+  animation: bf-caret-blink 1s step-end infinite;
+}
+
+/* Privacy band: ciphertext slowly drifting upward (content is doubled in
+   markup so -50% loops seamlessly) and a padlock that clicks shut. */
+@keyframes bf-cipher-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.bf-cipher-drift {
+  animation: bf-cipher-drift 40s linear infinite;
+}
+
+@keyframes bf-lock-click {
+  0%,
+  55% {
+    transform: translateY(-7px);
+  }
+  70%,
+  92% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-7px);
+  }
+}
+
+.bf-lock-shackle {
+  animation: bf-lock-click 4s ease-in-out infinite;
+}
+
+.bf-float {
+  animation: bf-float 5s ease-in-out infinite;
+}
+
+.bf-float-delayed {
+  animation: bf-float 5s ease-in-out 1.5s infinite;
+}
+
+.bf-fade-in {
+  animation: bf-fade-in 0.45s ease-out both;
+}
+
+/* Landing template showcase: endless auto-scroll, paused on hover/focus.
+   Content is duplicated in markup and moved by -50% for a seamless loop. */
+@keyframes bf-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bf-marquee-track {
+  overflow: hidden;
+  padding-top: 0.25rem;
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.bf-marquee {
+  width: max-content;
+  animation: bf-marquee 50s linear infinite;
+}
+
+.bf-marquee-track:hover .bf-marquee,
+.bf-marquee-track:focus-within .bf-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-marquee-track {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .bf-marquee {
+    animation: none;
+  }
+
+  .bf-marquee-dup {
+    display: none !important;
+  }
+
+  .bf-cipher-drift,
+  .bf-lock-shackle,
+  .bf-float,
+  .bf-float-delayed,
+  .bf-fade-in {
+    animation: none;
+  }
+}
+
+/* "Print" fallback for the jsPDF download — prints only the invoice sheet. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .billflow-print-area,
+  .billflow-print-area * {
+    visibility: visible;
+  }
+
+  .billflow-print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* Lift the scroll-to-top button above any fixed bottom action bar. */
+body:has([data-bottom-bar]) .bf-scroll-top {
+  bottom: 5.25rem;
+}

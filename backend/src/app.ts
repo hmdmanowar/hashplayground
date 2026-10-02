@@ -18,6 +18,7 @@ import { portfolioRoutes } from './modules/portfolio/portfolio.routes.js'
 import { jarvisAssistantRoutes } from './modules/jarvisAssistant/jarvisAssistant.routes.js'
 import { projectAssistantRoutes } from './modules/projectAssistant/projectAssistant.routes.js'
 import { autonomousWorkerRoutes } from './modules/autonomousWorker/autonomousWorker.routes.js'
+import { billflowRoutes } from './modules/billflow/billflow.routes.js'
 
 export async function buildApp() {
   const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>()
@@ -47,6 +48,7 @@ export async function buildApp() {
   await app.register(portfolioRoutes, { prefix: '/api/portfolio' })
   await app.register(jarvisAssistantRoutes, { prefix: '/api/assistant' })
   await app.register(autonomousWorkerRoutes, { prefix: '/api/autonomous-worker' })
+  await app.register(billflowRoutes, { prefix: '/api/billflow' })
 
   return app
 }

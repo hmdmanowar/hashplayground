@@ -105,6 +105,15 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
             Documentation
           </NavLink>
         )}
+        {!isPortfolioPage && (
+          // Plain <a>: BillFlow is a separate app, not a route of this one.
+          <a
+            href="/billflow/"
+            className="text-sm font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
+          >
+            Invoice Generator
+          </a>
+        )}
         {!isPortfolioPage &&
           (jarvisToggle ? (
             <button
@@ -188,6 +197,14 @@ function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
             >
               Documentation
             </NavLink>
+          )}
+          {!isPortfolioPage && (
+            <a
+              href="/billflow/"
+              className="rounded px-2 py-2 text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+            >
+              Invoice Generator
+            </a>
           )}
           {!isPortfolioPage &&
             (jarvisToggle ? (
