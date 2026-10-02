@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run build --workspace billflow && node scripts/copy-billflow.mjs",
+    "build": "tsc -b && vite build && npm install --workspace billflow --include=dev --no-audit --no-fund && npm run build --workspace billflow && node scripts/copy-billflow.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
