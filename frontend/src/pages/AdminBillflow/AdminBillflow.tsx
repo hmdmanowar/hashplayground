@@ -50,8 +50,9 @@ function GateMeter({ label, value, target }: { label: string; value: number; tar
   )
 }
 
-// Irreversible wipe of all BillFlow events + waitlist, confirmed by
-// re-entering the top admin's account password (checked server-side).
+// Irreversible wipe of BillFlow events, confirmed by re-entering the top
+// admin's account password (checked server-side). The Pro waitlist is kept
+// unless the admin explicitly ticks the force option.
 function ResetDialog({
   waitlistTotal,
   onClose,
@@ -64,6 +65,7 @@ function ResetDialog({
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [includeWaitlist, setIncludeWaitlist] = useState(false)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -78,7 +80,7 @@ function ResetDialog({
     setSubmitting(true)
     setError('')
     try {
-      onDone(await resetBillflowData(password))
+      onDone(await resetBillflowData(password, includeWaitlist))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Reset failed')
       setSubmitting(false)
@@ -96,16 +98,38 @@ function ResetDialog({
         className="w-full max-w-md rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-6 shadow-2xl"
       >
         <h2 id="billflow-reset-title" className="text-lg font-semibold text-red-600 dark:text-red-400">
-          Reset all BillFlow data?
+          Reset BillFlow data?
         </h2>
         <p className="mt-2 text-sm text-[var(--color-muted)]">This permanently deletes, with no undo:</p>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
           <li>every page view, PDF download and upgrade click</li>
-          <li>
-            all {waitlistTotal} Pro waitlist signup{waitlistTotal === 1 ? '' : 's'} (emails and price intent)
-          </li>
+          {includeWaitlist && (
+            <li className="font-medium text-red-600 dark:text-red-400">
+              all {waitlistTotal} Pro waitlist signup{waitlistTotal === 1 ? '' : 's'} (emails and price intent)
+            </li>
+          )}
         </ul>
+        {!includeWaitlist && (
+          <p className="mt-2 text-sm text-[var(--color-muted)]">
+            The {waitlistTotal} Pro waitlist signup{waitlistTotal === 1 ? ' is' : 's are'} kept.
+          </p>
+        )}
         <p className="mt-3 text-sm text-[var(--color-muted)]">Users’ invoices are not affected; they live in their own browsers.</p>
+
+        <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3">
+          <input
+            type="checkbox"
+            checked={includeWaitlist}
+            onChange={(event) => setIncludeWaitlist(event.target.checked)}
+            className="mt-0.5 h-4 w-4 cursor-pointer accent-red-600"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-red-600 dark:text-red-400">Force: also delete the Pro waitlist</span>
+            <span className="block text-xs text-[var(--color-muted)]">
+              Removes {waitlistTotal} real signup{waitlistTotal === 1 ? '' : 's'}. Only do this if you’re sure.
+            </span>
+          </span>
+        </label>
 
         <label className="mt-4 block">
           <span className="text-sm font-medium">Enter your account password to confirm</span>
@@ -135,7 +159,7 @@ function ResetDialog({
             disabled={submitting || !password}
             className="cursor-pointer rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? 'Resetting…' : 'Reset everything'}
+            {submitting ? 'Resetting…' : includeWaitlist ? 'Reset everything' : 'Reset events'}
           </button>
         </div>
       </form>
@@ -172,7 +196,12 @@ function AdminBillflow() {
 
   function handleResetDone(result: { events: number; waitlist: number }) {
     setResetOpen(false)
-    showToast(`BillFlow reset: removed ${result.events} events and ${result.waitlist} waitlist signups.`, { kind: 'success' })
+    showToast(
+      result.waitlist
+        ? `BillFlow reset: removed ${result.events} events and ${result.waitlist} waitlist signups.`
+        : `BillFlow reset: removed ${result.events} events. Waitlist kept.`,
+      { kind: 'success' },
+    )
     loadStats()
   }
 

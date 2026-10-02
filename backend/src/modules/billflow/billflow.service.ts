@@ -127,16 +127,26 @@ export async function getStats(range: BillflowStatsRange = 'day'): Promise<Billf
   }
 }
 
-// Wipes all BillFlow demand data (funnel events + waitlist) so tracking can
-// start fresh. Destructive and irreversible, so the top admin must re-enter
-// their account password even though they are already signed in.
-export async function resetAllData(username: string, password: string): Promise<{ events: number; waitlist: number }> {
+// Wipes BillFlow tracking (funnel events) so it can start fresh. The Pro
+// waitlist — real people's emails — survives a normal reset and is only
+// deleted when the admin explicitly forces it (includeWaitlist). Either way
+// it's irreversible, so the top admin must re-enter their account password
+// even though they are already signed in.
+export async function resetAllData(
+  username: string,
+  password: string,
+  includeWaitlist = false,
+): Promise<{ events: number; waitlist: number }> {
   const user = await prisma.user.findUnique({ where: { username }, select: { passwordHash: true } })
   if (!user?.passwordHash) {
     throw new ApiError(400, 'Set an account password in Account Settings before using reset.')
   }
   if (!(await verifyPasswordHash(password, user.passwordHash))) throw new ApiError(403, 'Incorrect password')
 
+  if (!includeWaitlist) {
+    const events = await prisma.billflowEvent.deleteMany({})
+    return { events: events.count, waitlist: 0 }
+  }
   const [events, waitlist] = await prisma.$transaction([
     prisma.billflowEvent.deleteMany({}),
     prisma.billflowWaitlist.deleteMany({}),

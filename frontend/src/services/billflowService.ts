@@ -21,8 +21,14 @@ export function getBillflowStats(range: BillflowRange = 'day'): Promise<Billflow
   return request<BillflowStats>(`/billflow/admin/stats?range=${range}`)
 }
 
-// Permanently deletes all BillFlow events and waitlist signups. The backend
-// re-checks the top admin's password before doing anything.
-export function resetBillflowData(password: string): Promise<{ events: number; waitlist: number }> {
-  return request<{ events: number; waitlist: number }>('/billflow/admin/reset', { method: 'POST', body: { password } })
+// Permanently deletes all BillFlow events, and the waitlist signups only when
+// includeWaitlist is set. The backend re-checks the top admin's password.
+export function resetBillflowData(
+  password: string,
+  includeWaitlist = false,
+): Promise<{ events: number; waitlist: number }> {
+  return request<{ events: number; waitlist: number }>('/billflow/admin/reset', {
+    method: 'POST',
+    body: { password, includeWaitlist },
+  })
 }
