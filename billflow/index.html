@@ -18,9 +18,12 @@
          in the HTML but is hidden until React replaces it, so visitors don't
          see an unstyled flash on load; the page background shows instead.
          React renders the same text, and no-JS visitors still get it. -->
+    <!-- On body, not html: a body background is painted on the canvas behind
+         everything, whereas an html background would push body's own
+         background on top of the fixed -z-10 particle layer and hide it. -->
     <style>
-      html { background: #f5f2fa; }
-      html.dark { background: #1e1e1e; }
+      body { background: #f5f2fa; }
+      html.dark body { background: #1e1e1e; }
       .bf-seo { visibility: hidden; }
     </style>
     <noscript><style>.bf-seo { visibility: visible; }</style></noscript>
