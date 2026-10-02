@@ -1,7 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import InvoicePreview from '../components/InvoicePreview'
-import { ArrowRightIcon, CheckIcon, SparkleIcon, XIcon } from '../components/Icons'
+import {
+  ArrowRightIcon,
+  BriefcaseIcon,
+  CameraIcon,
+  CheckIcon,
+  FileTextIcon,
+  GlobeIcon,
+  LockIcon,
+  PercentIcon,
+  QrIcon,
+  SparkleIcon,
+  XIcon,
+} from '../components/Icons'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
 import { isGst } from '../lib/invoice'
@@ -16,13 +28,34 @@ const STEPS = ['Pick a template', 'Fill in your details', 'Download the PDF']
 const CREATIVE = new Set(['graphic-designer-invoice', 'photography-invoice', 'content-writer-invoice', 'social-media-marketing-invoice'])
 const SERVICES = new Set(['consulting-invoice-template', 'web-developer-invoice', 'freelance-invoice-template', 'tutor-invoice-template'])
 
-const FILTERS: { id: string; label: string; match: (template: InvoiceTemplate) => boolean }[] = [
-  { id: 'all', label: 'All', match: () => true },
-  { id: 'gst', label: 'GST', match: (t) => isGst(t.taxMode) },
-  { id: 'no-gst', label: 'Without GST', match: (t) => t.taxMode === 'none' && t.currency === 'INR' },
-  { id: 'intl', label: 'International', match: (t) => t.currency !== 'INR' },
-  { id: 'creative', label: 'Creative', match: (t) => CREATIVE.has(t.slug) },
-  { id: 'services', label: 'Services', match: (t) => SERVICES.has(t.slug) },
+type IconComponent = (props: { className?: string }) => React.ReactElement
+
+const FILTERS: { id: string; label: string; icon: IconComponent; match: (template: InvoiceTemplate) => boolean }[] = [
+  { id: 'all', label: 'All', icon: SparkleIcon, match: () => true },
+  { id: 'gst', label: 'GST', icon: PercentIcon, match: (t) => isGst(t.taxMode) },
+  { id: 'no-gst', label: 'Without GST', icon: FileTextIcon, match: (t) => t.taxMode === 'none' && t.currency === 'INR' },
+  { id: 'intl', label: 'International', icon: GlobeIcon, match: (t) => t.currency !== 'INR' },
+  { id: 'creative', label: 'Creative', icon: CameraIcon, match: (t) => CREATIVE.has(t.slug) },
+  { id: 'services', label: 'Services', icon: BriefcaseIcon, match: (t) => SERVICES.has(t.slug) },
+]
+
+// The most-searched formats get a "Popular" badge.
+const POPULAR = new Set(['gst-invoice-format', 'freelance-invoice-template', 'invoice-for-international-clients'])
+
+// Fanned stack in the hero: three different templates as real previews.
+const HERO_STACK: { slug: string; style: InvoiceStyleId }[] = [
+  { slug: 'photography-invoice', style: 'studio' },
+  { slug: 'gst-invoice-format', style: 'classic' },
+  { slug: 'invoice-for-international-clients', style: 'modern' },
+]
+
+const TRUST_POINTS = ['Free forever', 'No sign-up', 'GST-ready', 'Data stays in your browser']
+
+const INCLUDED: { icon: IconComponent; title: string; body: string }[] = [
+  { icon: PercentIcon, title: 'GST worked out', body: 'CGST + SGST or IGST, suggested from both GSTINs.' },
+  { icon: QrIcon, title: 'Scan-to-pay UPI QR', body: 'Add your UPI ID and a QR code prints on the invoice.' },
+  { icon: FileTextIcon, title: 'Amount in words', body: 'In lakh and crore for rupee invoices, automatically.' },
+  { icon: LockIcon, title: 'Private by design', body: 'Nothing is uploaded. The PDF is made in your browser.' },
 ]
 
 
@@ -57,7 +90,7 @@ function ScaledPreview({ template, styleId }: { template: InvoiceTemplate; style
   )
 }
 
-function GalleryCard({ template }: { template: InvoiceTemplate }) {
+function GalleryCard({ template, index }: { template: InvoiceTemplate; index: number }) {
   // The gallery shows every template in the standard Classic style; styles
   // are chosen in step 2.
   const styleId: InvoiceStyleId = 'classic'
@@ -70,13 +103,21 @@ function GalleryCard({ template }: { template: InvoiceTemplate }) {
   return (
     <Link
       to={`/templates/?template=${template.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-xl focus-visible:border-[var(--color-primary)] focus-visible:outline-none motion-reduce:transition-none"
+      style={{ animationDelay: `${Math.min(index, 8) * 50}ms` }}
+      className="bf-fade-in group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-xl focus-visible:border-[var(--color-primary)] focus-visible:outline-none motion-reduce:transition-none"
     >
       <div className="bg-[var(--bg-app)] px-4 pt-4">
         <div className="overflow-hidden rounded-t-lg shadow-sm ring-1 ring-black/5">
           <ScaledPreview template={template} styleId={styleId} />
         </div>
       </div>
+
+      {POPULAR.has(template.slug) && (
+        <span className="absolute top-6 left-6 z-10 inline-flex items-center gap-1 rounded-full bg-[var(--color-primary-strong)] px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white uppercase shadow-md">
+          <SparkleIcon className="h-3 w-3" />
+          Popular
+        </span>
+      )}
 
       {/* Hover call to action over the preview */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex h-[17rem] items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -89,7 +130,17 @@ function GalleryCard({ template }: { template: InvoiceTemplate }) {
       <div className="flex flex-1 flex-col p-4">
         <h2 className="font-semibold">{template.label}</h2>
         <p className="mt-1 line-clamp-2 text-sm text-[var(--color-muted)]">{template.intro}</p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        {template.highlights.length > 0 && (
+          <ul className="mt-3 space-y-1">
+            {template.highlights.slice(0, 2).map((point) => (
+              <li key={point} className="flex items-start gap-1.5 text-xs">
+                <CheckIcon className="mt-0.5 h-3 w-3 shrink-0 text-[var(--color-accent)]" />
+                <span className="line-clamp-1">{point}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
           {badges.map((badge) => (
             <span
               key={badge}
@@ -198,6 +249,31 @@ function StyleStep({ template }: { template: InvoiceTemplate }) {
   )
 }
 
+// Three real template previews fanned out like a hand of cards.
+function HeroStack() {
+  const poses = ['-translate-x-24 translate-y-6 -rotate-6', 'z-10', 'translate-x-24 translate-y-6 rotate-6']
+  return (
+    <div className="relative hidden h-80 items-center justify-center lg:flex" aria-hidden="true">
+      <div className="absolute inset-x-10 inset-y-6 rounded-full bg-[var(--color-primary)]/15 blur-3xl" />
+      {HERO_STACK.map(({ slug, style }, index) => {
+        const template = findTemplate(slug)
+        if (!template) return null
+        return (
+          <div key={slug} className={`absolute w-60 ${poses[index]}`}>
+            <div
+              className={`overflow-hidden rounded-xl border border-[var(--border-panel)] bg-[var(--bg-panel)] shadow-2xl ${
+                index === 1 ? 'bf-float' : 'bf-float-delayed'
+              }`}
+            >
+              <ScaledPreview template={template} styleId={style} />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 let viewed = false
 
 function TemplatesPage() {
@@ -230,7 +306,8 @@ function TemplatesPage() {
 
   return (
     <div className="pb-8">
-      <section className="mx-auto max-w-7xl px-4 pt-12 pb-8 text-center">
+      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pt-12 pb-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <div className="text-center lg:text-left">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-panel)] bg-[var(--bg-panel)] px-3 py-1 text-xs font-medium text-[var(--color-muted)]">
           <SparkleIcon className="h-3.5 w-3.5 text-[var(--color-accent)]" />
           {TEMPLATES.length} templates · works with all {INVOICE_STYLES.length} PDF styles
@@ -241,8 +318,19 @@ function TemplatesPage() {
             made for your work
           </span>
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-sm text-[var(--color-muted)] sm:text-base">{GALLERY_PAGE.intro}</p>
-        <ol className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-medium">
+        <p className="mx-auto mt-4 max-w-2xl text-sm text-[var(--color-muted)] sm:text-base lg:mx-0">{GALLERY_PAGE.intro}</p>
+        <ul className="mt-5 flex flex-wrap justify-center gap-2 lg:justify-start">
+          {TRUST_POINTS.map((point) => (
+            <li
+              key={point}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-panel)] bg-[var(--bg-panel)] px-3 py-1 text-xs font-medium"
+            >
+              <CheckIcon className="h-3 w-3 text-[var(--color-accent)]" />
+              {point}
+            </li>
+          ))}
+        </ul>
+        <ol className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-medium lg:justify-start">
           {STEPS.map((step, index) => (
             <li key={step} className="flex items-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[10px] font-semibold text-[var(--color-accent)]">
@@ -253,12 +341,18 @@ function TemplatesPage() {
             </li>
           ))}
         </ol>
+        </div>
+        <HeroStack />
       </section>
 
       {/* Search + filters */}
       <div className="sticky top-14 z-20 border-y border-[var(--border-panel)] bg-[var(--bg-app)]/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter templates">
+          <div
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
+            role="group"
+            aria-label="Filter templates"
+          >
             {FILTERS.map((item) => {
               const count = TEMPLATES.filter((template) => item.match(template) && matchesSearch(template)).length
               const active = item.id === filterId
@@ -268,13 +362,13 @@ function TemplatesPage() {
                   type="button"
                   aria-pressed={active}
                   onClick={() => setFilterId(item.id)}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                     active
                       ? 'border-[var(--color-primary-strong)] bg-[var(--color-primary-strong)] text-white'
                       : 'border-[var(--border-panel)] bg-[var(--bg-panel)] text-[var(--color-muted)] hover:border-[var(--color-primary)]'
                   }`}
                 >
-                  {active && <CheckIcon className="h-3 w-3" />}
+                  <item.icon className="h-3.5 w-3.5" />
                   {item.label}
                   <span className={`rounded-full px-1.5 text-[10px] ${active ? 'bg-white/20' : 'bg-[var(--bg-app)]'}`}>{count}</span>
                 </button>
@@ -304,11 +398,27 @@ function TemplatesPage() {
         </div>
       </div>
 
-      <section className="mx-auto max-w-7xl px-4 pt-8">
+      <section className="mx-auto max-w-7xl px-4 pt-6">
+        {visible.length > 0 && (
+          <p className="mb-4 text-sm text-[var(--color-muted)]" aria-live="polite">
+            Showing <span className="font-semibold text-[var(--text-app)]">{visible.length}</span>{' '}
+            {visible.length === 1 ? 'template' : 'templates'}
+            {filter.id !== 'all' && (
+              <>
+                {' '}
+                in <span className="font-semibold text-[var(--text-app)]">{filter.label}</span>
+              </>
+            )}
+            {search && <> matching “{query.trim()}”</>}
+          </p>
+        )}
         {visible.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {visible.map((template) => (
-              <GalleryCard key={template.slug} template={template} />
+          <div
+            key={`${filterId}:${search}`}
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {visible.map((template, index) => (
+              <GalleryCard key={template.slug} template={template} index={index} />
             ))}
           </div>
         ) : (
@@ -327,6 +437,23 @@ function TemplatesPage() {
             </button>
           </div>
         )}
+      </section>
+
+      <section className="mx-auto mt-16 max-w-7xl px-4" aria-labelledby="included">
+        <h2 id="included" className="text-center text-2xl font-bold tracking-tight">
+          Every template includes
+        </h2>
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {INCLUDED.map((item) => (
+            <li key={item.title} className="bf-card">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[var(--color-accent)]">
+                <item.icon className="h-4 w-4" />
+              </span>
+              <h3 className="mt-3 text-sm font-semibold">{item.title}</h3>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">{item.body}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="mx-auto mt-14 max-w-7xl px-4">
