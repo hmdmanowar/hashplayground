@@ -6,9 +6,12 @@ export type BillflowEventType = 'page_view' | 'pdf_downloaded' | 'upgrade_clicke
 export type PriceIntent = 199 | 299 | 499
 
 // Fire-and-forget — analytics must never block or break the generator.
+// Sends the Hash Playground session cookie so the backend can skip admins'
+// own visits.
 export function trackEvent(type: BillflowEventType, slug: string): void {
   fetch(`${API_BASE}/billflow/events`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, slug }),
     keepalive: true,

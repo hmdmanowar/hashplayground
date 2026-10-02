@@ -240,7 +240,8 @@ function AdminBillflow() {
         <a href="/billflow/" className="text-[var(--color-primary)] hover:underline">
           BillFlow
         </a>{' '}
-        (the go/no-go gate is always the last {stats.gateWindowDays} days; the waitlist is all-time).
+        (the go/no-go gate is always the last {stats.gateWindowDays} days; the waitlist is all-time). Visits from
+        browsers logged in as an admin aren’t counted.
       </p>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -418,8 +419,8 @@ function AdminBillflow() {
         <h2 className="text-sm font-semibold text-red-600 dark:text-red-400">Danger zone</h2>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <p className="max-w-xl text-sm text-[var(--color-muted)]">
-            Reset all BillFlow tracking (page views, downloads, upgrade clicks) and the Pro waitlist to start fresh.
-            Requires your account password.
+            Reset all BillFlow tracking (page views, downloads, upgrade clicks) to start fresh. The Pro waitlist is
+            kept unless you force-delete it. Requires your account password.
           </p>
           <button
             type="button"

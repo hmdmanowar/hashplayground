@@ -57,7 +57,8 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // Public, fire-and-forget funnel counter.
+  // Public, fire-and-forget funnel counter. Admins' own visits are dropped
+  // (the generator sends cookies), so testing the app doesn't skew demand.
   app.post(
     '/events',
     {
@@ -67,7 +68,7 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
-      await recordEvent(request.body.type, request.body.slug)
+      if (request.authUser?.role !== 'admin') await recordEvent(request.body.type, request.body.slug)
       reply.status(204).send()
     },
   )
