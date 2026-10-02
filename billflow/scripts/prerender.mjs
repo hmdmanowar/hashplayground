@@ -115,7 +115,7 @@ function body(template) {
         }`,
     )
     .join('')
-  return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+  return `<div class="bf-seo" style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(template.h1)}</h1>
       <p>${escapeHtml(template.intro)}</p>
@@ -138,7 +138,7 @@ function templateList() {
 
 function galleryBody() {
   const cards = templateList()
-  return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+  return `<div class="bf-seo" style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(gallery.h1)}</h1>
       <p>${escapeHtml(gallery.intro)}</p>
@@ -152,7 +152,7 @@ const generator = data.templates.find((template) => template.slug === 'invoice-g
 
 function landingBody() {
   const faq = landing.faq.map((item) => `<h3>${escapeHtml(item.q)}</h3><p>${escapeHtml(item.a)}</p>`).join('')
-  return `<div style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+  return `<div class="bf-seo" style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(landing.h1)}</h1>
       <p>${escapeHtml(landing.intro)}</p>
