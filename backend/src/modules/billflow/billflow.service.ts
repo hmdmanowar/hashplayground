@@ -1,6 +1,8 @@
 import { prisma } from '../../lib/prisma.js'
 import { verifyPasswordHash } from '../../lib/password.js'
 import { ApiError } from '../../middleware/errorHandler.js'
+import { notifyFromSource } from '../notifications/notifications.service.js'
+import { getTopAdminUsername } from '../users/users.service.js'
 
 // Rupee prices for India, US-dollar prices elsewhere (ranges never overlap).
 export const BILLFLOW_PRICE_INTENTS = [199, 299, 499, 5, 9, 15] as const
@@ -8,6 +10,34 @@ export const BILLFLOW_EVENT_TYPES = ['page_view', 'pdf_downloaded', 'upgrade_cli
 export type BillflowEventType = (typeof BILLFLOW_EVENT_TYPES)[number]
 
 const GATE_WINDOW_DAYS = 30
+const GATE_DOWNLOADS = 150
+const GATE_WAITLIST = 15
+// Rolling 30-day download counts worth a notification.
+const DOWNLOAD_MILESTONES = new Set([1, 50, 100, GATE_DOWNLOADS])
+
+const regionNames = (() => {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' })
+  } catch {
+    return null
+  }
+})()
+const countryName = (code?: string) => (!code ? '' : code === 'EU' ? 'Eurozone' : (regionNames?.of(code) ?? code))
+// Rupee prices for India (199/299/499), dollars elsewhere (5/9/15).
+const formatIntent = (price: number) => (price < 100 ? `${price}/mo` : `₹${price}/mo`)
+
+// BillFlow's own notifications go to the top admin and link to its stats.
+// `onceIn`: skip if the same message was already sent within that many days.
+async function notifyAdmin(message: string, onceInDays?: number): Promise<void> {
+  const to = await getTopAdminUsername()
+  if (!to) return
+  if (onceInDays) {
+    const since = new Date(Date.now() - onceInDays * 24 * 60 * 60 * 1000)
+    const sent = await prisma.notification.count({ where: { fromUsername: 'billflow', message, createdAt: { gte: since } } })
+    if (sent) return
+  }
+  await notifyFromSource('billflow', to, message, '/admin/billflow')
+}
 
 // Dashboard ranges: how far back to look and how to bucket the series.
 export const BILLFLOW_STATS_RANGES = ['day', 'month', 'year'] as const
@@ -53,11 +83,38 @@ export async function joinWaitlist(input: JoinWaitlistInput): Promise<{ alreadyJ
     create: { email, priceIntent: input.priceIntent, source: input.source, country: input.country },
     update: { priceIntent: input.priceIntent },
   })
+  if (!existing) {
+    const where = input.country ? ` from ${countryName(input.country)}` : ''
+    await notifyAdmin(`New BillFlow Pro signup${where}: ${email} would pay ${formatIntent(input.priceIntent)}`)
+    const total = await prisma.billflowWaitlist.count()
+    if (total === GATE_WAITLIST) {
+      await notifyAdmin(`BillFlow reached ${GATE_WAITLIST} Pro waitlist signups: that half of the go/no-go gate is met`)
+    }
+  }
   return { alreadyJoined: Boolean(existing) }
 }
 
 export async function recordEvent(type: BillflowEventType, slug?: string, country?: string): Promise<void> {
   await prisma.billflowEvent.create({ data: { type, slug: slug || null, country: country || null } })
+  if (type === 'pdf_downloaded') await checkDownloadMilestones()
+}
+
+async function checkDownloadMilestones(): Promise<void> {
+  try {
+    const since = new Date(Date.now() - GATE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+    const downloads = await prisma.billflowEvent.count({ where: { type: 'pdf_downloaded', createdAt: { gte: since } } })
+    if (!DOWNLOAD_MILESTONES.has(downloads)) return
+    const message =
+      downloads === 1
+        ? 'BillFlow got its first PDF download'
+        : downloads === GATE_DOWNLOADS
+          ? `BillFlow hit ${GATE_DOWNLOADS} PDF downloads in ${GATE_WINDOW_DAYS} days: that half of the go/no-go gate is met`
+          : `BillFlow hit ${downloads} PDF downloads in the last ${GATE_WINDOW_DAYS} days`
+    // The window rolls, so the same count can recur; announce it once a month.
+    await notifyAdmin(message, GATE_WINDOW_DAYS)
+  } catch {
+    // ignore: milestones are a nicety, never a reason to fail tracking
+  }
 }
 
 export interface CountryRow {

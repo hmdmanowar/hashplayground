@@ -27,17 +27,23 @@ export async function sendNotification(
   return request<Notification>('/notifications', { method: 'POST', body: { toUsername, kind, message, link } })
 }
 
-export async function listNotificationsForUser(): Promise<Notification[]> {
-  return request<Notification[]>('/notifications')
+// A product that raises its own notifications (sent as that fromUsername);
+// passing it narrows the bell to just those.
+export type NotificationSource = 'billflow'
+
+const sourceQuery = (source?: NotificationSource) => (source ? `?source=${source}` : '')
+
+export async function listNotificationsForUser(source?: NotificationSource): Promise<Notification[]> {
+  return request<Notification[]>(`/notifications${sourceQuery(source)}`)
 }
 
-export async function getUnreadCount(): Promise<number> {
-  const { count } = await request<{ count: number }>('/notifications/unread-count')
+export async function getUnreadCount(source?: NotificationSource): Promise<number> {
+  const { count } = await request<{ count: number }>(`/notifications/unread-count${sourceQuery(source)}`)
   return count
 }
 
-export async function markAllAsRead(): Promise<void> {
-  await request('/notifications/read-all', { method: 'POST' })
+export async function markAllAsRead(source?: NotificationSource): Promise<void> {
+  await request(`/notifications/read-all${sourceQuery(source)}`, { method: 'POST' })
 }
 
 // Every notification ever sent, admin-composed and system-generated alike —

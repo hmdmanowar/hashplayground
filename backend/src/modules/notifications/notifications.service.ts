@@ -3,6 +3,12 @@ import { ApiError } from '../../middleware/errorHandler.js'
 
 export const BROADCAST_RECIPIENT = 'all'
 
+// System senders: notifications a product raises by itself, stored with
+// this as fromUsername (plain string, no User row) so they can be filtered —
+// e.g. the bell on the BillFlow admin page shows only BillFlow's.
+export const NOTIFICATION_SOURCES = ['billflow'] as const
+export type NotificationSource = (typeof NOTIFICATION_SOURCES)[number]
+
 export interface NotificationDto {
   id: string
   toUsername: string
@@ -39,33 +45,34 @@ function toDto(notification: {
 // Recipient = addressed to this user specifically, or a broadcast — but
 // never something the user sent themselves (an admin broadcasting to "all"
 // shouldn't see it in their own inbox).
-function recipientWhere(username: string) {
+function recipientWhere(username: string, source?: NotificationSource) {
   return {
     fromUsername: { not: username },
     OR: [{ toUsername: username }, { toUsername: BROADCAST_RECIPIENT }],
+    ...(source ? { AND: [{ fromUsername: source }] } : {}),
   }
 }
 
-export async function listNotificationsForUser(username: string): Promise<NotificationDto[]> {
+export async function listNotificationsForUser(username: string, source?: NotificationSource): Promise<NotificationDto[]> {
   const notifications = await prisma.notification.findMany({
-    where: recipientWhere(username),
+    where: recipientWhere(username, source),
     orderBy: { createdAt: 'desc' },
   })
   return notifications.map(toDto)
 }
 
-export async function getUnreadCount(username: string): Promise<number> {
+export async function getUnreadCount(username: string, source?: NotificationSource): Promise<number> {
   const notifications = await prisma.notification.findMany({
-    where: recipientWhere(username),
+    where: recipientWhere(username, source),
     select: { readBy: true },
   })
   return notifications.filter((n) => !n.readBy.includes(username)).length
 }
 
 // All-or-nothing per bell-open, not per-item — matches today's behavior.
-export async function markAllAsRead(username: string): Promise<void> {
+export async function markAllAsRead(username: string, source?: NotificationSource): Promise<void> {
   const notifications = await prisma.notification.findMany({
-    where: { ...recipientWhere(username), NOT: { readBy: { has: username } } },
+    where: { ...recipientWhere(username, source), NOT: { readBy: { has: username } } },
     select: { id: true, readBy: true },
   })
   await prisma.$transaction(
@@ -90,6 +97,21 @@ export async function sendNotification(
     data: { toUsername, fromUsername, kind, message, link },
   })
   return toDto(notification)
+}
+
+// A product's own notification to one user (kind "activity"). Never
+// throws: a failed notification must not break the action that caused it.
+export async function notifyFromSource(
+  source: NotificationSource,
+  toUsername: string,
+  message: string,
+  link?: string,
+): Promise<void> {
+  try {
+    await prisma.notification.create({ data: { toUsername, fromUsername: source, kind: 'activity', message, link } })
+  } catch {
+    // ignore
+  }
 }
 
 export async function listAllNotifications(): Promise<NotificationDto[]> {

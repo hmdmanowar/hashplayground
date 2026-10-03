@@ -53,7 +53,7 @@ function GuidePage({ guide }: { guide: Guide }) {
       <GuideBody guide={guide.sections} className="mt-12" />
 
       {guide.faq.length > 0 && (
-        <section className="mt-16 max-w-3xl" aria-labelledby="guide-faq">
+        <section className="mt-16" aria-labelledby="guide-faq">
           <h2 id="guide-faq" className="text-xl font-semibold">
             Frequently asked questions
           </h2>

@@ -173,7 +173,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         </ol>
       </section>
 
-      <section className="mt-12 max-w print:hidden" aria-labelledby="faq">
+      <section className="mt-12 print:hidden" aria-labelledby="faq">
         <h2 id="faq" className="text-xl font-semibold">
           Frequently asked questions
         </h2>

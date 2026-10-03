@@ -1,19 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
   listNotificationsForUser,
   getUnreadCount,
   markAllAsRead,
   type Notification,
+  type NotificationSource,
 } from '../../services/notificationService'
 import { BellIcon, EnvelopeIcon, AlertTriangleIcon } from '../Icons/Icons'
 
 const POLL_INTERVAL_MS = 5000
 
+// Product admin pages narrow the bell to that product's own notifications.
+const SCOPED_PAGES: { prefix: string; source: NotificationSource; label: string }[] = [
+  { prefix: '/admin/billflow', source: 'billflow', label: 'BillFlow' },
+]
+const SENDER_NAMES: Record<string, string> = { billflow: 'BillFlow' }
+
 function NotificationBell() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const scope = SCOPED_PAGES.find((page) => pathname.startsWith(page.prefix))
+  const source = scope?.source
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -25,7 +35,7 @@ function NotificationBell() {
     if (!username) return
 
     async function refresh() {
-      const [list, count] = await Promise.all([listNotificationsForUser(), getUnreadCount()])
+      const [list, count] = await Promise.all([listNotificationsForUser(source), getUnreadCount(source)])
       setNotifications(list)
       setUnreadCount(count)
     }
@@ -35,7 +45,7 @@ function NotificationBell() {
     // cross-tab trick) no longer means anything; the poll alone covers it.
     const timer = setInterval(refresh, POLL_INTERVAL_MS)
     return () => clearInterval(timer)
-  }, [username])
+  }, [username, source])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -51,8 +61,8 @@ function NotificationBell() {
     const next = !open
     setOpen(next)
     if (next) {
-      await markAllAsRead()
-      setNotifications(await listNotificationsForUser())
+      await markAllAsRead(source)
+      setNotifications(await listNotificationsForUser(source))
       setUnreadCount(0)
     }
   }
@@ -76,11 +86,13 @@ function NotificationBell() {
       {open && (
         <div className="absolute right-0 top-full z-30 mt-2 w-80 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] p-1 shadow-lg">
           <p className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted)]">
-            Notifications
+            {scope ? `${scope.label} notifications` : 'Notifications'}
           </p>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="px-2 py-3 text-sm text-[var(--color-muted)]">No notifications yet</p>
+              <p className="px-2 py-3 text-sm text-[var(--color-muted)]">
+                {scope ? `No ${scope.label} notifications yet` : 'No notifications yet'}
+              </p>
             ) : (
               notifications.map((entry) => {
                 const content = (
@@ -95,7 +107,8 @@ function NotificationBell() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm">{entry.message}</p>
                       <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-                        From {entry.fromUsername} · {new Date(entry.createdAt).toLocaleString()}
+                        From {SENDER_NAMES[entry.fromUsername] ?? entry.fromUsername} ·{' '}
+                        {new Date(entry.createdAt).toLocaleString()}
                       </p>
                     </div>
                   </>
