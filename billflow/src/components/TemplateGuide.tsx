@@ -41,7 +41,11 @@ function listKind(heading: string): ListKind {
 function sentenceCase(label: string): string {
   return label
     .split(' ')
-    .map((word) => (/^[A-Z]{2,}/.test(word) || word.startsWith('(') ? word : word.toLowerCase()))
+    .map((word) =>
+      /^[A-Z]{2,}/.test(word) || word.startsWith('(') || /^(Australian|Indian|British|American)$/.test(word)
+        ? word
+        : word.toLowerCase(),
+    )
     .join(' ')
 }
 
