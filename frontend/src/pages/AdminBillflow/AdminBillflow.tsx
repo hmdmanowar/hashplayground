@@ -188,6 +188,71 @@ function ResetMenu({ waitlistTotal, onPick }: { waitlistTotal: number; onPick: (
   )
 }
 
+// Same origin as BillFlow (/billflow/), so this flag is visible to it: an
+// excluded browser sends no events or waitlist signups, even logged out.
+const EXCLUDE_KEY = 'billflow:exclude'
+
+function readExcluded(): boolean | null {
+  try {
+    const value = localStorage.getItem(EXCLUDE_KEY)
+    return value === null ? null : value === '1'
+  } catch {
+    return null
+  }
+}
+
+function writeExcluded(excluded: boolean): void {
+  try {
+    localStorage.setItem(EXCLUDE_KEY, excluded ? '1' : '0')
+  } catch {
+    // storage blocked: the logged-in check on the server still applies
+  }
+}
+
+// Opening this page marks the browser as an admin's (once; an explicit
+// "include" is respected afterwards). The switch shows and flips it.
+function ExcludeThisBrowser() {
+  const [excluded, setExcluded] = useState(() => {
+    const stored = readExcluded()
+    if (stored === null) writeExcluded(true)
+    return stored ?? true
+  })
+
+  function toggle() {
+    writeExcluded(!excluded)
+    setExcluded(!excluded)
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 text-sm">
+      <p>
+        <span className="font-medium">{excluded ? 'This browser is excluded from BillFlow stats.' : 'This browser is counted in BillFlow stats.'}</span>{' '}
+        <span className="text-[var(--color-muted)]">
+          {excluded
+            ? 'Your visits, downloads and test signups here are never recorded, even when logged out.'
+            : 'Visits here are only skipped while you’re logged in as an admin.'}
+        </span>
+      </p>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={excluded}
+        aria-label="Exclude this browser from BillFlow stats"
+        onClick={toggle}
+        className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
+          excluded ? 'bg-[var(--color-primary-strong)]' : 'bg-[var(--border-panel)]'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+            excluded ? 'translate-x-5' : ''
+          }`}
+        />
+      </button>
+    </div>
+  )
+}
+
 // Irreversible wipe of one scope, confirmed by re-entering the top admin's
 // account password (checked server-side).
 function ResetDialog({
@@ -360,9 +425,10 @@ function AdminBillflow() {
         <a href="/billflow/" className="text-[var(--color-primary)] hover:underline">
           BillFlow
         </a>{' '}
-        (the go/no-go gate is always the last {stats.gateWindowDays} days; the waitlist is all-time). Visits from
-        browsers logged in as an admin aren’t counted.
+        (the go/no-go gate is always the last {stats.gateWindowDays} days; the waitlist is all-time). Activity
+        from admins isn’t counted.
       </p>
+      <ExcludeThisBrowser />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <GateMeter

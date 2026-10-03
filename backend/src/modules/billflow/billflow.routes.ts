@@ -93,6 +93,9 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
       config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
+      // An admin trying the flow gets the normal response, but nothing is
+      // stored and no notification is sent.
+      if (request.authUser?.role === 'admin') return reply.send({ alreadyJoined: false })
       reply.send(await joinWaitlist({ ...request.body, country: visitorCountry(request, request.body.country) }))
     },
   )
