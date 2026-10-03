@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { computeTotals, normalizePaymentLink, type InvoiceDraft } from './invoice'
+import { linkWithAmount } from './payLink'
 
 // A UPI ID is handle@psp, e.g. "name@okaxis" or "98765@ybl". The PSP part
 // never contains a dot, which is how "name@gmail.com" is told apart from it.
@@ -47,7 +48,10 @@ export function scanToPayFor(draft: InvoiceDraft): ScanToPay | null {
   if (upi) return { kind: 'upi', uri: upi.uri, amountMinor: upi.amountMinor, alt: `UPI QR code to pay ${upi.upiId}`, via: 'with any UPI app' }
   const link = draft.payment.link ? normalizePaymentLink(draft.payment.linkUrl) : null
   if (!link) return null
-  return { kind: 'link', uri: link, amountMinor: computeTotals(draft).total, alt: 'QR code for the payment link', via: 'online' }
+  const amountMinor = computeTotals(draft).total
+  // PayPal.me, Cash App and Monzo links get the total added, so the payer's
+  // app opens with it filled in; other links are encoded unchanged.
+  return { kind: 'link', uri: linkWithAmount(link, amountMinor, draft.currency), amountMinor, alt: 'QR code for the payment link', via: 'online' }
 }
 
 // UPI only settles in INR, so a USD/EUR invoice gets no QR.

@@ -27,6 +27,7 @@ import {
 } from '../lib/invoice'
 import { barePhoneNumber, isValidUpiId } from '../lib/upi'
 import { useIfscLookup } from '../lib/ifsc'
+import { linkAmountSupport } from '../lib/payLink'
 import { CheckIcon, PlusIcon, ResetIcon, TrashIcon, XIcon } from './Icons'
 
 const MAX_LOGO_BYTES = 500_000
@@ -111,14 +112,29 @@ const PAPER_OPTIONS: { value: PaperSize; label: string }[] = [
   { value: 'letter', label: 'US Letter' },
 ]
 
-function LinkHint({ url, hasUpiQr }: { url: string; hasUpiQr: boolean }) {
+function LinkHint({ url, hasUpiQr, currency }: { url: string; hasUpiQr: boolean; currency: CurrencyCode }) {
   if (!url.trim()) return <span className={MUTED}>A PayPal.me, Stripe, Wise or other pay link. It prints with a scan-to-pay QR code.</span>
-  if (!normalizePaymentLink(url)) return <span className={WARN}>Enter a full link, like paypal.me/yourname.</span>
+  const link = normalizePaymentLink(url)
+  if (!link) return <span className={WARN}>Enter a full link, like paypal.me/yourname.</span>
   if (hasUpiQr) return <span className={MUTED}>The UPI QR code is shown on the invoice; this link is printed as text.</span>
+  const { support, service } = linkAmountSupport(link, currency)
   return (
-    <span className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
-      <CheckIcon className="h-3.5 w-3.5 shrink-0" />
-      A scan-to-pay QR code for this link is added to the invoice.
+    <span className="mt-1 flex items-start gap-1 text-xs text-green-700 dark:text-green-400">
+      <CheckIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+      <span>
+        A scan-to-pay QR code is added to the invoice.{' '}
+        {support === 'added' && `It opens ${service} with the invoice total already filled in.`}
+        {support === 'wrong-currency' && (
+          <span className="text-amber-600 dark:text-amber-400">
+            {service} can’t prefill a {currency} amount, so your client enters it.
+          </span>
+        )}
+        {support === 'fixed' && (
+          <span className="text-[var(--color-muted)]">
+            The amount comes from the link itself, so set it to the invoice total when you create it (Stripe, Wise, Razorpay…).
+          </span>
+        )}
+      </span>
     </span>
   )
 }
@@ -272,7 +288,7 @@ function PaymentFields({
       )}
 
       {payment.link && (
-        <Field label="Payment link" hint={<LinkHint url={payment.linkUrl} hasUpiQr={hasUpiQr} />}>
+        <Field label="Payment link" hint={<LinkHint url={payment.linkUrl} hasUpiQr={hasUpiQr} currency={currency} />}>
           <input
             className="bf-input"
             type="url"
