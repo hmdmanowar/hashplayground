@@ -4,6 +4,7 @@ import FaqList from '../components/FaqList'
 import InvoiceForm from '../components/InvoiceForm'
 import InvoicePreview from '../components/InvoicePreview'
 import StylePicker from '../components/StylePicker'
+import TemplateGuide from '../components/TemplateGuide'
 import UpgradeBanner from '../components/UpgradeBanner'
 import WaitlistDialog from '../components/WaitlistDialog'
 import { CheckIcon, DownloadIcon, PrinterIcon } from '../components/Icons'
@@ -15,7 +16,7 @@ import { GENERATOR_SLUG, TEMPLATES, type InvoiceTemplate } from '../lib/template
 const HOW_IT_WORKS = [
   { title: 'Fill in your details', body: 'Add your business, your client and the items you’re billing. Your details are remembered in this browser.' },
   { title: 'Check the live preview', body: 'Totals, tax and the amount in words update as you type, exactly as they’ll appear on the PDF.' },
-  { title: 'Download and send', body: 'Download a clean A4 PDF and email or WhatsApp it to your client. No account needed.' },
+  { title: 'Download and send', body: 'Download a clean A4 or US Letter PDF and email or WhatsApp it to your client. No account needed.' },
 ]
 
 // A handful of other templates to link to from each page (internal links
@@ -152,27 +153,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         </section>
       )}
 
-      {template.guide.length > 0 && (
-        <article className="mt-16 max-w-3xl space-y-8 print:hidden">
-          {template.guide.map((section) => (
-            <section key={section.h}>
-              <h2 className="text-xl font-semibold">{section.h}</h2>
-              {section.p.map((paragraph) => (
-                <p key={paragraph} className="mt-3 text-sm leading-relaxed text-[var(--color-muted)] sm:text-base">
-                  {paragraph}
-                </p>
-              ))}
-              {section.list && (
-                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-[var(--color-muted)] sm:text-base">
-                  {section.list.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          ))}
-        </article>
-      )}
+      {template.guide.length > 0 && <TemplateGuide guide={template.guide} label={template.label} />}
 
       <section className="mt-16 print:hidden" aria-labelledby="how-it-works">
         <h2 id="how-it-works" className="text-xl font-semibold">
@@ -191,7 +172,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         </ol>
       </section>
 
-      <section className="mt-12 max-w-3xl print:hidden" aria-labelledby="faq">
+      <section className="mt-12 max-w print:hidden" aria-labelledby="faq">
         <h2 id="faq" className="text-xl font-semibold">
           Frequently asked questions
         </h2>

@@ -102,6 +102,9 @@ const PAYMENT_METHODS: { key: 'bank' | 'link' | 'upi' | 'other'; label: string }
   { key: 'other', label: 'Other' },
 ]
 
+// Static class names so Tailwind keeps them.
+const ITEM_COLUMNS: Record<number, string> = { 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-3', 4: 'sm:grid-cols-4' }
+
 const PAPER_OPTIONS: { value: PaperSize; label: string }[] = [
   { value: 'auto', label: 'Auto (Letter for USD/CAD, else A4)' },
   { value: 'a4', label: 'A4' },
@@ -250,7 +253,7 @@ function PaymentFields({
           </Field>
           <Field label={`${codeType.label.replace(/ \(.*\)$/, '')} (optional)`} hint={ifscHint}>
             <input
-              className="bf-input uppercase"
+              className="bf-input uppercase placeholder:normal-case"
               maxLength={isIfsc ? 11 : 34}
               autoComplete="off"
               spellCheck={false}
@@ -363,6 +366,9 @@ function InvoiceForm({
   const totals = computeTotals(draft)
   const taxed = hasTax(draft.taxMode)
   const suggestion = isGst(draft.taxMode) ? suggestedGstMode(draft.from.taxId, draft.to.taxId) : null
+  // HSN/SAC codes are an Indian GST field: offer them on INR / GST invoices,
+  // or wherever a line already has one.
+  const showHsn = (hsn: string) => isGst(draft.taxMode) || draft.currency === 'INR' || Boolean(hsn.trim())
 
   function handleLogo(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -525,10 +531,12 @@ function InvoiceForm({
                     value={item.description}
                     onChange={(e) => updateItem(item.id, { description: e.target.value })}
                   />
-                  <div className={`mt-2 grid grid-cols-2 gap-2 ${taxed ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
-                    <Field label="HSN/SAC">
-                      <input className="bf-input" value={item.hsn} onChange={(e) => updateItem(item.id, { hsn: e.target.value })} />
-                    </Field>
+                  <div className={`mt-2 grid grid-cols-2 gap-2 ${ITEM_COLUMNS[2 + Number(showHsn(item.hsn)) + Number(taxed)]}`}>
+                    {showHsn(item.hsn) && (
+                      <Field label="HSN/SAC">
+                        <input className="bf-input" value={item.hsn} onChange={(e) => updateItem(item.id, { hsn: e.target.value })} />
+                      </Field>
+                    )}
                     <Field label="Qty">
                       <input
                         className="bf-input"
