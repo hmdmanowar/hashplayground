@@ -160,15 +160,18 @@ export async function getStats(range: BillflowStatsRange = 'day'): Promise<Billf
   }
 }
 
-// Wipes BillFlow tracking (funnel events) so it can start fresh. The Pro
-// waitlist — real people's emails — survives a normal reset and is only
-// deleted when the admin explicitly forces it (includeWaitlist). Either way
-// it's irreversible, so the top admin must re-enter their account password
-// even though they are already signed in.
-export async function resetAllData(
+// What one admin reset clears: a single event type (one stat tile), all
+// events (the Pages and Countries tables are both built from them), or the
+// Pro waitlist (price intent + recent signups). Never more than one.
+export const BILLFLOW_RESET_SCOPES = ['page_view', 'pdf_downloaded', 'upgrade_clicked', 'events', 'waitlist'] as const
+export type BillflowResetScope = (typeof BILLFLOW_RESET_SCOPES)[number]
+
+// Irreversible, so the top admin must re-enter their account password even
+// though they are already signed in.
+export async function resetData(
   username: string,
   password: string,
-  includeWaitlist = false,
+  scope: BillflowResetScope,
 ): Promise<{ events: number; waitlist: number }> {
   const user = await prisma.user.findUnique({ where: { username }, select: { passwordHash: true } })
   if (!user?.passwordHash) {
@@ -176,13 +179,10 @@ export async function resetAllData(
   }
   if (!(await verifyPasswordHash(password, user.passwordHash))) throw new ApiError(403, 'Incorrect password')
 
-  if (!includeWaitlist) {
-    const events = await prisma.billflowEvent.deleteMany({})
-    return { events: events.count, waitlist: 0 }
+  if (scope === 'waitlist') {
+    const waitlist = await prisma.billflowWaitlist.deleteMany({})
+    return { events: 0, waitlist: waitlist.count }
   }
-  const [events, waitlist] = await prisma.$transaction([
-    prisma.billflowEvent.deleteMany({}),
-    prisma.billflowWaitlist.deleteMany({}),
-  ])
-  return { events: events.count, waitlist: waitlist.count }
+  const events = await prisma.billflowEvent.deleteMany({ where: scope === 'events' ? {} : { type: scope } })
+  return { events: events.count, waitlist: 0 }
 }

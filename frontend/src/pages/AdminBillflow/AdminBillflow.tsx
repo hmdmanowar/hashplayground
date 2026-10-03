@@ -1,7 +1,15 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import LoadingOverlay from '../../components/LoadingOverlay/LoadingOverlay'
 import Sparkline from '../../components/Sparkline/Sparkline'
-import { getBillflowStats, resetBillflowData, type BillflowRange, type BillflowStats } from '../../services/billflowService'
+import {
+  getBillflowStats,
+  resetBillflowData,
+  type BillflowRange,
+  type BillflowResetScope,
+  type BillflowStats,
+} from '../../services/billflowService'
+import { ChevronDownIcon, UndoIcon } from '../../components/Icons/Icons'
+import { useSetPageHeaderActions } from '../../context/PageHeaderContext'
 import { useToast } from '../../context/ToastContext'
 
 // Milestone-1 go/no-go gate for building BillFlow's paid tier (Razorpay,
@@ -72,22 +80,131 @@ function countryName(code: string | null): string {
   return regionNames?.of(code) ?? code
 }
 
-// Irreversible wipe of BillFlow events, confirmed by re-entering the top
-// admin's account password (checked server-side). The Pro waitlist is kept
-// unless the admin explicitly ticks the force option.
+// What each section's Reset clears. Tables that are built from the same
+// data share a scope (Pages and Countries both come from the events).
+const RESET_SCOPES: Record<BillflowResetScope, { title: string; deletes: string; keeps: string; done: string }> = {
+  page_view: {
+    title: 'Reset page views?',
+    deletes: 'every recorded page view',
+    keeps: 'PDF downloads, upgrade clicks and the waitlist are kept.',
+    done: 'page views',
+  },
+  pdf_downloaded: {
+    title: 'Reset PDF downloads?',
+    deletes: 'every recorded PDF download, which also resets the 30-day download gate',
+    keeps: 'Page views, upgrade clicks and the waitlist are kept.',
+    done: 'PDF downloads',
+  },
+  upgrade_clicked: {
+    title: 'Reset upgrade clicks?',
+    deletes: 'every recorded upgrade click',
+    keeps: 'Page views, PDF downloads and the waitlist are kept.',
+    done: 'upgrade clicks',
+  },
+  events: {
+    title: 'Reset page and country stats?',
+    deletes:
+      'every page view, PDF download and upgrade click. The Pages and Countries tables, the tiles and the download gate are all built from these, so they all start from zero',
+    keeps: 'The Pro waitlist is kept.',
+    done: 'events',
+  },
+  waitlist: {
+    title: 'Reset waitlist signups?',
+    deletes: 'every Pro waitlist signup: emails, price intent and countries',
+    keeps: 'Page views, PDF downloads and upgrade clicks are kept.',
+    done: 'waitlist signups',
+  },
+}
+
+const RESET_MENU: { scope: BillflowResetScope; label: string; hint: string }[] = [
+  { scope: 'page_view', label: 'Page views', hint: 'Page views tile' },
+  { scope: 'pdf_downloaded', label: 'PDF downloads', hint: 'Downloads tile and the 30-day gate' },
+  { scope: 'upgrade_clicked', label: 'Upgrade clicks', hint: 'Upgrade clicks tile' },
+  { scope: 'events', label: 'Page & country stats', hint: 'All events: Pages, Countries and every tile' },
+  { scope: 'waitlist', label: 'Waitlist signups', hint: 'Price intent and recent signups' },
+]
+
+// The page's one place for resets: a menu in the header's actions slot.
+function ResetMenu({ waitlistTotal, onPick }: { waitlistTotal: number; onPick: (scope: BillflowResetScope) => void }) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-red-300 px-3.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 dark:border-red-900 dark:text-red-400"
+      >
+        <UndoIcon className="h-4 w-4" />
+        Reset
+        <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute top-full right-0 z-40 mt-2 w-72 overflow-hidden rounded-xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-1 shadow-xl"
+        >
+          <p className="px-3 pt-2 pb-1 text-[11px] text-[var(--color-muted)]">Each reset asks for your password.</p>
+          {RESET_MENU.map((item) => (
+            <button
+              key={item.scope}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                onPick(item.scope)
+              }}
+              className="block w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors hover:bg-red-500/10"
+            >
+              <span className="block text-sm font-medium">
+                {item.label}
+                {item.scope === 'waitlist' && <span className="text-[var(--color-muted)]"> ({waitlistTotal})</span>}
+              </span>
+              <span className="block text-xs text-[var(--color-muted)]">{item.hint}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Irreversible wipe of one scope, confirmed by re-entering the top admin's
+// account password (checked server-side).
 function ResetDialog({
+  scope,
   waitlistTotal,
   onClose,
   onDone,
 }: {
+  scope: BillflowResetScope
   waitlistTotal: number
   onClose: () => void
-  onDone: (result: { events: number; waitlist: number }) => void
+  onDone: (scope: BillflowResetScope, result: { events: number; waitlist: number }) => void
 }) {
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [includeWaitlist, setIncludeWaitlist] = useState(false)
+  const meta = RESET_SCOPES[scope]
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -102,7 +219,7 @@ function ResetDialog({
     setSubmitting(true)
     setError('')
     try {
-      onDone(await resetBillflowData(password, includeWaitlist))
+      onDone(scope, await resetBillflowData(password, scope))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Reset failed')
       setSubmitting(false)
@@ -120,38 +237,15 @@ function ResetDialog({
         className="w-full max-w-md rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] p-6 shadow-2xl"
       >
         <h2 id="billflow-reset-title" className="text-lg font-semibold text-red-600 dark:text-red-400">
-          Reset BillFlow data?
+          {meta.title}
         </h2>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">This permanently deletes, with no undo:</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-          <li>every page view, PDF download and upgrade click</li>
-          {includeWaitlist && (
-            <li className="font-medium text-red-600 dark:text-red-400">
-              all {waitlistTotal} Pro waitlist signup{waitlistTotal === 1 ? '' : 's'} (emails and price intent)
-            </li>
-          )}
-        </ul>
-        {!includeWaitlist && (
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            The {waitlistTotal} Pro waitlist signup{waitlistTotal === 1 ? ' is' : 's are'} kept.
-          </p>
-        )}
-        <p className="mt-3 text-sm text-[var(--color-muted)]">Users’ invoices are not affected; they live in their own browsers.</p>
-
-        <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3">
-          <input
-            type="checkbox"
-            checked={includeWaitlist}
-            onChange={(event) => setIncludeWaitlist(event.target.checked)}
-            className="mt-0.5 h-4 w-4 cursor-pointer accent-red-600"
-          />
-          <span className="text-sm">
-            <span className="font-medium text-red-600 dark:text-red-400">Force: also delete the Pro waitlist</span>
-            <span className="block text-xs text-[var(--color-muted)]">
-              Removes {waitlistTotal} real signup{waitlistTotal === 1 ? '' : 's'}. Only do this if you’re sure.
-            </span>
-          </span>
-        </label>
+        <p className="mt-2 text-sm">
+          This permanently deletes, with no undo, {meta.deletes}
+          {scope === 'waitlist' && ` (${waitlistTotal} signup${waitlistTotal === 1 ? '' : 's'})`}.
+        </p>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">
+          It clears all of it, not just the time range shown. {meta.keeps}
+        </p>
 
         <label className="mt-4 block">
           <span className="text-sm font-medium">Enter your account password to confirm</span>
@@ -181,7 +275,7 @@ function ResetDialog({
             disabled={submitting || !password}
             className="cursor-pointer rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? 'Resetting…' : includeWaitlist ? 'Reset everything' : 'Reset events'}
+            {submitting ? 'Resetting…' : 'Reset'}
           </button>
         </div>
       </form>
@@ -192,7 +286,7 @@ function ResetDialog({
 function AdminBillflow() {
   const [stats, setStats] = useState<BillflowStats | null>(null)
   const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [resetOpen, setResetOpen] = useState(false)
+  const [resetScope, setResetScope] = useState<BillflowResetScope | null>(null)
   const [range, setRange] = useState<BillflowRange>('day')
   // While a new range loads, the previous numbers stay on screen (dimmed)
   // instead of flashing a spinner.
@@ -214,16 +308,20 @@ function AdminBillflow() {
     loadStats()
   }, [loadStats])
 
-  const closeReset = useCallback(() => setResetOpen(false), [])
+  const closeReset = useCallback(() => setResetScope(null), [])
 
-  function handleResetDone(result: { events: number; waitlist: number }) {
-    setResetOpen(false)
-    showToast(
-      result.waitlist
-        ? `BillFlow reset: removed ${result.events} events and ${result.waitlist} waitlist signups.`
-        : `BillFlow reset: removed ${result.events} events. Waitlist kept.`,
-      { kind: 'success' },
-    )
+  const setHeaderActions = useSetPageHeaderActions()
+  const waitlistTotal = stats?.waitlistTotal
+  useEffect(() => {
+    if (waitlistTotal === undefined) return
+    setHeaderActions(<ResetMenu waitlistTotal={waitlistTotal} onPick={setResetScope} />)
+    return () => setHeaderActions(null)
+  }, [setHeaderActions, waitlistTotal])
+
+  function handleResetDone(scope: BillflowResetScope, result: { events: number; waitlist: number }) {
+    setResetScope(null)
+    const removed = scope === 'waitlist' ? result.waitlist : result.events
+    showToast(`Removed ${removed} ${RESET_SCOPES[scope].done}.`, { kind: 'success' })
     loadStats()
   }
 
@@ -483,24 +581,10 @@ function AdminBillflow() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-red-300 p-4 dark:border-red-900">
-        <h2 className="text-sm font-semibold text-red-600 dark:text-red-400">Danger zone</h2>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-xl text-sm text-[var(--color-muted)]">
-            Reset all BillFlow tracking (page views, downloads, upgrade clicks) to start fresh. The Pro waitlist is
-            kept unless you force-delete it. Requires your account password.
-          </p>
-          <button
-            type="button"
-            onClick={() => setResetOpen(true)}
-            className="cursor-pointer rounded-full border border-red-400 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white dark:text-red-400"
-          >
-            Reset all data
-          </button>
-        </div>
-      </section>
 
-      {resetOpen && <ResetDialog waitlistTotal={stats.waitlistTotal} onClose={closeReset} onDone={handleResetDone} />}
+      {resetScope && (
+        <ResetDialog scope={resetScope} waitlistTotal={stats.waitlistTotal} onClose={closeReset} onDone={handleResetDone} />
+      )}
     </div>
   )
 }

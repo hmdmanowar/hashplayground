@@ -5,8 +5,9 @@ import {
   joinWaitlist,
   recordEvent,
   getStats,
-  resetAllData,
+  resetData,
   BILLFLOW_EVENT_TYPES,
+  BILLFLOW_RESET_SCOPES,
   BILLFLOW_STATS_RANGES,
 } from './billflow.service.js'
 import { requireTopAdmin } from '../../middleware/auth.js'
@@ -119,13 +120,13 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireTopAdmin,
       schema: {
-        body: z.object({ password: z.string().min(1).max(200), includeWaitlist: z.boolean().default(false) }),
+        body: z.object({ password: z.string().min(1).max(200), scope: z.enum(BILLFLOW_RESET_SCOPES) }),
         response: { 200: z.object({ events: z.number(), waitlist: z.number() }) },
       },
       config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
-      reply.send(await resetAllData(request.authUser!.username, request.body.password, request.body.includeWaitlist))
+      reply.send(await resetData(request.authUser!.username, request.body.password, request.body.scope))
     },
   )
 
