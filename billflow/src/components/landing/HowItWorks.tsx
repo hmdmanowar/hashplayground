@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { DEMO } from '../../lib/demo'
 import { GENERATOR_PATH } from '../../lib/templates'
 import { BellIcon, CheckIcon, FileTextIcon, PenIcon, QrIcon, SendIcon, WalletIcon } from '../Icons'
 
@@ -16,13 +17,13 @@ const STEPS: Step[] = [
   {
     title: 'Create',
     icon: PenIcon,
-    body: 'Pick a template, add your client and items. GST, totals and the amount in words are worked out as you type.',
+    body: 'Pick a template, add your client and items. Tax, totals and the amount in words are worked out as you type.',
     visual: (
       <div className="space-y-2.5">
         {[
-          ['Client', 'Acme Retail Pvt Ltd'],
-          ['Item', 'Website design · 1 × ₹40,000'],
-          ['Tax', 'GST 18% → CGST 9% + SGST 9%'],
+          ['Client', DEMO.client],
+          ['Item', `Website design · 1 × ${DEMO.design}`],
+          ['Tax', DEMO.taxStep],
         ].map(([label, value]) => (
           <div key={label} className="rounded-xl bg-white/10 px-4 py-3">
             <p className="text-[11px] tracking-wide text-indigo-200 uppercase">{label}</p>
@@ -31,7 +32,7 @@ const STEPS: Step[] = [
         ))}
         <div className="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900">
           <span>Total</span>
-          <span>₹47,200.00</span>
+          <span>{DEMO.designTotal}</span>
         </div>
       </div>
     ),
@@ -39,7 +40,7 @@ const STEPS: Step[] = [
   {
     title: 'Send',
     icon: SendIcon,
-    body: 'Download a clean A4 PDF with your logo and send it over email or WhatsApp. No account needed.',
+    body: 'Download a clean A4 or US Letter PDF with your logo and send it by email or WhatsApp. No account needed.',
     visual: (
       <div className="space-y-3">
         <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 text-gray-900">
@@ -48,7 +49,7 @@ const STEPS: Step[] = [
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">INV-0001.pdf</p>
-            <p className="text-xs text-gray-500">A4 · ready to share</p>
+            <p className="text-xs text-gray-500">PDF · ready to share</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -64,7 +65,9 @@ const STEPS: Step[] = [
   {
     title: 'Get paid',
     icon: WalletIcon,
-    body: 'Your client scans the UPI QR on the invoice and pays the exact amount from any UPI app. Pro will chase late payers for you.',
+    body: DEMO.india
+      ? 'Your client scans the UPI QR on the invoice and pays the exact amount from any UPI app. Pro will chase late payers for you.'
+      : 'Your client scans the QR on the invoice and lands on your PayPal, Stripe or Wise link. Pro will chase late payers for you.',
     visual: (
       <div className="space-y-3">
         <div className="flex items-center gap-4 rounded-xl bg-white px-4 py-4 text-gray-900">
@@ -72,8 +75,8 @@ const STEPS: Step[] = [
             <QrIcon className="h-10 w-10" />
           </span>
           <div>
-            <p className="text-sm font-semibold">Scan to pay ₹47,200.00</p>
-            <p className="text-xs text-gray-500">GPay · PhonePe · Paytm · BHIM</p>
+            <p className="text-sm font-semibold">Scan to pay {DEMO.designTotal}</p>
+            <p className="text-xs text-gray-500">{DEMO.payApps}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-xl bg-emerald-400/15 px-4 py-3 text-sm font-medium text-emerald-200">

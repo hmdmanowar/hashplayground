@@ -6,22 +6,92 @@
 import type { InvoiceStyleId } from './invoiceStyles'
 
 export type TaxMode = 'none' | 'gst_intra' | 'gst_inter' | 'custom'
-export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'AED'
+// Two-decimal currencies only: money is stored in hundredths everywhere, so
+// zero-decimal currencies like JPY are deliberately not offered.
+export type CurrencyCode =
+  | 'USD'
+  | 'EUR'
+  | 'GBP'
+  | 'INR'
+  | 'CAD'
+  | 'AUD'
+  | 'NZD'
+  | 'SGD'
+  | 'AED'
+  | 'SAR'
+  | 'ZAR'
+  | 'CHF'
+  | 'HKD'
+  | 'MYR'
+  | 'PHP'
+  | 'NGN'
+  | 'KES'
 
 export const CURRENCIES: { code: CurrencyCode; label: string }[] = [
-  { code: 'INR', label: 'INR — Indian Rupee' },
   { code: 'USD', label: 'USD — US Dollar' },
   { code: 'EUR', label: 'EUR — Euro' },
   { code: 'GBP', label: 'GBP — British Pound' },
+  { code: 'INR', label: 'INR — Indian Rupee' },
+  { code: 'CAD', label: 'CAD — Canadian Dollar' },
+  { code: 'AUD', label: 'AUD — Australian Dollar' },
+  { code: 'NZD', label: 'NZD — New Zealand Dollar' },
+  { code: 'SGD', label: 'SGD — Singapore Dollar' },
   { code: 'AED', label: 'AED — UAE Dirham' },
+  { code: 'SAR', label: 'SAR — Saudi Riyal' },
+  { code: 'ZAR', label: 'ZAR — South African Rand' },
+  { code: 'CHF', label: 'CHF — Swiss Franc' },
+  { code: 'HKD', label: 'HKD — Hong Kong Dollar' },
+  { code: 'MYR', label: 'MYR — Malaysian Ringgit' },
+  { code: 'PHP', label: 'PHP — Philippine Peso' },
+  { code: 'NGN', label: 'NGN — Nigerian Naira' },
+  { code: 'KES', label: 'KES — Kenyan Shilling' },
 ]
 
-export const TAX_MODES: { value: TaxMode; label: string }[] = [
+export function isCurrencyCode(value: unknown): value is CurrencyCode {
+  return CURRENCIES.some((currency) => currency.code === value)
+}
+
+// The tax dropdown offers named presets; under the hood they're still the
+// four TaxModes (VAT / GST / Sales tax are 'custom' with that label), so
+// saved drafts keep working unchanged.
+export type TaxPreset = 'none' | 'vat' | 'gst' | 'sales' | 'gst_intra' | 'gst_inter' | 'custom'
+
+export const TAX_PRESETS: { value: TaxPreset; label: string }[] = [
   { value: 'none', label: 'No tax' },
-  { value: 'gst_intra', label: 'GST — same state (CGST + SGST)' },
-  { value: 'gst_inter', label: 'GST — other state (IGST)' },
-  { value: 'custom', label: 'Other tax (VAT / Sales tax)' },
+  { value: 'vat', label: 'VAT' },
+  { value: 'gst', label: 'GST (Australia, NZ, Singapore, Canada…)' },
+  { value: 'sales', label: 'Sales tax' },
+  { value: 'gst_intra', label: 'India GST — same state (CGST + SGST)' },
+  { value: 'gst_inter', label: 'India GST — other state (IGST)' },
+  { value: 'custom', label: 'Other tax…' },
 ]
+
+const PRESET_LABELS: Partial<Record<TaxPreset, string>> = { vat: 'VAT', gst: 'GST', sales: 'Sales tax' }
+
+export function taxPresetOf(mode: TaxMode, label: string): TaxPreset {
+  if (mode !== 'custom') return mode
+  const name = label.trim().toLowerCase()
+  const preset = (Object.keys(PRESET_LABELS) as TaxPreset[]).find((key) => PRESET_LABELS[key]!.toLowerCase() === name)
+  return preset ?? 'custom'
+}
+
+export function applyTaxPreset(preset: TaxPreset, currentLabel: string): Pick<InvoiceDraft, 'taxMode' | 'taxLabel'> {
+  if (preset === 'none' || preset === 'gst_intra' || preset === 'gst_inter') return { taxMode: preset, taxLabel: '' }
+  if (preset === 'custom') {
+    // Keep a label the user already typed; clear one that came from a preset.
+    const fromPreset = taxPresetOf('custom', currentLabel) !== 'custom'
+    return { taxMode: 'custom', taxLabel: fromPreset ? '' : currentLabel }
+  }
+  return { taxMode: 'custom', taxLabel: PRESET_LABELS[preset]! }
+}
+
+// US Letter for the US and Canada, A4 everywhere else, unless the user picks.
+export type PaperSize = 'auto' | 'a4' | 'letter'
+
+export function resolvePaper(draft: Pick<InvoiceDraft, 'paper' | 'currency'>): 'a4' | 'letter' {
+  if (draft.paper === 'a4' || draft.paper === 'letter') return draft.paper
+  return draft.currency === 'USD' || draft.currency === 'CAD' ? 'letter' : 'a4'
+}
 
 export interface LineItem {
   id: string
@@ -56,34 +126,73 @@ export interface InvoiceDraft {
   payment: PaymentInfo
   logoDataUrl: string
   style: InvoiceStyleId
+  paper: PaperSize
 }
 
+// Which routing code goes with the bank account. The code itself lives in
+// PaymentInfo.ifsc (named before BillFlow went international; kept so saved
+// details survive).
+export type BankCodeType = 'ifsc' | 'swift' | 'routing' | 'sort' | 'bsb'
+
+export const BANK_CODE_TYPES: { value: BankCodeType; label: string; printed: string; placeholder: string }[] = [
+  { value: 'swift', label: 'SWIFT / BIC', printed: 'SWIFT/BIC', placeholder: 'e.g. BARCGB22' },
+  { value: 'routing', label: 'Routing number (US)', printed: 'Routing no.', placeholder: '9 digits' },
+  { value: 'sort', label: 'Sort code (UK)', printed: 'Sort code', placeholder: 'e.g. 20-00-00' },
+  { value: 'bsb', label: 'BSB (Australia)', printed: 'BSB', placeholder: 'e.g. 062-000' },
+  { value: 'ifsc', label: 'IFSC (India)', printed: 'IFSC', placeholder: 'e.g. HDFC0001234' },
+]
+
 // How the client can pay. Methods are independent toggles — freelancers
-// commonly list both UPI and a bank account.
+// commonly list both a bank account and UPI or a payment link.
 export interface PaymentInfo {
   upi: boolean
   upiId: string
   bank: boolean
   accountName: string
   accountNumber: string
-  ifsc: string
+  codeType: BankCodeType
+  ifsc: string // the bank code for codeType (IFSC, SWIFT, routing no., …)
   bankName: string
   branch: string
+  link: boolean
+  linkUrl: string
   other: boolean
   otherText: string
 }
 
 export const EMPTY_PAYMENT: PaymentInfo = {
-  upi: true,
+  upi: false,
   upiId: '',
-  bank: false,
+  bank: true,
   accountName: '',
   accountNumber: '',
+  codeType: 'swift',
   ifsc: '',
   bankName: '',
   branch: '',
+  link: false,
+  linkUrl: '',
   other: false,
   otherText: '',
+}
+
+// IBANs start with a 2-letter country code and 2 check digits.
+export function looksLikeIban(value: string): boolean {
+  return /^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(value.replace(/\s/g, '').toUpperCase())
+}
+
+// A payment link (PayPal.me, Stripe, Wise…) — http(s) only, so the QR code
+// can never point at something like a javascript: URL.
+export function normalizePaymentLink(value: string): string | null {
+  const raw = value.trim()
+  if (!raw) return null
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`)
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+    return url.hostname.includes('.') ? url.toString() : null
+  } catch {
+    return null
+  }
 }
 
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/
@@ -100,16 +209,25 @@ export function isValidAccountNumber(value: string): boolean {
 // The printed "Payment details" lines, shared by the preview and the PDF.
 export function paymentLines(payment: PaymentInfo): string[] {
   const lines: string[] = []
-  if (payment.upi && payment.upiId.trim()) lines.push(`UPI: ${payment.upiId.trim()}`)
   if (payment.bank) {
     const bankName = payment.bankName.trim()
     const branch = payment.branch.trim()
+    const account = payment.accountNumber.trim()
+    const code = payment.ifsc.trim()
+    const codeLabel = BANK_CODE_TYPES.find((type) => type.value === payment.codeType)?.printed ?? 'Bank code'
     if (payment.accountName.trim()) lines.push(`Account name: ${payment.accountName.trim()}`)
-    if (payment.accountNumber.trim()) lines.push(`A/c no.: ${payment.accountNumber.replace(/\s/g, '')}`)
-    if (payment.ifsc.trim()) lines.push(`IFSC: ${payment.ifsc.trim().toUpperCase()}`)
+    if (account) {
+      lines.push(looksLikeIban(account) ? `IBAN: ${account.toUpperCase()}` : `Account no.: ${account.replace(/\s/g, '')}`)
+    }
+    if (code) lines.push(`${codeLabel}: ${code.toUpperCase()}`)
     if (bankName) lines.push(`Bank: ${bankName}`)
     if (branch) lines.push(`Branch: ${branch}`)
   }
+  if (payment.link) {
+    const url = normalizePaymentLink(payment.linkUrl)
+    if (url) lines.push(`Pay online: ${url.replace(/^https?:\/\//, '').replace(/\/$/, '')}`)
+  }
+  if (payment.upi && payment.upiId.trim()) lines.push(`UPI: ${payment.upiId.trim()}`)
   if (payment.other && payment.otherText.trim()) lines.push(...payment.otherText.trim().split('\n'))
   return lines
 }
@@ -199,17 +317,48 @@ export function computeTotals(draft: InvoiceDraft): InvoiceTotals {
 
 // ---------------------------------------------------------------- formatting
 
-const SCREEN_SYMBOLS: Record<CurrencyCode, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', AED: 'AED ' }
-// jsPDF's built-in Helvetica has no ₹ glyph (it renders as garbage), so the
-// PDF uses plain-ASCII prefixes instead.
-const PDF_SYMBOLS: Record<CurrencyCode, string> = { INR: 'Rs. ', USD: '$', EUR: 'EUR ', GBP: 'GBP ', AED: 'AED ' }
+// Screen symbols are the familiar ones; the space-separated codes are where
+// the symbol alone would be ambiguous or unfamiliar.
+const SCREEN_SYMBOLS: Record<CurrencyCode, string> = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  INR: '₹',
+  CAD: 'CA$',
+  AUD: 'A$',
+  NZD: 'NZ$',
+  SGD: 'S$',
+  AED: 'AED ',
+  SAR: 'SAR ',
+  ZAR: 'R ',
+  CHF: 'CHF ',
+  HKD: 'HK$',
+  MYR: 'RM ',
+  PHP: '₱',
+  NGN: '₦',
+  KES: 'KSh ',
+}
+// jsPDF's built-in fonts only cover Latin-1 (no ₹, ₱ or ₦; € and £ are
+// unreliable), so the PDF uses plain-ASCII prefixes instead.
+const PDF_SYMBOLS: Partial<Record<CurrencyCode, string>> = {
+  USD: '$',
+  INR: 'Rs. ',
+  CAD: 'CA$',
+  AUD: 'A$',
+  NZD: 'NZ$',
+  SGD: 'S$',
+  HKD: 'HK$',
+  ZAR: 'R ',
+  MYR: 'RM ',
+  KES: 'KSh ',
+}
 
 export function formatMoney(minor: number, currency: CurrencyCode, target: 'screen' | 'pdf' = 'screen'): string {
   const formatted = new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Math.abs(minor) / 100)
-  const symbol = (target === 'pdf' ? PDF_SYMBOLS : SCREEN_SYMBOLS)[currency]
+  const symbol = target === 'pdf' ? (PDF_SYMBOLS[currency] ?? `${currency} `) : SCREEN_SYMBOLS[currency]
   return `${minor < 0 ? '-' : ''}${symbol}${formatted}`
 }
 
@@ -287,7 +436,19 @@ const CURRENCY_WORDS: Record<CurrencyCode, { major: string; minor: string }> = {
   USD: { major: 'US Dollars', minor: 'Cents' },
   EUR: { major: 'Euros', minor: 'Cents' },
   GBP: { major: 'Pounds', minor: 'Pence' },
+  CAD: { major: 'Canadian Dollars', minor: 'Cents' },
+  AUD: { major: 'Australian Dollars', minor: 'Cents' },
+  NZD: { major: 'New Zealand Dollars', minor: 'Cents' },
+  SGD: { major: 'Singapore Dollars', minor: 'Cents' },
   AED: { major: 'Dirhams', minor: 'Fils' },
+  SAR: { major: 'Saudi Riyals', minor: 'Halalas' },
+  ZAR: { major: 'Rand', minor: 'Cents' },
+  CHF: { major: 'Swiss Francs', minor: 'Centimes' },
+  HKD: { major: 'Hong Kong Dollars', minor: 'Cents' },
+  MYR: { major: 'Ringgit', minor: 'Sen' },
+  PHP: { major: 'Philippine Pesos', minor: 'Centavos' },
+  NGN: { major: 'Naira', minor: 'Kobo' },
+  KES: { major: 'Kenyan Shillings', minor: 'Cents' },
 }
 
 export function amountInWords(minor: number, currency: CurrencyCode): string {
@@ -316,6 +477,8 @@ export function suggestedGstMode(fromGstin: string, toGstin: string): TaxMode | 
   return fromGstin.trim().slice(0, 2) === toGstin.trim().slice(0, 2) ? 'gst_intra' : 'gst_inter'
 }
 
-export function taxIdLabel(mode: TaxMode): string {
-  return isGst(mode) ? 'GSTIN' : 'Tax ID'
+export function taxIdLabel(mode: TaxMode, taxLabel = ''): string {
+  if (isGst(mode)) return 'GSTIN'
+  if (mode === 'custom' && taxLabel.trim().toUpperCase() === 'VAT') return 'VAT no.'
+  return 'Tax ID'
 }

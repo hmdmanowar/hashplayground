@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react'
+import { DEMO } from '../../lib/demo'
+import { TEMPLATES } from '../../lib/templates'
+import { INVOICE_STYLES } from '../../lib/invoiceStyles'
 import { CheckIcon, DownloadIcon, FileTextIcon, LockIcon, PercentIcon, QrIcon } from '../Icons'
 
 // Phone mockup flanked by staggered pastel cards. The cards state what the
@@ -20,10 +23,10 @@ const LEFT: ProofCard[] = [
     tone: '#fde4e4',
     accent: '#c2410c',
     icon: PercentIcon,
-    title: 'GST maths, done for you on every line.',
+    title: 'Tax maths, done for you on every line.',
     footer: (
       <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-sm">
-        CGST 9% + SGST 9%
+        {DEMO.taxChip}
       </span>
     ),
     offset: 'lg:mt-16',
@@ -36,7 +39,7 @@ const LEFT: ProofCard[] = [
     footer: (
       <span className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 text-xs font-medium text-gray-700 shadow-sm">
         <QrIcon className="h-6 w-6 text-gray-900" />
-        GPay · PhonePe · Paytm
+        {DEMO.india ? 'GPay · PhonePe · Paytm' : DEMO.payApps}
       </span>
     ),
     offset: 'lg:mt-0',
@@ -61,11 +64,13 @@ const RIGHT: ProofCard[] = [
     tone: '#fdf0c4',
     accent: '#b45309',
     icon: FileTextIcon,
-    title: 'Free for every Indian business.',
+    title: 'Free for every business, everywhere.',
     footer: (
       <span className="block rounded-2xl bg-white/80 px-4 py-2 text-center shadow-sm">
-        <span className="block text-2xl font-bold text-gray-900">₹0</span>
-        <span className="block text-[11px] text-gray-600">14 templates · 5 styles</span>
+        <span className="block text-2xl font-bold text-gray-900">{DEMO.free}</span>
+        <span className="block text-[11px] text-gray-600">
+          {TEMPLATES.length} templates · {INVOICE_STYLES.length} styles
+        </span>
       </span>
     ),
     offset: 'lg:mt-16',
@@ -114,30 +119,30 @@ function Phone() {
             <div className="rounded-2xl bg-white p-3 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[9px] tracking-wide text-gray-500 uppercase">Tax invoice</p>
+                  <p className="text-[9px] tracking-wide text-gray-500 uppercase">{DEMO.docTitle}</p>
                   <p className="text-xs font-semibold">INV-0042</p>
                 </div>
                 <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-semibold text-amber-700">Due 17 Oct</span>
               </div>
               <p className="mt-2 text-[10px] text-gray-500">Billed to</p>
-              <p className="text-xs font-medium">Acme Retail Pvt Ltd</p>
+              <p className="text-xs font-medium">{DEMO.client}</p>
               <div className="mt-2 space-y-1 border-t border-gray-100 pt-2 text-[10px]">
                 <div className="flex justify-between">
                   <span>Website design</span>
-                  <span>₹40,000</span>
+                  <span>{DEMO.design}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Maintenance × 3</span>
-                  <span>₹7,500</span>
+                  <span>{DEMO.maintenance}</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
-                  <span>CGST + SGST 18%</span>
-                  <span>₹8,550</span>
+                  <span>{DEMO.taxLine}</span>
+                  <span>{DEMO.tax}</span>
                 </div>
               </div>
               <div className="mt-2 flex justify-between border-t border-gray-100 pt-2 text-sm font-bold">
                 <span>Total</span>
-                <span>₹56,050</span>
+                <span>{DEMO.total}</span>
               </div>
             </div>
 
@@ -147,7 +152,7 @@ function Phone() {
               </span>
               <div>
                 <p className="text-xs font-semibold">Scan to pay</p>
-                <p className="text-[10px] text-gray-500">Any UPI app · exact amount</p>
+                <p className="text-[10px] text-gray-500">{DEMO.payHint}</p>
               </div>
             </div>
 

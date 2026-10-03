@@ -14,7 +14,7 @@ import { GENERATOR_SLUG, TEMPLATES, type InvoiceTemplate } from '../lib/template
 
 const HOW_IT_WORKS = [
   { title: 'Fill in your details', body: 'Add your business, your client and the items you’re billing. Your details are remembered in this browser.' },
-  { title: 'Check the live preview', body: 'Totals, GST split and amount in words update as you type, exactly as they’ll appear on the PDF.' },
+  { title: 'Check the live preview', body: 'Totals, tax and the amount in words update as you type, exactly as they’ll appear on the PDF.' },
   { title: 'Download and send', body: 'Download a clean A4 PDF and email or WhatsApp it to your client. No account needed.' },
 ]
 
@@ -84,7 +84,7 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
         <p className="mt-3 text-sm text-[var(--color-muted)] sm:text-base">{template.intro}</p>
         {template.slug === GENERATOR_SLUG && (
           <p className="mt-3 text-sm">
-            Need a GST, proforma, freelance or export format?{' '}
+            Need a VAT, GST, proforma, freelance or country-specific format?{' '}
             <Link to="/templates/" className="font-semibold text-[var(--color-accent)] hover:underline">
               Browse {TEMPLATES.length - 1} ready-made templates →
             </Link>

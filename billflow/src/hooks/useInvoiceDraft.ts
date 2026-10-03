@@ -4,6 +4,7 @@ import { findUpiId } from '../lib/upi'
 import { GENERATOR_SLUG, type InvoiceTemplate } from '../lib/templates'
 import { readJson, removeKey, writeJson } from '../lib/storage'
 import { getInvoiceStyle } from '../lib/invoiceStyles'
+import { regionDefaults } from '../lib/region'
 
 // Two storage scopes: the seller's own details (business, logo, payment
 // info) are shared by every template page, while the invoice body is saved
@@ -21,23 +22,34 @@ type StoredBusiness = Partial<BusinessFields> & { paymentDetails?: string }
 // Drafts saved before payment details became structured stored one free-text
 // "paymentDetails" string — lift its UPI ID into the UPI field and keep the
 // rest as "Other" text so nothing the user typed is lost.
+// First-visit payment defaults follow the visitor's country: UPI + IFSC in
+// India, a bank transfer with the local routing code elsewhere.
+function defaultPayment(): PaymentInfo {
+  const local = regionDefaults()
+  return { ...EMPTY_PAYMENT, upi: local.upi, codeType: local.codeType }
+}
+
 function migratePayment(stored: StoredBusiness | null): PaymentInfo {
-  if (stored?.payment) return { ...EMPTY_PAYMENT, ...stored.payment }
+  if (stored?.payment) {
+    // Saved before bank codes became selectable: those were always IFSCs.
+    const codeType = stored.payment.codeType ?? 'ifsc'
+    return { ...EMPTY_PAYMENT, ...stored.payment, codeType }
+  }
   const text = stored?.paymentDetails?.trim() ?? ''
-  if (!text) return { ...EMPTY_PAYMENT }
+  if (!text) return defaultPayment()
   const upiId = findUpiId(text)
   const rest = text
     .split('\n')
     .filter((line) => !upiId || !line.includes(upiId))
     .join('\n')
     .trim()
-  return { ...EMPTY_PAYMENT, upi: Boolean(upiId), upiId: upiId ?? '', other: Boolean(rest), otherText: rest }
+  return { ...EMPTY_PAYMENT, upi: Boolean(upiId), upiId: upiId ?? '', bank: false, codeType: 'ifsc', other: Boolean(rest), otherText: rest }
 }
 
 const EMPTY_PARTY: Party = { name: '', address: '', taxId: '', email: '', phone: '' }
 
 export function emptyItem(): LineItem {
-  return { id: newId(), description: '', hsn: '', quantity: '1', rate: '', taxRate: '18' }
+  return { id: newId(), description: '', hsn: '', quantity: '1', rate: '', taxRate: '0' }
 }
 
 function buildDefault(template: InvoiceTemplate): InvoiceDraft {
@@ -57,9 +69,10 @@ function buildDefault(template: InvoiceTemplate): InvoiceDraft {
     to: { ...EMPTY_PARTY },
     items: template.items.map((item) => ({ ...item, id: newId() })),
     notes: template.notes,
-    payment: { ...EMPTY_PAYMENT },
+    payment: defaultPayment(),
     logoDataUrl: '',
     style: getInvoiceStyle(undefined).id,
+    paper: 'auto',
   }
 }
 
@@ -122,7 +135,7 @@ export function useInvoiceDraft(template: InvoiceTemplate, requestedStyle?: stri
   const addItem = useCallback(() => {
     setDraft((prev) => {
       const last = prev.items[prev.items.length - 1]
-      return { ...prev, items: [...prev.items, { ...emptyItem(), taxRate: last?.taxRate ?? '18' }] }
+      return { ...prev, items: [...prev.items, { ...emptyItem(), taxRate: last?.taxRate ?? '0' }] }
     })
   }, [])
 

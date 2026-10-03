@@ -29,7 +29,8 @@ import {
 } from '../components/Icons'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { trackEvent } from '../lib/api'
-import { EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft } from '../lib/invoice'
+import { CURRENCIES, EMPTY_PAYMENT, newId, toIsoDate, type InvoiceDraft } from '../lib/invoice'
+import { detectCountry, localPrice, regionDefaults } from '../lib/region'
 import { INVOICE_STYLES } from '../lib/invoiceStyles'
 import { SAMPLE_LOGO } from '../lib/sampleLogo'
 import { GENERATOR_PATH, LANDING_PAGE, TEMPLATES, findTemplate } from '../lib/templates'
@@ -37,10 +38,47 @@ import { GENERATOR_PATH, LANDING_PAGE, TEMPLATES, findTemplate } from '../lib/te
 // ---------------------------------------------------------------- data
 
 // A sample invoice for the hero, rendered by the real preview component so
-// the landing page always shows exactly what users will get. The UPI handle
-// is deliberately fake (no "@billflow" bank exists) so the demo QR can never
-// send money to a real account.
+// the landing page always shows exactly what users will get. Indian visitors
+// see a GST invoice with a UPI QR; everyone else gets their own currency and
+// usual tax with a payment-link QR. Both pay targets are deliberately fake
+// (no "@billflow" UPI bank exists; example.com is reserved) so the demo QR
+// can never send money anywhere real.
 function sampleDraft(): InvoiceDraft {
+  return detectCountry() === 'IN' ? indiaSample() : localSample()
+}
+
+function localSample(): InvoiceDraft {
+  const country = detectCountry()
+  const local = regionDefaults(country)
+  const today = new Date()
+  const due = new Date(today)
+  due.setDate(due.getDate() + 15)
+  const party = { address: '', taxId: '', email: '', phone: '' }
+  const taxed = local.vatRate !== '0' && local.taxName !== 'Sales tax'
+  return {
+    documentTitle: !taxed ? 'Invoice' : local.taxName === 'VAT' ? 'VAT Invoice' : 'Tax Invoice',
+    invoiceNumber: 'INV-0042',
+    issueDate: toIsoDate(today),
+    dueDate: toIsoDate(due),
+    currency: local.currency,
+    taxMode: taxed ? 'custom' : 'none',
+    taxLabel: taxed ? local.taxName : '',
+    discountPercent: '',
+    from: { ...party, name: 'Your Studio', address: local.seller },
+    to: { ...party, ...local.client },
+    items: [
+      { id: newId(), description: 'Website design and development', hsn: '', quantity: '1', rate: localPrice('1200', local.currency), taxRate: taxed ? local.vatRate : '0' },
+      { id: newId(), description: 'Monthly maintenance', hsn: '', quantity: '3', rate: localPrice('150', local.currency), taxRate: taxed ? local.vatRate : '0' },
+    ],
+    notes: '',
+    payment: { ...EMPTY_PAYMENT, bank: false, link: true, linkUrl: 'https://example.com/pay/yourstudio' },
+    logoDataUrl: SAMPLE_LOGO,
+    style: 'classic',
+    paper: 'auto',
+  }
+}
+
+function indiaSample(): InvoiceDraft {
   const today = new Date()
   const due = new Date(today)
   due.setDate(due.getDate() + 15)
@@ -61,9 +99,10 @@ function sampleDraft(): InvoiceDraft {
       { id: newId(), description: 'Monthly maintenance', hsn: '998316', quantity: '3', rate: '2500', taxRate: '18' },
     ],
     notes: '',
-    payment: { ...EMPTY_PAYMENT, upi: true, upiId: 'yourstudio@billflow' },
+    payment: { ...EMPTY_PAYMENT, bank: false, upi: true, upiId: 'yourstudio@billflow', codeType: 'ifsc' },
     logoDataUrl: SAMPLE_LOGO,
     style: 'classic',
+    paper: 'a4',
   }
 }
 
@@ -80,45 +119,45 @@ const AUDIENCES = [
   'small businesses',
 ]
 
-const HIGHLIGHTS = ['No sign-up', 'GST ready', 'UPI QR on every invoice', 'PDF in seconds']
+const HIGHLIGHTS = ['No sign-up', 'VAT, GST & sales tax', 'Scan-to-pay QR', 'PDF in seconds']
 
 const FACTS = [
   { value: `${TEMPLATES.length}`, label: 'ready-made templates' },
-  { value: '5', label: 'currencies, incl. INR & USD' },
-  { value: '₹0', label: 'to create & download' },
+  { value: `${CURRENCIES.length}`, label: 'currencies, from USD to INR' },
+  { value: 'Free', label: 'to create & download' },
   { value: '< 1 min', label: 'to your first invoice' },
 ]
 
 const FEATURES = [
   {
     icon: PercentIcon,
-    title: 'GST done for you',
-    body: 'CGST + SGST or IGST worked out line by line, with a hint when the GSTINs show which one applies.',
+    title: 'VAT, GST or sales tax',
+    body: 'Pick the tax and a rate per line and the totals work themselves out. Indian GST splits into CGST + SGST or IGST.',
   },
   {
     icon: QrIcon,
-    title: 'Scan-to-pay UPI QR',
-    body: 'Add your UPI ID and every invoice carries a QR with the exact amount, ready for GPay, PhonePe or Paytm.',
+    title: 'Scan-to-pay QR',
+    body: 'Add a PayPal, Stripe or Wise pay link (or a UPI ID in India) and the invoice carries a QR your client can scan.',
   },
   {
     icon: BankIcon,
-    title: 'Bank details in one go',
-    body: 'Type an IFSC and the bank name and branch fill themselves in. Account numbers are checked as you type.',
+    title: 'Bank details done right',
+    body: 'IBAN, SWIFT/BIC, routing number, sort code or BSB. In India, type an IFSC and the bank and branch fill in.',
   },
   {
     icon: FileTextIcon,
     title: 'Templates for every job',
-    body: 'Tax invoice, proforma, export under LUT, freelance, tuition, VAT and more, each with the right wording.',
+    body: 'UK, US and Australian invoices, VAT, GST, proforma, freelance, tuition and more, each with the right wording.',
   },
   {
     icon: GlobeIcon,
     title: 'Bill clients anywhere',
-    body: 'Invoice in INR, USD, EUR, GBP or AED. The amount in words follows the currency you pick.',
+    body: `Invoice in ${CURRENCIES.length} currencies, from USD, EUR and GBP to INR, AUD and AED. Your own is picked for you.`,
   },
   {
     icon: ImageIcon,
     title: 'Your brand on it',
-    body: 'Upload your logo and get a crisp A4 PDF with selectable text that looks great printed or on screen.',
+    body: 'Upload your logo and get a crisp A4 or US Letter PDF with selectable text, great printed or on screen.',
   },
   {
     icon: LockIcon,
@@ -144,16 +183,18 @@ const PERSONAS = [
   { icon: PenIcon, title: 'Designers & writers', body: 'Concepts, deliverables and per-piece work.', slug: 'graphic-designer-invoice' },
   { icon: CameraIcon, title: 'Photographers', body: 'Shoots, editing, albums and advances.', slug: 'photography-invoice' },
   { icon: GraduationIcon, title: 'Tutors & coaches', body: 'Monthly fees, sessions and course material.', slug: 'tutor-invoice-template' },
-  { icon: GlobeIcon, title: 'Exporters', body: 'Foreign clients, USD/EUR, LUT wording.', slug: 'invoice-for-international-clients' },
+  { icon: GlobeIcon, title: 'VAT-registered businesses', body: 'VAT invoices for UK, EU and UAE clients.', slug: 'vat-invoice-generator' },
 ]
 
 const SHOWCASE_SLUGS = [
-  'gst-invoice-format',
-  'proforma-invoice',
   'freelance-invoice-template',
-  'invoice-for-international-clients',
-  'photography-invoice',
+  'uk-invoice-template',
+  'us-invoice-template',
+  'australia-tax-invoice',
+  'gst-invoice-format',
   'vat-invoice-generator',
+  'photography-invoice',
+  'proforma-invoice',
 ]
 
 // ---------------------------------------------------------------- sections
@@ -176,6 +217,13 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
   const [styleIndex, setStyleIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const look = INVOICE_STYLES[styleIndex]
+  const taxRate = draft.items[0]?.taxRate ?? '0'
+  const taxCallout =
+    draft.taxMode === 'gst_intra'
+      ? { label: 'GST worked out', value: `CGST ${Number(taxRate) / 2}% + SGST ${Number(taxRate) / 2}%` }
+      : draft.taxMode === 'custom'
+        ? { label: `${draft.taxLabel} worked out`, value: `${draft.taxLabel} ${taxRate}% on every line` }
+        : { label: 'Totals worked out', value: 'Add VAT, GST or sales tax' }
 
   // Auto-advance through every style; hover pauses, reduced motion opts out
   // (the dots still let anyone flip through manually).
@@ -190,10 +238,10 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
       <div className="bf-fade-in">
         <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-panel)] bg-[var(--bg-panel)] px-3 py-1 text-xs font-medium text-[var(--color-muted)]">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Free invoicing for India, built by Hash Playground
+          Free invoicing worldwide, built by Hash Playground
         </span>
         <h1 className="mt-5 text-4xl leading-tight font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Free GST invoicing for{' '}
+          Free invoicing for{' '}
           {/* Fixed two-line slot so the layout doesn't jump as words change */}
           <span className="block min-h-[2.4em] sm:min-h-[1.2em]">
             <TypewriterWords
@@ -255,15 +303,17 @@ function Hero({ draft }: { draft: InvoiceDraft }) {
           ))}
         </div>
         <div className="bf-float absolute top-[38%] left-2 rounded-2xl border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 shadow-xl sm:-left-10">
-          <p className="text-[11px] text-[var(--color-muted)]">GST worked out</p>
-          <p className="text-sm font-semibold">CGST 9% + SGST 9%</p>
+          <p className="text-[11px] text-[var(--color-muted)]">{taxCallout.label}</p>
+          <p className="text-sm font-semibold">{taxCallout.value}</p>
         </div>
         <div className="bf-float-delayed absolute right-2 bottom-24 hidden rounded-2xl sm:block border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-3 shadow-xl sm:-right-8">
           <p className="flex items-center gap-1.5 text-sm font-semibold">
             <QrIcon className="h-4 w-4 text-[var(--color-accent)]" />
             Scan to pay
           </p>
-          <p className="text-[11px] text-[var(--color-muted)]">Any UPI app, exact amount</p>
+          <p className="text-[11px] text-[var(--color-muted)]">
+            {draft.payment.upi ? 'Any UPI app, exact amount' : 'Straight to your pay link'}
+          </p>
         </div>
         <div
           className="bf-float absolute left-6 flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-xl"
@@ -321,7 +371,7 @@ function Features() {
         eyebrow="Everything an invoice needs"
         title="Invoicing"
         accent="without the busywork"
-        body="All the details Indian clients and accountants expect, filled in for you so you can get back to work."
+        body="All the details clients and accountants expect, wherever you work, filled in so you can get back to it."
       />
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((feature) => {
@@ -390,7 +440,7 @@ function Personas() {
     <section className="mx-auto max-w-7xl px-4 py-20">
       <SectionHeading
         eyebrow="Who it’s for"
-        title="Built for Indian businesses,"
+        title="Built for businesses everywhere,"
         accent="especially yours"
         body="Start from a template made for the way you bill."
       />

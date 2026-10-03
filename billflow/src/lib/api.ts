@@ -3,7 +3,10 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 export type BillflowEventType = 'page_view' | 'pdf_downloaded' | 'upgrade_clicked'
-export type PriceIntent = 199 | 299 | 499
+// Monthly price a waitlist signup would pay: rupees for India, US dollars
+// everywhere else (the two ranges never overlap, so the number alone says
+// which currency it is).
+export type PriceIntent = 199 | 299 | 499 | 5 | 9 | 15
 
 // Fire-and-forget — analytics must never block or break the generator.
 // Sends the Hash Playground session cookie so the backend can skip admins'

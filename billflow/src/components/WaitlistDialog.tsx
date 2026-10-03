@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { joinWaitlist, type PriceIntent } from '../lib/api'
+import { detectCountry } from '../lib/region'
 import { CheckIcon, XIcon } from './Icons'
 
-const PRICE_OPTIONS: { value: PriceIntent; label: string }[] = [
-  { value: 199, label: '₹199 / month' },
-  { value: 299, label: '₹299 / month' },
-  { value: 499, label: '₹499 / month' },
-]
+const PRICE_OPTIONS: { value: PriceIntent; label: string }[] =
+  detectCountry() === 'IN'
+    ? [
+        { value: 199, label: '₹199 / month' },
+        { value: 299, label: '₹299 / month' },
+        { value: 499, label: '₹499 / month' },
+      ]
+    : [
+        { value: 5, label: '$5 / month' },
+        { value: 9, label: '$9 / month' },
+        { value: 15, label: '$15 / month' },
+      ]
 
 interface WaitlistDialogProps {
   open: boolean
@@ -17,7 +25,7 @@ interface WaitlistDialogProps {
 
 function WaitlistDialog({ open, source, defaultEmail, onClose }: WaitlistDialogProps) {
   const [email, setEmail] = useState('')
-  const [priceIntent, setPriceIntent] = useState<PriceIntent>(299)
+  const [priceIntent, setPriceIntent] = useState<PriceIntent>(PRICE_OPTIONS[1].value)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done'>('idle')
   const [alreadyJoined, setAlreadyJoined] = useState(false)
   const [error, setError] = useState('')

@@ -45,7 +45,14 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         body: z.object({
           email: z.string().trim().email().max(254),
-          priceIntent: z.union([z.literal(199), z.literal(299), z.literal(499)]),
+          priceIntent: z.union([
+            z.literal(199),
+            z.literal(299),
+            z.literal(499),
+            z.literal(5),
+            z.literal(9),
+            z.literal(15),
+          ]),
           source: slugSchema,
         }),
         response: { 200: z.object({ alreadyJoined: z.boolean() }) },

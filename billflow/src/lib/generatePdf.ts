@@ -7,22 +7,22 @@ import {
   formatQuantity,
   hasTax,
   paymentLines,
+  resolvePaper,
   taxIdLabel,
   toMinor,
   type InvoiceDraft,
   type Party,
 } from './invoice'
-import { qrDataUrl, upiPaymentFor } from './upi'
+import { qrDataUrl, scanToPayFor } from './upi'
 import { getInvoiceStyle, hexToRgb } from './invoiceStyles'
 
 // Draws the invoice directly with jsPDF (same approach as the main app's
 // Portfolio/generateResumePdf.ts) rather than screenshotting the preview:
 // real selectable text, small files and identical output in every browser.
 
-const PAGE_WIDTH = 210 // A4, mm
-const PAGE_HEIGHT = 297
+// Page sizes in mm. Everything below is laid out relative to these.
+const PAPER = { a4: { width: 210, height: 297 }, letter: { width: 215.9, height: 279.4 } } as const
 const MARGIN = 14
-const RIGHT = PAGE_WIDTH - MARGIN
 const LINE = 4.6
 const PT_TO_MM = 25.4 / 72
 const COLOR_TEXT: [number, number, number] = [30, 32, 38]
@@ -57,7 +57,11 @@ interface Column {
 }
 
 export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const paper = resolvePaper(draft)
+  const PAGE_WIDTH = PAPER[paper].width
+  const PAGE_HEIGHT = PAPER[paper].height
+  const RIGHT = PAGE_WIDTH - MARGIN
+  const doc = new jsPDF({ unit: 'mm', format: paper })
   const totals = computeTotals(draft)
   const taxed = hasTax(draft.taxMode)
   const money = (minor: number) => formatMoney(minor, draft.currency, 'pdf')
@@ -180,7 +184,7 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     setText(9.5, 'normal', COLOR_MUTED)
     const rows = [
       ...data.address.split('\n').filter((line) => line.trim()),
-      data.taxId ? `${taxIdLabel(draft.taxMode)}: ${data.taxId.toUpperCase()}` : '',
+      data.taxId ? `${taxIdLabel(draft.taxMode, draft.taxLabel)}: ${data.taxId.toUpperCase()}` : '',
       data.email,
       data.phone,
     ].filter(Boolean)
@@ -375,11 +379,11 @@ export async function generateInvoicePdf(draft: InvoiceDraft): Promise<void> {
     y = top + blockHeight + 4
   }
 
-  const upi = upiPaymentFor(draft)
+  const upi = scanToPayFor(draft)
   const upiQr = upi
     ? {
         dataUrl: await qrDataUrl(upi.uri),
-        caption: [upi.amountMinor > 0 ? `Scan to pay ${money(upi.amountMinor)}` : 'Scan to pay', 'with any UPI app'],
+        caption: [upi.amountMinor > 0 ? `Scan to pay ${money(upi.amountMinor)}` : 'Scan to pay', upi.via],
       }
     : undefined
   block('PAYMENT DETAILS', paymentLines(draft.payment).join('\n'), upiQr)

@@ -50,6 +50,12 @@ function GateMeter({ label, value, target }: { label: string; value: number; tar
   )
 }
 
+// Waitlist prices are rupees for India (199/299/499) and US dollars
+// elsewhere (5/9/15); the ranges never overlap.
+function formatIntent(price: number): string {
+  return price < 100 ? `${price}/mo` : `₹${price}/mo`
+}
+
 // Irreversible wipe of BillFlow events, confirmed by re-entering the top
 // admin's account password (checked server-side). The Pro waitlist is kept
 // unless the admin explicitly ticks the force option.
@@ -365,7 +371,7 @@ function AdminBillflow() {
           <div className="mt-2 space-y-2">
             {stats.priceIntents.map((row) => (
               <div key={row.priceIntent} className="flex items-center gap-3 text-sm">
-                <span className="w-24 shrink-0">₹{row.priceIntent}/mo</span>
+                <span className="w-24 shrink-0">{formatIntent(row.priceIntent)}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-app)]">
                   <div
                     className="h-full rounded-full bg-[var(--color-primary)]"
@@ -404,7 +410,7 @@ function AdminBillflow() {
                 stats.recentSignups.map((row) => (
                   <tr key={row.email} className="border-t border-[var(--border-panel)]">
                     <td className="px-3 py-2 break-all">{row.email}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">₹{row.priceIntent}/mo</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{formatIntent(row.priceIntent)}</td>
                     <td className="px-3 py-2">/billflow/{row.source ?? ''}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{new Date(row.createdAt).toLocaleDateString()}</td>
                   </tr>

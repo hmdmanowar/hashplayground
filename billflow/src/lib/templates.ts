@@ -1,5 +1,10 @@
 import data from '../data/templates.json'
 import type { CurrencyCode, TaxMode } from './invoice'
+import { detectCountry, localPrice, regionDefaults } from './region'
+
+// 'global' templates are written in USD and localised to the visitor's
+// country at runtime; the others are tied to one country's rules.
+export type TemplateRegion = 'global' | 'IN' | 'GB' | 'US' | 'AU' | 'AE'
 
 // templates.json is the single source for both this app and the build-time
 // prerender (scripts/prerender.mjs), which turns each entry into a static
@@ -11,6 +16,7 @@ export interface PageMeta {
 }
 
 export interface InvoiceTemplate extends PageMeta {
+  region: TemplateRegion
   label: string
   h1: string
   intro: string
@@ -36,7 +42,34 @@ export interface GuideSection {
 }
 
 export const SITE_ORIGIN = data.siteOrigin
-export const TEMPLATES = data.templates as InvoiceTemplate[]
+// A global template in the visitor's own currency, with prices converted
+// and any VAT-style tax renamed and re-rated to what's usual locally (an
+// Australian visitor's VAT invoice becomes GST at 10%).
+function localize(template: InvoiceTemplate): InvoiceTemplate {
+  if (template.region !== 'global') return template
+  const local = regionDefaults(detectCountry())
+  const taxed = template.taxMode === 'custom'
+  return {
+    ...template,
+    currency: local.currency,
+    taxLabel: taxed ? local.taxName : template.taxLabel,
+    documentTitle:
+      taxed && template.documentTitle === 'VAT Invoice'
+        ? local.taxName === 'VAT'
+          ? 'VAT Invoice'
+          : local.taxName === 'GST'
+            ? 'Tax Invoice'
+            : 'Invoice'
+        : template.documentTitle,
+    items: template.items.map((item) => ({
+      ...item,
+      rate: localPrice(item.rate, local.currency),
+      taxRate: taxed ? local.vatRate : item.taxRate,
+    })),
+  }
+}
+
+export const TEMPLATES = (data.templates as InvoiceTemplate[]).map(localize)
 
 // The /billflow/ landing page and the /billflow/templates/ gallery page.
 export const LANDING_PAGE = data.landingPage

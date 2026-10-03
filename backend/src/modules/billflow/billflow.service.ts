@@ -2,7 +2,8 @@ import { prisma } from '../../lib/prisma.js'
 import { verifyPasswordHash } from '../../lib/password.js'
 import { ApiError } from '../../middleware/errorHandler.js'
 
-export const BILLFLOW_PRICE_INTENTS = [199, 299, 499] as const
+// Rupee prices for India, US-dollar prices elsewhere (ranges never overlap).
+export const BILLFLOW_PRICE_INTENTS = [199, 299, 499, 5, 9, 15] as const
 export const BILLFLOW_EVENT_TYPES = ['page_view', 'pdf_downloaded', 'upgrade_clicked'] as const
 export type BillflowEventType = (typeof BILLFLOW_EVENT_TYPES)[number]
 

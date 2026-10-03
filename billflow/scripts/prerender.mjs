@@ -32,8 +32,12 @@ const jsonLd = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
 
 const pageUrl = (slug) => `${data.siteOrigin}${data.basePath}${slug ? `${slug}/` : ''}`
 const gallery = data.galleryPage
-// 1200x630 social card (JPEG, ~120 KB: WhatsApp skips previews over ~300 KB)
-const ogImage = `${data.siteOrigin}${data.basePath}og-billflow.jpg`
+// 1200x630 social cards (JPEG, ~120 KB: WhatsApp skips previews over ~300 KB):
+// a global one, and a GST/UPI one for the India-specific pages.
+const ogImageFor = (page) => `${data.siteOrigin}${data.basePath}${page.region === 'IN' ? 'og-billflow-in.jpg' : 'og-billflow.jpg'}`
+// Country pages say which English they're written for; the rest are global.
+const LOCALES = { IN: 'en_IN', GB: 'en_GB', AU: 'en_AU', AE: 'en_AE' }
+const localeFor = (page) => LOCALES[page.region] ?? 'en_US'
 const logoUrl = `${data.siteOrigin}${data.basePath}billflow-logo.png`
 
 // Breadcrumb trail as schema.org BreadcrumbList
@@ -47,6 +51,7 @@ function head(template, extraStructured = []) {
   const url = pageUrl(template.slug)
   const title = escapeHtml(template.metaTitle)
   const description = escapeHtml(template.metaDescription)
+  const ogImage = ogImageFor(template)
   const structured = [
     {
       '@context': 'https://schema.org',
@@ -56,7 +61,7 @@ function head(template, extraStructured = []) {
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Any (browser-based)',
       description: template.metaDescription,
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     },
     ...(template.faq?.length
       ? [
@@ -80,7 +85,7 @@ function head(template, extraStructured = []) {
     `<link rel="canonical" href="${url}" />`,
     '<meta property="og:type" content="website" />',
     '<meta property="og:site_name" content="BillFlow" />',
-    '<meta property="og:locale" content="en_IN" />',
+    `<meta property="og:locale" content="${localeFor(template)}" />`,
     `<meta property="og:url" content="${url}" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
@@ -88,7 +93,7 @@ function head(template, extraStructured = []) {
     '<meta property="og:image:type" content="image/jpeg" />',
     '<meta property="og:image:width" content="1200" />',
     '<meta property="og:image:height" content="630" />',
-    '<meta property="og:image:alt" content="BillFlow: free GST invoice generator with UPI QR and PDF download" />',
+    '<meta property="og:image:alt" content="BillFlow: free invoice generator with VAT, GST or sales tax and PDF download" />',
     '<meta name="twitter:card" content="summary_large_image" />',
     `<meta name="twitter:title" content="${title}" />`,
     `<meta name="twitter:description" content="${description}" />`,

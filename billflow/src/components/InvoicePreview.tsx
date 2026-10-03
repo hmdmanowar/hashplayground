@@ -13,7 +13,7 @@ import {
   type Party,
 } from '../lib/invoice'
 import { getInvoiceStyle } from '../lib/invoiceStyles'
-import { useUpiQr } from '../lib/upi'
+import { useScanToPayQr } from '../lib/upi'
 
 // A paper-white sheet in both themes — it previews a printed document, so
 // it deliberately ignores the app's dark palette. Mirrors generatePdf.ts:
@@ -60,8 +60,8 @@ function InvoicePreview({
   const taxed = hasTax(draft.taxMode)
   const showHsn = draft.items.some((item) => item.hsn.trim())
   const money = (minor: number) => formatMoney(minor, draft.currency)
-  const taxLabel = taxIdLabel(draft.taxMode)
-  const upi = useUpiQr(draft)
+  const taxLabel = taxIdLabel(draft.taxMode, draft.taxLabel)
+  const upi = useScanToPayQr(draft)
   const payLines = paymentLines(draft.payment)
   const look = getInvoiceStyle(draft.style)
   const topTitle = look.layout !== 'split'
@@ -293,7 +293,7 @@ function InvoicePreview({
           </div>
           {upi.payment && upi.dataUrl && (
             <figure className="shrink-0 text-center">
-              <img src={upi.dataUrl} alt={`UPI QR code to pay ${upi.payment.upiId}`} className="h-24 w-24" />
+              <img src={upi.dataUrl} alt={upi.payment.alt} className="h-24 w-24" />
               <figcaption className="mt-1 text-[10px] leading-tight text-gray-500">
                 Scan to pay
                 {upi.payment.amountMinor > 0 && (
@@ -303,7 +303,7 @@ function InvoicePreview({
                   </>
                 )}
                 <br />
-                with any UPI app
+                {upi.payment.via}
               </figcaption>
             </figure>
           )}

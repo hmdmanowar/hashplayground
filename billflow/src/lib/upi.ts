@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { computeTotals, type InvoiceDraft } from './invoice'
+import { computeTotals, normalizePaymentLink, type InvoiceDraft } from './invoice'
 
 // A UPI ID is handle@psp, e.g. "name@okaxis" or "98765@ybl". The PSP part
 // never contains a dot, which is how "name@gmail.com" is told apart from it.
@@ -32,6 +32,24 @@ export interface UpiPayment {
   amountMinor: number
 }
 
+// What the invoice's scan-to-pay QR encodes: a UPI deep link (India, INR)
+// or, failing that, the seller's payment link (PayPal, Stripe, Wise…).
+export interface ScanToPay {
+  kind: 'upi' | 'link'
+  uri: string
+  amountMinor: number
+  alt: string
+  via: string // caption's last line
+}
+
+export function scanToPayFor(draft: InvoiceDraft): ScanToPay | null {
+  const upi = upiPaymentFor(draft)
+  if (upi) return { kind: 'upi', uri: upi.uri, amountMinor: upi.amountMinor, alt: `UPI QR code to pay ${upi.upiId}`, via: 'with any UPI app' }
+  const link = draft.payment.link ? normalizePaymentLink(draft.payment.linkUrl) : null
+  if (!link) return null
+  return { kind: 'link', uri: link, amountMinor: computeTotals(draft).total, alt: 'QR code for the payment link', via: 'online' }
+}
+
 // UPI only settles in INR, so a USD/EUR invoice gets no QR.
 export function upiPaymentFor(draft: InvoiceDraft): UpiPayment | null {
   const upiId = draft.payment.upiId.trim()
@@ -50,14 +68,14 @@ export function upiPaymentFor(draft: InvoiceDraft): UpiPayment | null {
   return { upiId, uri: `upi://pay?${query}`, amountMinor }
 }
 
-// qrcode is loaded on demand — only invoices with a UPI ID need it.
+// qrcode is loaded on demand — only invoices with a UPI ID or pay link need it.
 export async function qrDataUrl(text: string): Promise<string> {
   const QRCode = await import('qrcode')
   return QRCode.toDataURL(text, { errorCorrectionLevel: 'M', margin: 1, width: 320 })
 }
 
-export function useUpiQr(draft: InvoiceDraft): { payment: UpiPayment | null; dataUrl: string | null } {
-  const payment = upiPaymentFor(draft)
+export function useScanToPayQr(draft: InvoiceDraft): { payment: ScanToPay | null; dataUrl: string | null } {
+  const payment = scanToPayFor(draft)
   const uri = payment?.uri ?? null
   const [qr, setQr] = useState<{ uri: string; dataUrl: string } | null>(null)
 

@@ -32,29 +32,30 @@ type IconComponent = (props: { className?: string }) => React.ReactElement
 
 const FILTERS: { id: string; label: string; icon: IconComponent; match: (template: InvoiceTemplate) => boolean }[] = [
   { id: 'all', label: 'All', icon: SparkleIcon, match: () => true },
-  { id: 'gst', label: 'GST', icon: PercentIcon, match: (t) => isGst(t.taxMode) },
-  { id: 'no-gst', label: 'Without GST', icon: FileTextIcon, match: (t) => t.taxMode === 'none' && t.currency === 'INR' },
-  { id: 'intl', label: 'International', icon: GlobeIcon, match: (t) => t.currency !== 'INR' },
+  { id: 'global', label: 'Any country', icon: GlobeIcon, match: (t) => t.region === 'global' },
+  { id: 'vat', label: 'VAT & GST', icon: PercentIcon, match: (t) => t.taxMode !== 'none' },
+  { id: 'country', label: 'UK · US · Australia', icon: FileTextIcon, match: (t) => ['GB', 'US', 'AU'].includes(t.region) },
+  { id: 'india', label: 'India', icon: FileTextIcon, match: (t) => t.region === 'IN' },
   { id: 'creative', label: 'Creative', icon: CameraIcon, match: (t) => CREATIVE.has(t.slug) },
   { id: 'services', label: 'Services', icon: BriefcaseIcon, match: (t) => SERVICES.has(t.slug) },
 ]
 
 // The most-searched formats get a "Popular" badge.
-const POPULAR = new Set(['gst-invoice-format', 'freelance-invoice-template', 'invoice-for-international-clients'])
+const POPULAR = new Set(['freelance-invoice-template', 'invoice-generator', 'gst-invoice-format'])
 
 // Fanned stack in the hero: three different templates as real previews.
 const HERO_STACK: { slug: string; style: InvoiceStyleId }[] = [
   { slug: 'photography-invoice', style: 'studio' },
   { slug: 'gst-invoice-format', style: 'classic' },
-  { slug: 'invoice-for-international-clients', style: 'modern' },
+  { slug: 'uk-invoice-template', style: 'modern' },
 ]
 
-const TRUST_POINTS = ['Free forever', 'No sign-up', 'GST-ready', 'Data stays in your browser']
+const TRUST_POINTS = ['Free forever', 'No sign-up', 'Any currency & tax', 'Data stays in your browser']
 
 const INCLUDED: { icon: IconComponent; title: string; body: string }[] = [
-  { icon: PercentIcon, title: 'GST worked out', body: 'CGST + SGST or IGST, suggested from both GSTINs.' },
-  { icon: QrIcon, title: 'Scan-to-pay UPI QR', body: 'Add your UPI ID and a QR code prints on the invoice.' },
-  { icon: FileTextIcon, title: 'Amount in words', body: 'In lakh and crore for rupee invoices, automatically.' },
+  { icon: PercentIcon, title: 'Tax worked out', body: 'VAT, GST or sales tax per line, and India’s CGST + SGST or IGST.' },
+  { icon: QrIcon, title: 'Scan-to-pay QR', body: 'Add a pay link (or UPI ID in India) and a QR prints on the invoice.' },
+  { icon: FileTextIcon, title: 'Amount in words', body: 'In your currency, with lakh and crore for rupee invoices.' },
   { icon: LockIcon, title: 'Private by design', body: 'Nothing is uploaded. The PDF is made in your browser.' },
 ]
 
@@ -381,7 +382,7 @@ function TemplatesPage() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search e.g. GST, proforma, photographer…"
+              placeholder="Search e.g. VAT, UK, proforma, photographer…"
               className="w-full rounded-full border border-[var(--border-panel)] bg-[var(--bg-panel)] px-4 py-2 pr-9 text-sm outline-none transition-colors focus:border-[var(--color-primary)]"
             />
             {query && (

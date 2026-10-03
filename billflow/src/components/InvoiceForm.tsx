@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import {
   CURRENCIES,
-  TAX_MODES,
+  TAX_PRESETS,
+  BANK_CODE_TYPES,
+  applyTaxPreset,
+  normalizePaymentLink,
+  taxPresetOf,
+  type BankCodeType,
+  type PaperSize,
+  type TaxPreset,
   computeTotals,
   formatMoney,
   hasTax,
@@ -88,11 +95,30 @@ function UpiHint({ upiId, currency }: { upiId: string; currency: CurrencyCode })
   )
 }
 
-const PAYMENT_METHODS: { key: 'upi' | 'bank' | 'other'; label: string }[] = [
-  { key: 'upi', label: 'UPI' },
+const PAYMENT_METHODS: { key: 'bank' | 'link' | 'upi' | 'other'; label: string }[] = [
   { key: 'bank', label: 'Bank transfer' },
+  { key: 'link', label: 'Payment link' },
+  { key: 'upi', label: 'UPI (India)' },
   { key: 'other', label: 'Other' },
 ]
+
+const PAPER_OPTIONS: { value: PaperSize; label: string }[] = [
+  { value: 'auto', label: 'Auto (Letter for USD/CAD, else A4)' },
+  { value: 'a4', label: 'A4' },
+  { value: 'letter', label: 'US Letter' },
+]
+
+function LinkHint({ url, hasUpiQr }: { url: string; hasUpiQr: boolean }) {
+  if (!url.trim()) return <span className={MUTED}>A PayPal.me, Stripe, Wise or other pay link. It prints with a scan-to-pay QR code.</span>
+  if (!normalizePaymentLink(url)) return <span className={WARN}>Enter a full link, like paypal.me/yourname.</span>
+  if (hasUpiQr) return <span className={MUTED}>The UPI QR code is shown on the invoice; this link is printed as text.</span>
+  return (
+    <span className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
+      <CheckIcon className="h-3.5 w-3.5 shrink-0" />
+      A scan-to-pay QR code for this link is added to the invoice.
+    </span>
+  )
+}
 
 function PaymentFields({
   payment,
@@ -105,7 +131,10 @@ function PaymentFields({
 }) {
   const accountNumber = payment.accountNumber.trim()
   const ifsc = payment.ifsc.trim()
-  const ifscLookup = useIfscLookup(payment.bank ? ifsc : '')
+  const isIfsc = payment.codeType === 'ifsc'
+  const ifscLookup = useIfscLookup(payment.bank && isIfsc ? ifsc : '')
+  const codeType = BANK_CODE_TYPES.find((type) => type.value === payment.codeType) ?? BANK_CODE_TYPES[0]
+  const hasUpiQr = payment.upi && isValidUpiId(payment.upiId) && currency === 'INR'
 
   // Fill bank name / branch from the IFSC, but never clobber something the
   // user typed: only fields that are empty or still hold our last auto-fill.
@@ -124,7 +153,8 @@ function PaymentFields({
   }, [found])
 
   let ifscHint: ReactNode
-  if (ifsc && !isValidIfsc(ifsc)) ifscHint = <span className={WARN}>IFSC is 11 characters, like HDFC0001234.</span>
+  if (!isIfsc) ifscHint = undefined
+  else if (ifsc && !isValidIfsc(ifsc)) ifscHint = <span className={WARN}>IFSC is 11 characters, like HDFC0001234.</span>
   else if (ifscLookup.status === 'loading') ifscHint = <span className={MUTED}>Looking up bank…</span>
   else if (ifscLookup.status === 'not_found')
     ifscHint = <span className={WARN}>IFSC not found. Please check the code.</span>
@@ -187,28 +217,44 @@ function PaymentFields({
               />
             </Field>
           </div>
-          <Field
-            label="Account number"
-            hint={
-              accountNumber && !isValidAccountNumber(accountNumber) ? (
-                <span className={WARN}>Account numbers are usually 9–18 digits.</span>
-              ) : undefined
-            }
-          >
-            <input
+          <div className="sm:col-span-2">
+            <Field
+              label="Account number or IBAN"
+              hint={
+                isIfsc && accountNumber && !isValidAccountNumber(accountNumber) ? (
+                  <span className={WARN}>Indian account numbers are usually 9–18 digits.</span>
+                ) : undefined
+              }
+            >
+              <input
+                className="bf-input"
+                autoComplete="off"
+                spellCheck={false}
+                value={payment.accountNumber}
+                onChange={(e) => updatePayment({ accountNumber: e.target.value })}
+              />
+            </Field>
+          </div>
+          <Field label="Bank code type">
+            <select
               className="bf-input"
-              inputMode="numeric"
-              autoComplete="off"
-              value={payment.accountNumber}
-              onChange={(e) => updatePayment({ accountNumber: e.target.value })}
-            />
+              value={payment.codeType}
+              onChange={(e) => updatePayment({ codeType: e.target.value as BankCodeType })}
+            >
+              {BANK_CODE_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
           </Field>
-          <Field label="IFSC" hint={ifscHint}>
+          <Field label={`${codeType.label.replace(/ \(.*\)$/, '')} (optional)`} hint={ifscHint}>
             <input
               className="bf-input uppercase"
-              maxLength={11}
+              maxLength={isIfsc ? 11 : 34}
               autoComplete="off"
               spellCheck={false}
+              placeholder={codeType.placeholder}
               value={payment.ifsc}
               onChange={(e) => updatePayment({ ifsc: e.target.value.toUpperCase() })}
             />
@@ -222,12 +268,27 @@ function PaymentFields({
         </div>
       )}
 
+      {payment.link && (
+        <Field label="Payment link" hint={<LinkHint url={payment.linkUrl} hasUpiQr={hasUpiQr} />}>
+          <input
+            className="bf-input"
+            type="url"
+            inputMode="url"
+            placeholder="paypal.me/yourname"
+            autoComplete="off"
+            spellCheck={false}
+            value={payment.linkUrl}
+            onChange={(e) => updatePayment({ linkUrl: e.target.value })}
+          />
+        </Field>
+      )}
+
       {payment.other && (
         <Field label="Other payment details">
           <textarea
             className="bf-input resize-y"
             rows={2}
-            placeholder="PayPal, cheque, cash on delivery…"
+            placeholder="Cheque, cash, payment terms…"
             value={payment.otherText}
             onChange={(e) => updatePayment({ otherText: e.target.value })}
           />
@@ -241,11 +302,13 @@ function PartyFields({
   side,
   party,
   mode,
+  taxLabel,
   updateParty,
 }: {
   side: 'from' | 'to'
   party: Party
   mode: TaxMode
+  taxLabel: string
   updateParty: InvoiceFormProps['updateParty']
 }) {
   const set = (patch: Partial<Party>) => updateParty(side, patch)
@@ -266,7 +329,7 @@ function PartyFields({
           />
         </Field>
       </div>
-      <Field label={`${taxIdLabel(mode)} (optional)`} hint={<GstinHint value={party.taxId} mode={mode} />}>
+      <Field label={`${taxIdLabel(mode, taxLabel)} (optional)`} hint={<GstinHint value={party.taxId} mode={mode} />}>
         <input
           className="bf-input uppercase"
           value={party.taxId}
@@ -366,15 +429,19 @@ function InvoiceForm({
             </select>
           </Field>
           <Field label="Tax">
-            <select className="bf-input" value={draft.taxMode} onChange={(e) => update({ taxMode: e.target.value as TaxMode })}>
-              {TAX_MODES.map((mode) => (
-                <option key={mode.value} value={mode.value}>
-                  {mode.label}
+            <select
+              className="bf-input"
+              value={taxPresetOf(draft.taxMode, draft.taxLabel)}
+              onChange={(e) => update(applyTaxPreset(e.target.value as TaxPreset, draft.taxLabel))}
+            >
+              {TAX_PRESETS.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
                 </option>
               ))}
             </select>
           </Field>
-          {draft.taxMode === 'custom' && (
+          {taxPresetOf(draft.taxMode, draft.taxLabel) === 'custom' && (
             <Field label="Tax name">
               <input
                 className="bf-input"
@@ -384,6 +451,15 @@ function InvoiceForm({
               />
             </Field>
           )}
+          <Field label="Paper size">
+            <select className="bf-input" value={draft.paper} onChange={(e) => update({ paper: e.target.value as PaperSize })}>
+              {PAPER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Field>
           <Field label="Discount % (optional)">
             <input
               className="bf-input"
@@ -428,11 +504,11 @@ function InvoiceForm({
           </label>
           {logoError && <span className="text-xs text-red-600 dark:text-red-400">{logoError}</span>}
         </div>
-        <PartyFields side="from" party={draft.from} mode={draft.taxMode} updateParty={updateParty} />
+        <PartyFields side="from" party={draft.from} mode={draft.taxMode} taxLabel={draft.taxLabel} updateParty={updateParty} />
       </Section>
 
       <Section title="Bill to">
-        <PartyFields side="to" party={draft.to} mode={draft.taxMode} updateParty={updateParty} />
+        <PartyFields side="to" party={draft.to} mode={draft.taxMode} taxLabel={draft.taxLabel} updateParty={updateParty} />
       </Section>
 
       <Section title="Items">
