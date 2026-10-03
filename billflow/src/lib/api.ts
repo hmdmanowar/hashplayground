@@ -1,5 +1,7 @@
 // Same convention as the main app's apiClient: '/api' in dev (Vite proxy),
 // VITE_API_BASE_URL (the backend's Render domain) in production.
+import { detectCountry } from './region'
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 export type BillflowEventType = 'page_view' | 'pdf_downloaded' | 'upgrade_clicked'
@@ -16,7 +18,8 @@ export function trackEvent(type: BillflowEventType, slug: string): void {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, slug }),
+    // The browser's best guess at the country; the backend prefers Cloudflare's.
+    body: JSON.stringify({ type, slug, country: detectCountry() }),
     keepalive: true,
   }).catch(() => {})
 }
@@ -29,7 +32,7 @@ export async function joinWaitlist(input: {
   const response = await fetch(`${API_BASE}/billflow/waitlist`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
+    body: JSON.stringify({ ...input, country: detectCountry() }),
   })
   if (!response.ok) {
     const payload = await response.json().catch(() => null)

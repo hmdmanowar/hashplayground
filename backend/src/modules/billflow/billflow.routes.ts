@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import {
@@ -19,6 +19,29 @@ const slugSchema = z
   .regex(/^[a-z0-9-]*$/)
   .optional()
 
+// Two-letter country code from the browser's own guess (timezone/language;
+// "EU" when only the eurozone is known).
+const countrySchema = z
+  .string()
+  .regex(/^[A-Z]{2}$/)
+  .optional()
+
+// Cloudflare's IP-based country wins when present (XX = unknown, T1 = Tor);
+// otherwise fall back to what the browser reported.
+function visitorCountry(request: FastifyRequest, reported: string | undefined): string | undefined {
+  const header = request.headers['cf-ipcountry']
+  const cf = typeof header === 'string' ? header.toUpperCase() : ''
+  return /^[A-Z]{2}$/.test(cf) && cf !== 'XX' && cf !== 'T1' ? cf : reported
+}
+
+const countryRowSchema = z.object({
+  country: z.string().nullable(),
+  views: z.number(),
+  downloads: z.number(),
+  upgradeClicks: z.number(),
+  signups: z.number(),
+})
+
 const statsDtoSchema = z.object({
   range: z.enum(BILLFLOW_STATS_RANGES),
   rangeLabel: z.string(),
@@ -27,8 +50,15 @@ const statsDtoSchema = z.object({
   waitlistTotal: z.number(),
   priceIntents: z.array(z.object({ priceIntent: z.number(), count: z.number() })),
   recentSignups: z.array(
-    z.object({ email: z.string(), priceIntent: z.number(), source: z.string().nullable(), createdAt: z.string() }),
+    z.object({
+      email: z.string(),
+      priceIntent: z.number(),
+      source: z.string().nullable(),
+      country: z.string().nullable(),
+      createdAt: z.string(),
+    }),
   ),
+  byCountry: z.array(countryRowSchema),
   eventTotals: z.array(z.object({ type: z.string(), count: z.number() })),
   eventsBySlug: z.array(z.object({ slug: z.string(), type: z.string(), count: z.number() })),
   buckets: z.array(z.string()),
@@ -54,13 +84,14 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
             z.literal(15),
           ]),
           source: slugSchema,
+          country: countrySchema,
         }),
         response: { 200: z.object({ alreadyJoined: z.boolean() }) },
       },
       config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
-      reply.send(await joinWaitlist(request.body))
+      reply.send(await joinWaitlist({ ...request.body, country: visitorCountry(request, request.body.country) }))
     },
   )
 
@@ -70,12 +101,14 @@ export const billflowRoutes: FastifyPluginAsync = async (fastify) => {
     '/events',
     {
       schema: {
-        body: z.object({ type: z.enum(BILLFLOW_EVENT_TYPES), slug: slugSchema }),
+        body: z.object({ type: z.enum(BILLFLOW_EVENT_TYPES), slug: slugSchema, country: countrySchema }),
       },
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
-      if (request.authUser?.role !== 'admin') await recordEvent(request.body.type, request.body.slug)
+      if (request.authUser?.role !== 'admin') {
+        await recordEvent(request.body.type, request.body.slug, visitorCountry(request, request.body.country))
+      }
       reply.status(204).send()
     },
   )

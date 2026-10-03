@@ -56,6 +56,22 @@ function formatIntent(price: number): string {
   return price < 100 ? `${price}/mo` : `₹${price}/mo`
 }
 
+const regionNames = (() => {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' })
+  } catch {
+    return null
+  }
+})()
+
+// "IN" → "India". "EU" is the browser-only guess for eurozone visitors, and
+// null marks events recorded before countries were tracked.
+function countryName(code: string | null): string {
+  if (!code) return 'Unknown (before tracking)'
+  if (code === 'EU') return 'Eurozone'
+  return regionNames?.of(code) ?? code
+}
+
 // Irreversible wipe of BillFlow events, confirmed by re-entering the top
 // admin's account password (checked server-side). The Pro waitlist is kept
 // unless the admin explicitly ticks the force option.
@@ -361,6 +377,50 @@ function AdminBillflow() {
         </div>
       </section>
 
+      <section>
+        <h2 className="text-sm font-semibold">Countries</h2>
+        <div className="mt-2 overflow-x-auto rounded-lg border border-[var(--border-panel)]">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[var(--bg-app)]">
+              <tr>
+                <th className="px-3 py-2 font-medium">Country</th>
+                <th className="px-3 py-2 text-right font-medium">Views</th>
+                <th className="px-3 py-2 text-right font-medium">Downloads</th>
+                <th className="px-3 py-2 text-right font-medium">Download rate</th>
+                <th className="px-3 py-2 text-right font-medium">Upgrade clicks</th>
+                <th className="px-3 py-2 text-right font-medium" title="All-time, like the waitlist total">
+                  Signups
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.byCountry.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-[var(--color-muted)]">
+                    No traffic yet.
+                  </td>
+                </tr>
+              ) : (
+                stats.byCountry.map((row) => (
+                  <tr key={row.country ?? 'unknown'} className="border-t border-[var(--border-panel)]">
+                    <td className={`px-3 py-2 ${row.country ? '' : 'text-[var(--color-muted)]'}`}>
+                      {countryName(row.country)}
+                    </td>
+                    <td className="px-3 py-2 text-right">{row.views}</td>
+                    <td className="px-3 py-2 text-right">{row.downloads}</td>
+                    <td className="px-3 py-2 text-right text-[var(--color-muted)]">
+                      {row.views ? `${Math.round((row.downloads / row.views) * 100)}%` : '—'}
+                    </td>
+                    <td className="px-3 py-2 text-right">{row.upgradeClicks}</td>
+                    <td className="px-3 py-2 text-right">{row.signups}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       </div>
 
       <section>
@@ -396,13 +456,14 @@ function AdminBillflow() {
                 <th className="px-3 py-2 font-medium">Email</th>
                 <th className="px-3 py-2 font-medium">Would pay</th>
                 <th className="px-3 py-2 font-medium">From page</th>
+                <th className="px-3 py-2 font-medium">Country</th>
                 <th className="px-3 py-2 font-medium">Joined</th>
               </tr>
             </thead>
             <tbody>
               {stats.recentSignups.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-6 text-center text-[var(--color-muted)]">
+                  <td colSpan={5} className="px-3 py-6 text-center text-[var(--color-muted)]">
                     No signups yet.
                   </td>
                 </tr>
@@ -412,6 +473,7 @@ function AdminBillflow() {
                     <td className="px-3 py-2 break-all">{row.email}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{formatIntent(row.priceIntent)}</td>
                     <td className="px-3 py-2">/billflow/{row.source ?? ''}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{row.country ? countryName(row.country) : '—'}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{new Date(row.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))

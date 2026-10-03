@@ -40,6 +40,7 @@ export interface JoinWaitlistInput {
   email: string
   priceIntent: number
   source?: string
+  country?: string
 }
 
 // Re-joining with the same email just refreshes the price intent rather than
@@ -49,14 +50,22 @@ export async function joinWaitlist(input: JoinWaitlistInput): Promise<{ alreadyJ
   const existing = await prisma.billflowWaitlist.findUnique({ where: { email }, select: { id: true } })
   await prisma.billflowWaitlist.upsert({
     where: { email },
-    create: { email, priceIntent: input.priceIntent, source: input.source },
+    create: { email, priceIntent: input.priceIntent, source: input.source, country: input.country },
     update: { priceIntent: input.priceIntent },
   })
   return { alreadyJoined: Boolean(existing) }
 }
 
-export async function recordEvent(type: BillflowEventType, slug?: string): Promise<void> {
-  await prisma.billflowEvent.create({ data: { type, slug: slug || null } })
+export async function recordEvent(type: BillflowEventType, slug?: string, country?: string): Promise<void> {
+  await prisma.billflowEvent.create({ data: { type, slug: slug || null, country: country || null } })
+}
+
+export interface CountryRow {
+  country: string | null // null: recorded before countries were tracked
+  views: number
+  downloads: number
+  upgradeClicks: number
+  signups: number // all-time, like the waitlist total
 }
 
 export interface BillflowStatsDto {
@@ -67,7 +76,8 @@ export interface BillflowStatsDto {
   gateWindowDays: number
   waitlistTotal: number
   priceIntents: { priceIntent: number; count: number }[]
-  recentSignups: { email: string; priceIntent: number; source: string | null; createdAt: string }[]
+  recentSignups: { email: string; priceIntent: number; source: string | null; country: string | null; createdAt: string }[]
+  byCountry: CountryRow[]
   eventTotals: { type: string; count: number }[]
   eventsBySlug: { slug: string; type: string; count: number }[]
   // One count per bucket (oldest first) for each event type.
@@ -80,7 +90,7 @@ export async function getStats(range: BillflowStatsRange = 'day'): Promise<Billf
   const since = starts[0]
   const gateSince = new Date(Date.now() - GATE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
 
-  const [waitlistTotal, intents, recent, totals, bySlug, byBucket, gateDownloads] = await Promise.all([
+  const [waitlistTotal, intents, recent, totals, bySlug, byBucket, gateDownloads, eventsByCountry, signupsByCountry] = await Promise.all([
     prisma.billflowWaitlist.count(),
     prisma.billflowWaitlist.groupBy({ by: ['priceIntent'], _count: { _all: true }, orderBy: { priceIntent: 'asc' } }),
     prisma.billflowWaitlist.findMany({ orderBy: { createdAt: 'desc' }, take: 25 }),
@@ -92,7 +102,27 @@ export async function getStats(range: BillflowStatsRange = 'day'): Promise<Billf
       WHERE "createdAt" >= ${since}
       GROUP BY 1, 2`,
     prisma.billflowEvent.count({ where: { type: 'pdf_downloaded', createdAt: { gte: gateSince } } }),
+    prisma.billflowEvent.groupBy({ by: ['country', 'type'], where: { createdAt: { gte: since } }, _count: { _all: true } }),
+    prisma.billflowWaitlist.groupBy({ by: ['country'], _count: { _all: true } }),
   ])
+
+  const countries = new Map<string | null, CountryRow>()
+  const rowFor = (country: string | null) => {
+    let row = countries.get(country)
+    if (!row) countries.set(country, (row = { country, views: 0, downloads: 0, upgradeClicks: 0, signups: 0 }))
+    return row
+  }
+  for (const event of eventsByCountry) {
+    const row = rowFor(event.country)
+    if (event.type === 'page_view') row.views += event._count._all
+    else if (event.type === 'pdf_downloaded') row.downloads += event._count._all
+    else if (event.type === 'upgrade_clicked') row.upgradeClicks += event._count._all
+  }
+  for (const signup of signupsByCountry) rowFor(signup.country).signups += signup._count._all
+  // Busiest first; "unknown" (pre-tracking data) always last.
+  const byCountry = [...countries.values()].sort(
+    (a, b) => Number(a.country === null) - Number(b.country === null) || b.views - a.views || b.downloads - a.downloads,
+  )
 
   const keys = starts.map(bucketKey)
   const index = new Map(keys.map((key, i) => [key, i]))
@@ -117,6 +147,7 @@ export async function getStats(range: BillflowStatsRange = 'day'): Promise<Billf
       email: row.email,
       priceIntent: row.priceIntent,
       source: row.source,
+      country: row.country,
       createdAt: row.createdAt.toISOString(),
     })),
     eventTotals: totals.map((row) => ({ type: row.type, count: row._count._all })),
@@ -125,6 +156,7 @@ export async function getStats(range: BillflowStatsRange = 'day'): Promise<Billf
       .sort((a, b) => b.count - a.count),
     buckets: keys,
     series,
+    byCountry,
   }
 }
 

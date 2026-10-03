@@ -369,9 +369,12 @@ model Notification {
 model BillflowWaitlist {
   id          String   @id @default(uuid())
   email       String   @unique
-  // Monthly price (INR) the visitor said they'd pay — 199 / 299 / 499.
+  // Monthly price the visitor said they'd pay: INR 199 / 299 / 499 in India,
+  // USD 5 / 9 / 15 elsewhere.
   priceIntent Int
   source      String?
+  // ISO country code (or "EU"), from Cloudflare or the visitor's browser.
+  country     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -382,6 +385,7 @@ model BillflowEvent {
   id        String   @id @default(uuid())
   type      String
   slug      String?
+  country   String?
   createdAt DateTime @default(now())
 
   @@index([type, createdAt])

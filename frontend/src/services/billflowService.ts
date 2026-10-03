@@ -10,7 +10,21 @@ export interface BillflowStats {
   gateWindowDays: number
   waitlistTotal: number
   priceIntents: { priceIntent: number; count: number }[]
-  recentSignups: { email: string; priceIntent: number; source: string | null; createdAt: string }[]
+  recentSignups: {
+    email: string
+    priceIntent: number
+    source: string | null
+    country: string | null
+    createdAt: string
+  }[]
+  // Views/downloads/clicks within the range; signups are all-time.
+  byCountry: {
+    country: string | null
+    views: number
+    downloads: number
+    upgradeClicks: number
+    signups: number
+  }[]
   eventTotals: { type: string; count: number }[]
   eventsBySlug: { slug: string; type: string; count: number }[]
   buckets: string[] // bucket start dates (YYYY-MM-DD, UTC), oldest first
