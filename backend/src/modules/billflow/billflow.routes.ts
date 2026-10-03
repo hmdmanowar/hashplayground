@@ -13,11 +13,12 @@ import {
 import { requireTopAdmin } from '../../middleware/auth.js'
 
 // Template slugs are lowercase-kebab (see billflow/src/data/templates.json);
-// the empty string is the main /billflow/ generator page.
+// the empty string is the main /billflow/ generator page, and guide
+// articles report as "guides/<slug>".
 const slugSchema = z
   .string()
   .max(80)
-  .regex(/^[a-z0-9-]*$/)
+  .regex(/^[a-z0-9-]*(\/[a-z0-9-]+)?$/)
   .optional()
 
 // Two-letter country code from the browser's own guess (timezone/language;

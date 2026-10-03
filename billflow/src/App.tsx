@@ -8,7 +8,11 @@ import GeneratorPage from './pages/GeneratorPage'
 import LandingPage from './pages/LandingPage'
 import TemplatesPage from './pages/TemplatesPage'
 import NotFoundPage from './pages/NotFoundPage'
+import GuidesPage from './pages/GuidesPage'
+import GuidePage from './pages/GuidePage'
+import InfoPage from './pages/InfoPage'
 import { findTemplate } from './lib/templates'
+import { ABOUT_PAGE, findGuide, PRIVACY_PAGE } from './lib/guides'
 
 function TemplateRoute() {
   const { slug = '' } = useParams()
@@ -16,6 +20,13 @@ function TemplateRoute() {
   if (!template) return <NotFoundPage />
   // Keyed by slug so switching templates remounts with that template's draft.
   return <GeneratorPage key={template.slug} template={template} />
+}
+
+function GuideRoute() {
+  const { slug = '' } = useParams()
+  const guide = findGuide(slug)
+  if (!guide) return <NotFoundPage />
+  return <GuidePage key={guide.slug} guide={guide} />
 }
 
 function ScrollToTop() {
@@ -39,6 +50,10 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/guides" element={<GuidesPage />} />
+            <Route path="/guides/:slug" element={<GuideRoute />} />
+            <Route path="/about" element={<InfoPage page={ABOUT_PAGE} />} />
+            <Route path="/privacy" element={<InfoPage page={PRIVACY_PAGE} />} />
             <Route path="/:slug" element={<TemplateRoute />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

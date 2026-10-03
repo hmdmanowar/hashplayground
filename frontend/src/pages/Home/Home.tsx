@@ -7,6 +7,7 @@ import HowItWorks from '../../components/HowItWorks/HowItWorks'
 import WorkspacePreview from '../../components/WorkspacePreview/WorkspacePreview'
 import WhyHashPlayground from '../../components/WhyHashPlayground/WhyHashPlayground'
 import RoadmapSection from '../../components/RoadmapSection/RoadmapSection'
+import BillflowPromo from '../../components/BillflowPromo/BillflowPromo'
 import LandingFooter from '../../components/LandingFooter/LandingFooter'
 
 function Home() {
@@ -35,6 +36,7 @@ function Home() {
         <HowItWorks />
         <WorkspacePreview />
         <WhyHashPlayground />
+        <BillflowPromo />
         <RoadmapSection />
         <LandingFooter />
       </div>

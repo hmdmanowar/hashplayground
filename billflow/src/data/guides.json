@@ -1,0 +1,773 @@
+[
+  {
+    "slug": "what-to-include-on-an-invoice",
+    "label": "What to Put on an Invoice",
+    "metaTitle": "What to Include on an Invoice: Full Checklist | BillFlow",
+    "metaDescription": "The essential fields every invoice needs, plus country extras for UK VAT invoices, the US, Australian tax invoices, India GST and EU reverse charge.",
+    "h1": "What to Include on an Invoice: A Checklist for Every Country",
+    "intro": "Every invoice needs a few core details: who it’s from, who it’s to, a unique number, a date, what you supplied, what it costs and how to pay. Some countries add their own requirements on top, especially if you charge VAT or GST. Here’s the full checklist.",
+    "sections": [
+      {
+        "h": "What every invoice needs",
+        "p": [
+          "Whatever country you’re in and whatever you sell, these are the details that make a document a proper invoice rather than a friendly note asking for money. Leave one out and you risk a delayed payment, a confused accounts team or a record that won’t stand up if a tax office ever asks."
+        ],
+        "list": [
+          "The word “Invoice” (or “Tax Invoice” where your rules require it) clearly at the top",
+          "A unique invoice number that follows on from your last one",
+          "The invoice date, and the date of supply if it’s different",
+          "Your name or trading name, address and contact details",
+          "Your client’s name (or business name) and address",
+          "A clear description of each product or service, with quantity and rate",
+          "The subtotal, any discount, any tax, and the total amount due",
+          "The currency, so there’s no doubt about what you’re asking for",
+          "The due date or payment terms",
+          "How to pay you: bank details, a payment link or another method"
+        ]
+      },
+      {
+        "h": "Why each detail matters",
+        "p": [
+          "The invoice number is how you and your client refer to the bill in emails, remittance notes and bank references. Without one, matching a payment to the right job gets messy fast. Dates matter because they start the clock on payment terms and, in many tax systems, decide which period the sale belongs to.",
+          "Descriptions are worth more care than most people give them. “Website work” forces your client to ask questions; “Homepage redesign, 3 revision rounds, delivered 12 March” gets approved. If your client has a purchase order number, add it, because many larger companies won’t pay an invoice without one.",
+          "Finally, put your payment details on the invoice itself. A client who has to email you for your bank account is a client who pays a week later."
+        ],
+        "example": {
+          "title": "A clear line item",
+          "lines": [
+            "Description: Logo design, 3 concepts and 2 revision rounds",
+            "Quantity: 1",
+            "Rate: {your rate}",
+            "Tax: {tax rate, if you charge tax}",
+            "Amount: {line total}"
+          ]
+        }
+      },
+      {
+        "h": "UK: extra details for a VAT invoice",
+        "p": [
+          "If you’re not VAT-registered in the UK, the core checklist above covers you, and you must not add VAT or show a VAT number. Registration is compulsory once your taxable turnover passes the threshold, currently £90,000 (check HMRC for changes).",
+          "Once you are registered, your invoices to VAT-registered customers become VAT invoices and need more detail. The standard VAT rate is 20%, though some goods and services use other rates."
+        ],
+        "list": [
+          "Your VAT registration number",
+          "The time of supply (tax point), if it differs from the invoice date",
+          "The VAT rate applied to each item",
+          "The total excluding VAT, the VAT amount and the total including VAT",
+          "Any discount shown separately"
+        ]
+      },
+      {
+        "h": "US: what to include on an invoice",
+        "p": [
+          "The US has no national VAT or GST, so most invoices simply follow the core checklist. Sales tax is set by individual states and sometimes localities, and many services aren’t taxable in many states, which is why plenty of freelancers don’t add any. If you do sell taxable goods or services, show the sales tax as its own line and check your state’s rules for what else it expects.",
+          "Business clients often ask a freelancer for a Form W-9 before the first payment, and some will want your EIN or SSN for their tax reporting. That information usually goes on the form, not the invoice itself."
+        ]
+      },
+      {
+        "h": "Australia: tax invoice requirements",
+        "p": [
+          "In Australia, only businesses registered for GST issue a “tax invoice”. Registration is required once annual turnover reaches A$75,000 (A$150,000 for non-profits), and GST is 10%. A business that isn’t registered issues an ordinary “Invoice” and should still quote its ABN, because a payer may have to withhold tax from a supplier who doesn’t provide one."
+        ],
+        "list": [
+          "The words “Tax invoice” at the top",
+          "Your identity and ABN",
+          "The date of issue",
+          "A description of what you sold, with quantity and price",
+          "The GST amount, or a statement that the total includes GST",
+          "For tax invoices of A$1,000 or more, the buyer’s identity or ABN"
+        ]
+      },
+      {
+        "h": "India: GST invoice requirements",
+        "p": [
+          "A GST-registered business in India needs to show more than the basics. GST is split into CGST and SGST for sales within your state and IGST for sales to another state, so the place of supply decides which you charge. Registration is generally required once turnover passes ₹20 lakh for services (₹10 lakh in special category states). Export of services is zero-rated, typically under a Letter of Undertaking (LUT)."
+        ],
+        "list": [
+          "Your 15-character GSTIN, and your client’s GSTIN if they’re registered",
+          "A unique invoice number for the financial year",
+          "The place of supply, especially for inter-state sales",
+          "HSN codes for goods or SAC codes for services",
+          "The taxable value, GST rate and the CGST + SGST or IGST amounts",
+          "A signature, physical or digital, of the supplier or an authorised person"
+        ]
+      },
+      {
+        "h": "EU: reverse charge invoices",
+        "p": [
+          "VAT rates differ across EU countries, but one situation catches many freelancers out: business-to-business services supplied to a client in another EU country. These are generally under the reverse charge, meaning you don’t charge VAT and your client accounts for it in their own country instead.",
+          "The invoice should show both your VAT number and your client’s, charge no VAT, and include a note such as “Reverse charge”. Exact wording and reporting rules vary, so check your country’s guidance or ask your accountant.",
+          "In BillFlow you can add a tax ID for both you and your client, set tax to none, and type the reverse charge wording into the notes so it prints on the PDF."
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Do I need to sign an invoice?",
+        "a": "In most countries a signature isn’t required on an ordinary invoice. India’s GST rules are a notable exception, where a physical or digital signature of the supplier or an authorised person is expected."
+      },
+      {
+        "q": "Can I send an invoice without a company logo?",
+        "a": "Yes. A logo makes an invoice look more polished, but no tax system requires one. What matters is that your name, contact details and the legal details for your country are present."
+      },
+      {
+        "q": "Should I include my client’s email address?",
+        "a": "It isn’t required, but it helps. Many businesses route invoices to a specific accounts email, so adding the right contact speeds up approval and reduces the chance your invoice sits in the wrong inbox."
+      },
+      {
+        "q": "What if I forget something on an invoice I’ve already sent?",
+        "a": "Don’t edit and resend it under the same number without telling your client. For small errors a corrected copy may be fine; for tax mistakes the usual approach is a credit note and a new invoice. Check with your accountant if tax is involved."
+      },
+      {
+        "q": "Is a receipt the same as an invoice?",
+        "a": "No. An invoice asks for payment; a receipt confirms that payment has been made. Some businesses mark a paid invoice as “Paid” and send it back as a receipt, which is usually fine for simple cases."
+      }
+    ],
+    "related": [
+      "invoice-generator",
+      "vat-invoice-generator",
+      "gst-invoice-format"
+    ]
+  },
+  {
+    "slug": "invoice-payment-terms",
+    "label": "Invoice Payment Terms",
+    "metaTitle": "Invoice Payment Terms: Net 30, EOM and More | BillFlow",
+    "metaDescription": "Net 7, Net 30, due on receipt, EOM, 2/10 net 30 and deposits explained, plus how to choose payment terms and word them clearly on your invoice.",
+    "h1": "Invoice Payment Terms Explained, With Wording You Can Use",
+    "intro": "Payment terms tell your client when and how to pay. The most common are “Due on receipt”, “Net 15” and “Net 30”, meaning payment within that many days of the invoice date. Choosing the right terms, and writing them clearly, is one of the simplest ways to get paid on time.",
+    "sections": [
+      {
+        "h": "What are payment terms on an invoice?",
+        "p": [
+          "Payment terms are the conditions you set for payment: how many days the client has, what methods you accept, and sometimes what happens if they pay early or late. They belong in two places: your contract or quote, agreed before the work starts, and the invoice itself, as a reminder.",
+          "The single most useful thing you can do is pair your terms with an actual due date. “Net 30” asks the client to do maths; “Due 14 November” doesn’t. Writing both removes any doubt."
+        ]
+      },
+      {
+        "h": "Common payment terms and what they mean",
+        "p": [
+          "These shorthand terms are widely understood by accounts teams around the world, though it’s still worth spelling them out for smaller clients."
+        ],
+        "list": [
+          "Due on receipt: payment is expected as soon as the client gets the invoice",
+          "Net 7: payment due within 7 days of the invoice date",
+          "Net 15: payment due within 15 days, popular with freelancers",
+          "Net 30: payment due within 30 days, a common default for business clients",
+          "Net 60: payment due within 60 days, often requested by large companies",
+          "EOM (end of month): payment due at the end of the month the invoice is issued",
+          "Net 30 EOM: payment due 30 days after the end of the invoice month",
+          "2/10 net 30: the client may take a 2% discount if they pay within 10 days; otherwise the full amount is due in 30",
+          "CIA (cash in advance): payment before the work starts or the goods ship"
+        ]
+      },
+      {
+        "h": "Deposits, milestones and upfront payments",
+        "p": [
+          "For bigger projects, waiting until the end to invoice everything puts all the risk on you. Splitting payment protects your cash flow and filters out clients who aren’t serious.",
+          "A deposit is a share of the fee paid before you begin, often somewhere between a quarter and a half for new clients. Milestone billing splits the rest across agreed stages, such as design approval, first draft and final delivery, with an invoice for each. A proforma invoice is handy for requesting a deposit before the real invoice is issued.",
+          "Whatever split you choose, agree it in writing first and reference it on each invoice so the client can see where they are in the plan."
+        ],
+        "example": {
+          "title": "Milestone schedule for a {project name}",
+          "lines": [
+            "Invoice 1: 40% deposit, due on receipt, before work begins",
+            "Invoice 2: 30% on design approval, Net 7",
+            "Invoice 3: 30% on final delivery, Net 7"
+          ]
+        }
+      },
+      {
+        "h": "How to choose the right payment terms",
+        "p": [
+          "Shorter terms get you paid faster, but they have to be realistic for the client. A sole trader can usually pay in a week; a large company’s accounts team may only run payments twice a month, and some insist on their own terms in their supplier contract.",
+          "A few questions help you decide:"
+        ],
+        "list": [
+          "How long can you comfortably wait for this money?",
+          "Is this a new client, or one with a good payment record?",
+          "How big is the invoice compared with your monthly income?",
+          "Does the client have standard supplier terms you’ll need to accept?",
+          "Is an early-payment discount worth less to you than faster cash?"
+        ]
+      },
+      {
+        "h": "How to word payment terms on your invoice",
+        "p": [
+          "Keep it short, specific and polite. State the due date, the terms, how to pay and the reference to use. If your contract includes late fees, mention them briefly rather than as a threat. Here are a few wordings you can adapt for the notes section of your invoice."
+        ],
+        "example": {
+          "title": "Sample payment terms wording",
+          "lines": [
+            "Payment due within 14 days of the invoice date ({due date}).",
+            "Please pay by bank transfer using invoice number {invoice number} as the reference.",
+            "",
+            "Terms: Net 30. Payment is due by {due date}.",
+            "",
+            "2/10 net 30: deduct 2% if paid by {date 10 days after invoice}; otherwise the full amount is due by {due date}.",
+            "",
+            "This invoice covers the 40% deposit agreed in our proposal of {date}. Work begins once payment is received.",
+            "",
+            "Thank you for your business. Late payments may incur charges as set out in our agreement."
+          ]
+        }
+      },
+      {
+        "h": "What if a client pays late?",
+        "p": [
+          "Many countries have rules about late payment between businesses. The UK, for example, gives businesses a statutory right to claim interest and compensation on late business-to-business debts, and EU countries have their own late-payment rules too. Rates and conditions change, so check the current rules for your country before quoting any figure on an invoice.",
+          "In practice, a friendly reminder a day or two after the due date solves most late payments. Clear terms on the original invoice make that conversation much easier, because there’s no debate about when the money was due.",
+          "If reminders don’t work, a phone call often does more than another email. Keep a record of what you sent and when, pause new work for clients who are well overdue, and get advice before taking formal action. For future jobs with that client, a deposit or shorter terms is a reasonable, non-confrontational change to make."
+        ]
+      },
+      {
+        "h": "Setting payment terms in BillFlow",
+        "p": [
+          "BillFlow has its own due date field, so the deadline prints clearly on every invoice, and a notes section where you can add your terms wording from the examples above. Add your bank details or a payment link (PayPal, Stripe, Wise and similar) and BillFlow prints a scan-to-pay QR code, which removes one more excuse for paying late."
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Are Net 30 terms counted in business days or calendar days?",
+        "a": "Usually calendar days from the invoice date. If you mean something different, say so, and always show the actual due date to avoid confusion."
+      },
+      {
+        "q": "Can a client set their own payment terms?",
+        "a": "Large clients often have standard supplier terms, such as Net 45 or Net 60. You can negotiate, but whatever you both sign is what applies, so agree terms before starting work rather than on the invoice."
+      },
+      {
+        "q": "Is “due on receipt” too aggressive?",
+        "a": "Not for small jobs, one-off clients or deposits. For larger business clients it can be unrealistic because of their payment runs, so a short term like Net 7 is often a better compromise."
+      },
+      {
+        "q": "Should I offer an early payment discount?",
+        "a": "Only if faster cash is worth more to you than the discount. A 2% discount for paying 20 days early is generous, so many freelancers prefer firm, short terms instead."
+      },
+      {
+        "q": "What payment terms should I use for international clients?",
+        "a": "Similar terms work, but allow for slower cross-border transfers and state the currency clearly. A payment link can be quicker than an international bank transfer for smaller amounts."
+      }
+    ],
+    "related": [
+      "freelance-invoice-template",
+      "proforma-invoice",
+      "invoice-for-international-clients"
+    ]
+  },
+  {
+    "slug": "payment-reminder-email-templates",
+    "label": "Payment reminder email templates",
+    "metaTitle": "Payment Reminder Email Templates (Copy & Send) | BillFlow",
+    "metaDescription": "Five ready-to-copy payment reminder emails, from a polite pre-due nudge to a final notice, plus when to send each and a short WhatsApp or SMS version.",
+    "h1": "Payment reminder email templates: when to send them and what to say",
+    "intro": "The best payment reminders are planned before an invoice is late. Send a short nudge a few days before the due date, another on the day, then follow up at 3, 7 and 14 days overdue with a firmer tone each time. Below are five templates you can copy, edit and send today.",
+    "sections": [
+      {
+        "h": "When should you send a payment reminder?",
+        "p": [
+          "Most late payments aren’t deliberate. Invoices get buried, the person who approves them is on leave, or the bank details were never passed to accounts. A predictable reminder schedule fixes most of these quietly, without you ever sounding annoyed.",
+          "Think of the schedule as a staircase. Each step is a little more direct than the last, but none of them should feel like a surprise to the client, because each one refers back to the invoice and the previous message. Keep a note of what you sent and when, so you can show a clear history if you ever need to escalate."
+        ],
+        "list": [
+          "3 to 5 days before the due date: a friendly heads-up with the invoice attached again",
+          "On the due date: a short note that payment is due today",
+          "3 days overdue: a polite check that the invoice arrived and nothing is blocking it",
+          "7 days overdue: a clearer request with a specific date to pay by",
+          "14 days overdue: a firm message naming the consequences you agreed in your terms",
+          "Around 30 days overdue: a final notice before you pause work or take further steps"
+        ]
+      },
+      {
+        "h": "Email 1: a friendly heads-up before the due date",
+        "p": [
+          "Every reminder, however gentle, should make paying effortless. Include the invoice number, the amount and currency, the due date, how to pay and a copy of the invoice itself. If your invoice already shows bank details or a payment link, the client can pay straight from the attachment without writing back to ask.",
+          "Keep the first message warm and short. You’re not chasing anyone yet, just making sure the invoice is on their radar."
+        ],
+        "example": {
+          "title": "Email 1: before the due date",
+          "lines": [
+            "Subject: Invoice {invoice number} due on {due date}",
+            "",
+            "Hi {client name},",
+            "",
+            "Just a quick note that invoice {invoice number} for {amount} is due on {due date}. I’ve attached it again so it’s easy to find.",
+            "",
+            "You can pay by {payment method}; the details are on the invoice. Let me know if anything needs changing before it goes through.",
+            "",
+            "Thanks so much,",
+            "{your name}"
+          ]
+        }
+      },
+      {
+        "h": "Email 2: on the due date",
+        "p": [
+          "On the due date, stay neutral. A one-line reminder with the essentials is enough, and it gives a busy client an easy prompt to forward to whoever handles payments."
+        ],
+        "example": {
+          "title": "Email 2: due today",
+          "lines": [
+            "Subject: Invoice {invoice number} is due today",
+            "",
+            "Hi {client name},",
+            "",
+            "A friendly reminder that invoice {invoice number} for {amount} is due today, {due date}. A copy is attached, with payment details on page one.",
+            "",
+            "If it’s already on its way, thank you, and please ignore this email.",
+            "",
+            "Best,",
+            "{your name}"
+          ]
+        }
+      },
+      {
+        "h": "Email 3: three to seven days overdue",
+        "p": [
+          "Once the invoice is late, ask a question rather than make an accusation. Checking whether the invoice reached the right person often uncovers the real problem, such as a missing purchase order number or a new accounts contact. By day seven, add a clear date you’d like payment by."
+        ],
+        "example": {
+          "title": "Email 3: a gentle overdue check",
+          "lines": [
+            "Subject: Checking in on invoice {invoice number}",
+            "",
+            "Hi {client name},",
+            "",
+            "I haven’t yet seen payment for invoice {invoice number} ({amount}), which was due on {due date}. Could you check it reached the right person, or let me know if you need a PO number or anything else from me?",
+            "",
+            "It would be great to have this settled by {new pay-by date}. I’ve attached the invoice again.",
+            "",
+            "Many thanks,",
+            "{your name}"
+          ]
+        }
+      },
+      {
+        "h": "Email 4: fourteen days overdue",
+        "p": [
+          "Two weeks late calls for a firmer, more formal tone. Restate the facts, mention any earlier reminders, and refer to the payment terms you agreed. Only mention late fees or interest if they were in your contract or on the original invoice, and check the rules where you and your client are based before applying them."
+        ],
+        "example": {
+          "title": "Email 4: firm reminder",
+          "lines": [
+            "Subject: Overdue: invoice {invoice number}, {days overdue} days late",
+            "",
+            "Dear {client name},",
+            "",
+            "Invoice {invoice number} for {amount} was due on {due date} and is now {days overdue} days overdue. I sent reminders on {reminder dates}.",
+            "",
+            "Under our agreed terms ({payment terms}), please arrange payment by {pay-by date}. If there’s a problem with the invoice or the work, please reply so we can sort it out quickly.",
+            "",
+            "Regards,",
+            "{your name}",
+            "{business name}"
+          ]
+        }
+      },
+      {
+        "h": "Email 5: final notice",
+        "p": [
+          "A final notice should be calm, specific and honest about what happens next. Only state steps you’re genuinely prepared to take, such as pausing ongoing work or passing the debt on for formal recovery. If the amount is significant, it’s worth getting local legal advice before you send it."
+        ],
+        "example": {
+          "title": "Email 5: final notice",
+          "lines": [
+            "Subject: Final notice: invoice {invoice number}",
+            "",
+            "Dear {client name},",
+            "",
+            "Despite previous reminders, invoice {invoice number} for {amount}, due on {due date}, remains unpaid.",
+            "",
+            "Please pay the full balance by {final date}. If I don’t receive payment or hear from you by then, I will {next step, e.g. pause all work on the project / begin formal recovery}.",
+            "",
+            "I’d much rather resolve this together, so if you need a payment plan, reply and we’ll agree one.",
+            "",
+            "Regards,",
+            "{your name}",
+            "{business name}"
+          ]
+        }
+      },
+      {
+        "h": "Short WhatsApp and SMS reminder",
+        "p": [
+          "If you normally talk to the client by message, a short text can work better than another email. Keep it under three lines, include the invoice number and amount, and point to where the full invoice is. Send it during business hours and only to a number the client has used with you for work.",
+          "BillFlow puts the due date, payment details and any scan-to-pay QR code right on the invoice PDF, so every reminder can simply say “details are on the invoice”. Automatic reminders are coming in BillFlow Pro, and there’s an early-access list just below the invoice preview."
+        ],
+        "example": {
+          "title": "WhatsApp or SMS",
+          "lines": [
+            "Hi {client name}, quick reminder that invoice {invoice number} for {amount} was due on {due date}. Payment details are on the invoice I emailed on {sent date}. Thanks! {your name}"
+          ]
+        }
+      }
+    ],
+    "faq": [
+      {
+        "q": "Should I call the client instead of emailing?",
+        "a": "A short, friendly call after the second or third email often works well, especially for larger amounts. Follow it up with an email confirming what was agreed, so you keep a written record."
+      },
+      {
+        "q": "What time of day should I send a payment reminder?",
+        "a": "Send it during the client’s working hours, early in the week if you can. A message that lands on a Friday evening is easy to forget by Monday."
+      },
+      {
+        "q": "Should I re-attach the invoice every time?",
+        "a": "Yes. Re-attaching saves the client searching their inbox and removes the most common excuse for delay. Keep the file name clear, such as the invoice number and your business name."
+      },
+      {
+        "q": "Can I add a late fee to a reminder?",
+        "a": "Only if it was part of your agreed terms, and only within the rules that apply where you and your client are based. Check with an accountant or adviser before charging interest or fees."
+      },
+      {
+        "q": "What if the client disputes the invoice?",
+        "a": "Pause the reminder schedule and deal with the dispute first. Ask exactly which items are in question, offer to issue a corrected invoice if needed, and agree a payment date for the undisputed part."
+      }
+    ],
+    "related": [
+      "freelance-invoice-template",
+      "invoice-generator",
+      "consulting-invoice-template"
+    ]
+  },
+  {
+    "slug": "how-to-number-invoices",
+    "label": "How to Number Invoices",
+    "metaTitle": "How to Number Invoices: Schemes and Examples | BillFlow",
+    "metaDescription": "How to number invoices: sequential numbers, prefixes, year and client-based schemes with examples, plus what to do with cancelled invoices and gaps.",
+    "h1": "How to Number Invoices: Simple Schemes That Stay Organised",
+    "intro": "Give every invoice a unique number that follows on from the last one, such as 001, 002, 003. You can add a prefix, the year or a client code, but the sequence must never repeat. Here’s how to pick a scheme, handle cancelled invoices and stay on the right side of tax rules.",
+    "sections": [
+      {
+        "h": "Why invoice numbers matter",
+        "p": [
+          "An invoice number is the one reference you, your client and your accountant all share. It appears on bank transfer references, in email threads and in your bookkeeping, and it’s how everyone finds the right document months later.",
+          "Many tax authorities also expect invoice numbers to be unique and sequential, because an unbroken run makes it easy to see that every sale has been recorded. A messy or repeated numbering system won’t necessarily get you in trouble, but it invites questions you’d rather not answer during a tax check."
+        ]
+      },
+      {
+        "h": "Start with simple sequential numbering",
+        "p": [
+          "The easiest scheme is a plain sequence: your first invoice is 1, the next is 2, and so on. Padding with zeros, such as 0001, keeps the numbers the same length so they sort properly in folders and spreadsheets.",
+          "You don’t have to start at 1. Plenty of new businesses start at 100 or 1001 so their first clients don’t see “Invoice 1”. That’s generally fine as long as you then carry on in order without skipping or reusing numbers.",
+          "Number invoices in the order you issue them, not the order the work happened. If you finish a job on Monday but invoice it on Friday after another client’s bill, the Friday invoice simply takes the later number. Trying to backdate numbers to match the work only creates confusion, and the invoice date already records when it was issued."
+        ]
+      },
+      {
+        "h": "Adding prefixes, years and client codes",
+        "p": [
+          "Once you send more than a handful of invoices, a little structure helps. A prefix identifies your business or document type, the year shows when it was issued at a glance, and a client code groups work by customer. Keep it short: the number should be easy to read out over the phone or type into a bank reference."
+        ],
+        "example": {
+          "title": "Common invoice numbering schemes",
+          "lines": [
+            "Plain sequence: 0001, 0002, 0003",
+            "Prefix: INV-0001, INV-0002, INV-0003",
+            "Year and sequence: 2026-001, 2026-002, 2026-003",
+            "Prefix, year and sequence: INV-2026-001, INV-2026-002",
+            "Year and month: 2026-10-001, 2026-10-002",
+            "Client code: ACME-001, ACME-002, BLUE-001",
+            "Client code with global sequence: ACME-0145, BLUE-0146"
+          ]
+        }
+      },
+      {
+        "h": "Choosing a scheme that grows with you",
+        "p": [
+          "Year-based schemes are popular because they reset neatly and make annual bookkeeping easy. If you use one, make sure the year part changes so a number can never repeat, and think about whether your tax year matches the calendar year. In India, for example, the financial year runs from April to March, so a scheme like 2026-27/001 often fits better.",
+          "Client-based schemes are handy if you bill a few regular clients, but a separate sequence per client can make it harder to prove you haven’t missed an invoice overall. A safe compromise is to keep one global running number and add the client code as a label, as in the last example above.",
+          "Whatever you pick, write it down and stick with it. Switching schemes mid-year is allowed in many places, but it’s easier on your accountant if changes happen at the start of a new year."
+        ]
+      },
+      {
+        "h": "What to do with voided or cancelled invoices",
+        "p": [
+          "Never delete an invoice and reuse its number. If you made a mistake before sending, you can usually mark that number as void, keep a copy for your records, and issue the corrected invoice under the next number.",
+          "If the invoice has already been sent, and especially if it included tax, the usual approach is to issue a credit note that cancels all or part of it, then raise a new invoice if needed. Credit notes often have their own sequence, such as CN-001. Rules on credit notes vary, so check with your accountant if tax has already been reported."
+        ],
+        "list": [
+          "Mark voided invoices clearly as “Void” or “Cancelled”",
+          "Keep the voided copy with your records",
+          "Note why it was cancelled and which invoice replaced it, so anyone reviewing your books later can follow the trail",
+          "Use a credit note rather than editing an invoice already sent"
+        ]
+      },
+      {
+        "h": "Why gaps matter, and tax rules to know",
+        "p": [
+          "A gap in your sequence, such as jumping from 041 to 043, isn’t automatically a problem, but you should be able to explain it. A voided invoice kept on file explains it instantly; an unexplained gap could look like an unrecorded sale.",
+          "Some tax systems set specific rules. In the UK, HMRC expects each VAT invoice to carry a unique number that follows on from the last. EU VAT rules generally call for a sequential number that uniquely identifies the invoice. India’s GST rules are stricter: the invoice number can be up to 16 characters, may use letters, numbers, hyphens and slashes, and must be unique for each financial year. These details can change, so confirm the current rules with your tax authority or accountant."
+        ]
+      },
+      {
+        "h": "Numbering invoices in BillFlow",
+        "p": [
+          "BillFlow has an invoice number field where you can type any scheme you like, from 0001 to INV-2026-001. Keep a simple log or spreadsheet of the numbers you’ve used, including any voided ones, so you always know the next number in line. Because your business details are remembered on your device, creating the next invoice is mostly a matter of updating the number, client and line items."
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Can I restart invoice numbers every year?",
+        "a": "Usually yes, as long as each number stays unique, which is why year-based schemes include the year. India’s GST rules specifically require uniqueness within each financial year. Check with your accountant if you’re unsure."
+      },
+      {
+        "q": "Should I use separate numbering for different businesses?",
+        "a": "Yes. Each business or trading entity should keep its own invoice sequence, so its records are complete and easy to check on their own."
+      },
+      {
+        "q": "Does a proforma invoice need an invoice number?",
+        "a": "It’s good practice to give it a reference, but many businesses use a separate sequence such as PF-001, because a proforma isn’t a final tax invoice. The real invoice then gets the next number in your main sequence."
+      },
+      {
+        "q": "Can I use random invoice numbers?",
+        "a": "It’s best not to. Random numbers make it hard to show that every sale is recorded, and several tax systems expect a sequence. A simple running number is safer and easier to manage."
+      },
+      {
+        "q": "What if I accidentally used the same number twice?",
+        "a": "Contact the client, cancel one of the duplicates with a credit note or a void note, and reissue it under a new number. Keep a record of what happened for your books."
+      }
+    ],
+    "related": [
+      "invoice-generator",
+      "gst-invoice-format",
+      "proforma-invoice"
+    ]
+  },
+  {
+    "slug": "proforma-vs-tax-invoice",
+    "label": "Proforma vs tax invoice",
+    "metaTitle": "Proforma Invoice vs Tax Invoice: Key Differences | BillFlow",
+    "metaDescription": "Proforma invoice, tax invoice, commercial invoice or quote? Learn what each document is for, its legal status, and when to send each one to a client.",
+    "h1": "Proforma invoice vs tax invoice vs commercial invoice vs quote",
+    "intro": "A quote or estimate offers a price, a proforma invoice previews the final bill before the sale is confirmed, and a tax invoice is the real demand for payment that counts in your accounts. A commercial invoice is the customs document for exporting goods. Here’s when to use each.",
+    "sections": [
+      {
+        "h": "What is a quote or estimate?",
+        "p": [
+          "A quote (or quotation) is a price you offer for a defined piece of work or set of goods. An estimate is a looser version: your best guess of the cost, which may change once the work begins. Neither one asks for payment, and neither belongs in your sales records.",
+          "Depending on its wording and local law, an accepted quote can form part of a contract, so state how long the price is valid and what’s included. An estimate should say clearly that it’s approximate.",
+          "Quotes and estimates are also useful for you: they record the scope you priced, which makes it much easier to discuss changes later. Give each one a reference number in its own series, such as Q-001, so the proforma and final invoice can point back to it."
+        ]
+      },
+      {
+        "h": "What is a proforma invoice?",
+        "p": [
+          "A proforma invoice looks almost exactly like a real invoice, with items, quantities, prices, tax and a total, but it’s issued before the sale is final. It tells the buyer precisely what they’ll be billed, so they can approve a budget, raise a purchase order, pay a deposit or apply for an import licence or letter of credit.",
+          "Legally, a proforma is not a tax invoice. In most countries it isn’t recorded as a sale, it doesn’t create a tax liability for the seller, and the buyer can’t use it to reclaim VAT or GST. It should be clearly titled “Proforma Invoice” and is best numbered in its own series, so it can’t be confused with your real invoices."
+        ],
+        "list": [
+          "Requesting an advance or deposit before you start",
+          "Giving an importer the figures their bank or customs agent needs",
+          "Letting a client’s finance team approve spend before work is delivered",
+          "Confirming the final price of a large order before you ship"
+        ]
+      },
+      {
+        "h": "What is a tax invoice (or a regular invoice)?",
+        "p": [
+          "An invoice is the formal request for payment once a sale has happened or the work is delivered. It goes into your accounts as income and, where you’re registered for tax, records the VAT, GST or sales tax you’ve charged. Many countries use the term “tax invoice” for the version that lets a registered buyer claim that tax back.",
+          "The exact rules vary. In Australia, a tax invoice comes from a GST-registered supplier, says “Tax invoice” and shows the supplier’s ABN, the date, a description and the GST. In the UK, a VAT invoice must show the supplier’s VAT registration number. In India, a GST tax invoice shows the supplier’s GSTIN and splits tax into CGST and SGST or IGST. In the UAE, a tax invoice shows the supplier’s TRN. If you’re not registered for tax, you issue an ordinary invoice instead. Check your own tax authority’s rules for the details."
+        ]
+      },
+      {
+        "h": "What is a commercial invoice?",
+        "p": [
+          "A commercial invoice is used when you ship physical goods across a border. Customs authorities use it to identify the goods, check their value and work out any duties and import taxes. It often travels with the shipment alongside a packing list and other shipping papers.",
+          "As well as normal invoice details, a commercial invoice usually shows the exporter and importer, a detailed description of each item, its tariff (HS) code, the country of origin, quantities, weights, the agreed delivery terms (Incoterms) and the currency. Requirements differ by destination, so check with your courier, freight forwarder or customs broker. If you only sell services, you generally won’t need one."
+        ]
+      },
+      {
+        "h": "Proforma vs tax invoice vs commercial invoice vs quote at a glance",
+        "p": [],
+        "list": [
+          "Quote or estimate: offers a price before agreement; not a request for payment; not in your sales records",
+          "Proforma invoice: previews the final bill after agreement but before delivery or payment; can be used to request an advance; not a tax document",
+          "Tax invoice or invoice: demands payment for a completed sale; recorded as income; the document a registered buyer uses to claim tax back",
+          "Commercial invoice: describes exported goods for customs; used to assess duties; needed for physical shipments, not usually for services",
+          "Numbering: quotes and proformas in their own series; invoices in one unbroken sequence",
+          "Can it be changed? Quotes and proformas can be revised freely; a final invoice is normally corrected with a credit note rather than edited"
+        ]
+      },
+      {
+        "h": "Which document should you send, and when?",
+        "p": [
+          "For most freelancers and small businesses the order is simple: quote, then proforma if the client needs one, then the final invoice. Exporters of goods add a commercial invoice for the shipment. When a deposit was paid against a proforma, the final invoice should show the full amount and then deduct what’s already been received."
+        ],
+        "example": {
+          "title": "A typical sequence for an export order",
+          "lines": [
+            "1. Quote Q-2026-014: 500 units at {price}, valid 30 days",
+            "2. Proforma PF-2026-009: same items, 50% advance requested",
+            "3. Commercial invoice: goods, HS codes, origin and weights for customs",
+            "4. Invoice INV-2026-112: full total, less advance paid, balance due {date}"
+          ]
+        }
+      },
+      {
+        "h": "How to create a proforma or final invoice in BillFlow",
+        "p": [
+          "Open the proforma invoice template in BillFlow and the document is titled “Proforma Invoice” for you. Add your items, tax and an advance amount in the notes, such as “50% advance requested; this is not a tax invoice”. When the sale is confirmed, start a regular invoice from the generator with a fresh invoice number, and add your tax ID and your client’s, along with your bank or payment-link details, so it’s ready to pay."
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Can a client pay against a proforma invoice?",
+        "a": "Yes. Clients often pay a deposit or the full amount against a proforma. Once paid, issue a proper invoice or tax invoice for your records and theirs, referencing the proforma number."
+      },
+      {
+        "q": "Do I charge VAT or GST on a proforma invoice?",
+        "a": "You can show the tax that will apply so the buyer knows the full cost, but the proforma itself usually isn’t a tax document. The tax is accounted for on the final invoice. Confirm the timing rules with your accountant."
+      },
+      {
+        "q": "Is a proforma invoice legally binding?",
+        "a": "Generally it’s treated as a good-faith statement of the expected sale rather than a binding demand. Your contract, purchase order or accepted quote is what usually sets the binding terms."
+      },
+      {
+        "q": "Can I use a commercial invoice as my accounting invoice?",
+        "a": "Sometimes the same document serves both purposes, but many exporters issue a separate sales invoice for their books. Ask your accountant and freight forwarder what works for your setup."
+      },
+      {
+        "q": "Should a proforma have its own numbering?",
+        "a": "Yes. A separate prefix such as PF keeps your real invoice sequence unbroken, which accountants and tax authorities expect."
+      }
+    ],
+    "related": [
+      "proforma-invoice",
+      "invoice-for-international-clients",
+      "vat-invoice-generator"
+    ]
+  },
+  {
+    "slug": "invoice-vs-receipt",
+    "label": "Invoice vs receipt",
+    "metaTitle": "Invoice vs Receipt: What’s the Difference? | BillFlow",
+    "metaDescription": "An invoice asks for payment; a receipt proves it was made. Learn when to issue each, what they must show, and how to mark a paid invoice as proof.",
+    "h1": "Invoice vs receipt: what’s the difference and when to use each",
+    "intro": "An invoice asks for payment; a receipt confirms that payment has been made. You send an invoice before you’re paid and a receipt afterwards. Bills and statements sit alongside them: a bill is often just another word for an invoice, and a statement summarises an account over time.",
+    "sections": [
+      {
+        "h": "What is an invoice?",
+        "p": [
+          "An invoice is a request for payment. It lists what you supplied, what it costs, any tax, the total and when and how the client should pay. Until it’s paid, it represents money owed to you, which is why accountants call unpaid invoices accounts receivable.",
+          "Invoices are usually sent after work is delivered, or at agreed milestones, and give the buyer time to pay, such as 14 or 30 days. They carry a unique number so both sides can match payments to the right document.",
+          "An invoice is also the document your client’s accounts team needs to process the payment. If it’s missing a purchase order number, the right company name or your bank details, it can sit unpaid for weeks, so it pays to get these right first time."
+        ]
+      },
+      {
+        "h": "What is a receipt?",
+        "p": [
+          "A receipt is proof that money has changed hands. It shows who paid, how much, when and for what. The buyer keeps it for their records, expense claims or tax return, and the seller keeps a copy to show the sale was settled.",
+          "Shops and cafés issue receipts on the spot because payment is immediate. Freelancers and service businesses tend to issue an invoice first and a receipt, or a paid invoice, once the money arrives. Some clients, especially individuals and those claiming expenses, will specifically ask for a receipt.",
+          "A receipt doesn’t need to be elaborate. A short document, an email or a payment confirmation that clearly links the money to a specific sale is often enough for a client’s records, although tax-registered businesses may face stricter rules on what a receipt must contain."
+        ]
+      },
+      {
+        "h": "Where do bills and statements fit in?",
+        "p": [
+          "“Bill” and “invoice” are often used interchangeably. In everyday speech a bill is usually what you get when payment is due straight away, like a restaurant bill or a utility bill, while “invoice” is more common between businesses. Both ask for payment.",
+          "A statement of account is different. It doesn’t request payment for a new sale; it summarises every invoice, payment and credit for one client over a period, and shows the balance outstanding. It’s a handy way to chase several open invoices at once."
+        ],
+        "example": {
+          "title": "Sample statement of account lines",
+          "lines": [
+            "Statement for {client name}, {start date} to {end date}",
+            "",
+            "{date}  Invoice INV-041        1,200.00",
+            "{date}  Payment received       -1,200.00",
+            "{date}  Invoice INV-047          850.00",
+            "",
+            "Balance due: 850.00 {currency}"
+          ]
+        }
+      },
+      {
+        "h": "When should you issue an invoice or a receipt?",
+        "p": [
+          "Some countries and tax systems set specific rules on when a receipt or tax invoice must be issued, so if you’re registered for VAT, GST or sales tax, check the timing rules with your accountant or tax authority."
+        ],
+        "list": [
+          "Issue an invoice when you’ve delivered work or goods and expect payment later",
+          "Issue an invoice for a deposit or milestone when your terms ask for staged payments",
+          "Issue a receipt when you’re paid on the spot, in cash, by card or by instant transfer",
+          "Issue a receipt or paid invoice when a client pays an invoice and asks for confirmation",
+          "Send a statement when a client has several invoices open, or at the end of a month or quarter"
+        ]
+      },
+      {
+        "h": "What must an invoice and a receipt show?",
+        "p": [
+          "An invoice typically needs your name or business name and address, the client’s name and address, a unique invoice number, the invoice date, a description of the goods or services, quantities and prices, any tax, the total and payment terms. If you’re registered for tax, add your tax number and follow your local rules for tax invoices.",
+          "A receipt is usually simpler: your business details, a receipt or reference number, the date paid, the amount, the payment method and what the payment was for. Linking the receipt to the original invoice number makes the paper trail easy to follow."
+        ],
+        "example": {
+          "title": "Sample invoice line vs receipt line",
+          "lines": [
+            "Invoice line:",
+            "Website redesign, 5 pages  |  Qty 1  |  Rate 2,000.00  |  Tax {rate}%  |  Amount 2,000.00",
+            "",
+            "Receipt line:",
+            "Received 2,000.00 {currency} on {payment date} by bank transfer for invoice INV-052. Ref {bank reference}."
+          ]
+        }
+      },
+      {
+        "h": "How to turn a paid invoice into proof of payment",
+        "p": [
+          "If you don’t want to create a separate receipt, you can reissue the original invoice marked as paid. Keep the same invoice number and amounts, and add a clear payment note with the date, method and reference. Many clients accept this as proof of payment, though some businesses and some countries’ rules may require a formal receipt, so check if you’re unsure.",
+          "In BillFlow, open the invoice details again, add the payment line to the notes and download a fresh PDF. Because your business details are remembered on your device and nothing is uploaded, it takes under a minute. Keep both versions: the original as sent and the one marked paid."
+        ],
+        "example": {
+          "title": "Paid note for the invoice",
+          "lines": [
+            "PAID IN FULL on {payment date}",
+            "Amount received: {amount} {currency}",
+            "Method: {bank transfer / card / PayPal / UPI}, ref {reference}",
+            "Thank you for your business."
+          ]
+        }
+      },
+      {
+        "h": "Common mistakes to avoid",
+        "p": [
+          "Most of these come down to keeping one clear record per sale. When the invoice number appears on every related receipt, payment note and statement line, anyone checking your books later, including you at tax time, can follow the trail in seconds."
+        ],
+        "list": [
+          "Sending a receipt before the money has actually cleared in your account",
+          "Giving a paid invoice a new number, which breaks the link to the original",
+          "Forgetting to record part payments, so the balance due is wrong",
+          "Leaving out the payment method or reference, which makes the receipt hard to match",
+          "Editing a sent invoice to change amounts instead of issuing a credit note or a corrected invoice"
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Is an invoice proof of payment?",
+        "a": "No. An unpaid invoice only shows that money is owed. It becomes evidence of payment when it’s clearly marked paid with the date and method, or when a separate receipt is issued."
+      },
+      {
+        "q": "Do I need to give a receipt if I already sent an invoice?",
+        "a": "Not always. Many business clients rely on their bank records. But if a client asks for one, or local rules require it, send a receipt or a paid copy of the invoice."
+      },
+      {
+        "q": "Can a receipt and an invoice have the same number?",
+        "a": "A paid invoice keeps its original number. A separate receipt usually gets its own number series, such as RCT-001, while referencing the invoice it settles."
+      },
+      {
+        "q": "How long should I keep invoices and receipts?",
+        "a": "Retention periods vary by country and are often several years. Check your tax authority’s guidance and keep digital copies backed up somewhere safe."
+      },
+      {
+        "q": "What if a client pays only part of an invoice?",
+        "a": "Issue a receipt or note for the amount received and show the remaining balance. A statement of account is a tidy way to show what’s still outstanding."
+      }
+    ],
+    "related": [
+      "invoice-generator",
+      "freelance-invoice-template",
+      "us-invoice-template"
+    ]
+  }
+]

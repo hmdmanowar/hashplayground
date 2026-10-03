@@ -35,6 +35,16 @@ function SiteHeader() {
           >
             Templates
           </NavLink>
+          <NavLink
+            to="/guides/"
+            className={({ isActive }) =>
+              `hidden rounded px-2 py-1 text-sm font-medium transition-colors hover:text-[var(--color-primary)] sm:inline ${
+                isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)]'
+              }`
+            }
+          >
+            Guides
+          </NavLink>
           <Link
             to={GENERATOR_PATH}
             className="rounded-full bg-[var(--color-primary-strong)] px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-white transition-opacity hover:opacity-90 sm:px-4"

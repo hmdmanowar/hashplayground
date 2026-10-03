@@ -39,6 +39,8 @@ export interface GuideSection {
   h: string
   p: string[]
   list?: string[]
+  // A ready-to-copy sample (email template, numbering scheme…), guides only.
+  example?: { title?: string; lines: string[] }
 }
 
 export const SITE_ORIGIN = data.siteOrigin

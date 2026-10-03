@@ -16,6 +16,8 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = join(root, 'dist')
 const data = JSON.parse(readFileSync(join(root, 'src/data/templates.json'), 'utf8'))
+const guides = JSON.parse(readFileSync(join(root, 'src/data/guides.json'), 'utf8'))
+const pages = JSON.parse(readFileSync(join(root, 'src/data/pages.json'), 'utf8'))
 const shell = readFileSync(join(dist, 'index.html'), 'utf8')
 
 const HEAD_PATTERN = /<!-- seo:start[\s\S]*?<!-- seo:end -->/
@@ -47,13 +49,13 @@ const breadcrumbs = (trail) => ({
   itemListElement: trail.map(([name, url], index) => ({ '@type': 'ListItem', position: index + 1, name, item: url })),
 })
 
-function head(template, extraStructured = []) {
+function head(template, extraStructured = [], { app = true } = {}) {
   const url = pageUrl(template.slug)
   const title = escapeHtml(template.metaTitle)
   const description = escapeHtml(template.metaDescription)
   const ogImage = ogImageFor(template)
   const structured = [
-    {
+    ...(app ? [{
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
       name: 'BillFlow',
@@ -62,7 +64,7 @@ function head(template, extraStructured = []) {
       operatingSystem: 'Any (browser-based)',
       description: template.metaDescription,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    },
+    }] : []),
     ...(template.faq?.length
       ? [
           {
@@ -129,6 +131,7 @@ function body(template) {
       ${guide}
       <h2>Frequently asked questions</h2>${faq}
       <h2><a href="${pageUrl(gallery.slug)}">Free invoice templates</a></h2><ul>${links}</ul>
+      <p><a href="${pageUrl('guides')}">Invoicing guides</a> · <a href="${pageUrl('about')}">About</a> · <a href="${pageUrl('privacy')}">Privacy</a></p>
     </div>`
 }
 
@@ -161,7 +164,7 @@ function landingBody() {
       <p><a href="${pageUrl('')}">BillFlow</a></p>
       <h1>${escapeHtml(landing.h1)}</h1>
       <p>${escapeHtml(landing.intro)}</p>
-      <p><a href="${pageUrl(generator.slug)}">Create an invoice, free</a> · <a href="${pageUrl(gallery.slug)}">Browse templates</a></p>
+      <p><a href="${pageUrl(generator.slug)}">Create an invoice, free</a> · <a href="${pageUrl(gallery.slug)}">Browse templates</a> · <a href="${pageUrl('guides')}">Invoicing guides</a></p>
       <h2>Invoice templates</h2><ul>${templateList()}</ul>
       <h2>Frequently asked questions</h2>${faq}
     </div>`
@@ -225,8 +228,139 @@ writeFileSync(
     .replace(BODY_MARKER, () => galleryBody()),
 )
 
-const sitemapPages = [landing, gallery, ...data.templates]
-const priority = (page) => (page === landing ? '1.0' : page === gallery || page === generator ? '0.9' : '0.8')
+// ------------------------------------------------------------ guides
+const hub = pages.hub
+const guideUrlSlug = (guide) => `guides/${guide.slug}`
+
+function sectionsHtml(sections) {
+  return sections
+    .map(
+      (section) =>
+        `<h2>${escapeHtml(section.h)}</h2>${section.p.map((p) => `<p>${escapeHtml(p)}</p>`).join('')}${
+          section.list?.length ? `<ul>${section.list.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''
+        }${section.example ? `<pre>${escapeHtml(section.example.lines.join('\n'))}</pre>` : ''}`,
+    )
+    .join('')
+}
+
+function writePage(slug, html) {
+  const file = join(dist, slug, 'index.html')
+  mkdirSync(dirname(file), { recursive: true })
+  writeFileSync(file, html)
+}
+
+const guideLinks = guides
+  .map((guide) => `<li><a href="${pageUrl(guideUrlSlug(guide))}">${escapeHtml(guide.h1)}</a> - ${escapeHtml(guide.intro)}</li>`)
+  .join('')
+
+writePage(
+  hub.slug,
+  shell
+    .replace(HEAD_PATTERN, () =>
+      head(
+        hub,
+        [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            itemListElement: guides.map((guide, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              name: guide.h1,
+              url: pageUrl(guideUrlSlug(guide)),
+            })),
+          },
+          breadcrumbs([['BillFlow', pageUrl('')], ['Guides', pageUrl(hub.slug)]]),
+        ],
+        { app: false },
+      ),
+    )
+    .replace(
+      BODY_MARKER,
+      () => `<div class="bf-seo" style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+      <p><a href="${pageUrl('')}">BillFlow</a></p>
+      <h1>${escapeHtml(hub.h1)}</h1>
+      <p>${escapeHtml(hub.intro)}</p>
+      <ul>${guideLinks}</ul>
+    </div>`,
+    ),
+)
+
+for (const guide of guides) {
+  const slug = guideUrlSlug(guide)
+  const related = guide.related
+    .map((templateSlug) => data.templates.find((t) => t.slug === templateSlug))
+    .filter(Boolean)
+    .map((t) => `<li><a href="${pageUrl(t.slug)}">${escapeHtml(t.h1)}</a></li>`)
+    .join('')
+  const article = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.h1,
+    description: guide.metaDescription,
+    url: pageUrl(slug),
+    mainEntityOfPage: pageUrl(slug),
+    image: ogImageFor(guide),
+    inLanguage: 'en',
+    author: { '@type': 'Organization', name: 'BillFlow', url: pageUrl('') },
+    publisher: { '@type': 'Organization', name: 'Hash Playground', url: `${data.siteOrigin}/`, logo: { '@type': 'ImageObject', url: logoUrl } },
+  }
+  writePage(
+    slug,
+    shell
+      .replace(HEAD_PATTERN, () =>
+        head(
+          { ...guide, slug },
+          [
+            article,
+            breadcrumbs([
+              ['BillFlow', pageUrl('')],
+              ['Guides', pageUrl(hub.slug)],
+              [guide.label, pageUrl(slug)],
+            ]),
+          ],
+          { app: false },
+        ),
+      )
+      .replace(
+        BODY_MARKER,
+        () => `<div class="bf-seo" style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+      <p><a href="${pageUrl('')}">BillFlow</a> / <a href="${pageUrl(hub.slug)}">Guides</a></p>
+      <h1>${escapeHtml(guide.h1)}</h1>
+      <p>${escapeHtml(guide.intro)}</p>
+      ${sectionsHtml(guide.sections)}
+      <h2>Frequently asked questions</h2>${guide.faq.map((item) => `<h3>${escapeHtml(item.q)}</h3><p>${escapeHtml(item.a)}</p>`).join('')}
+      <h2>Templates to start from</h2><ul>${related}</ul>
+      <h2><a href="${pageUrl(hub.slug)}">More invoicing guides</a></h2><ul>${guideLinks}</ul>
+    </div>`,
+      ),
+  )
+}
+
+// About and Privacy
+for (const page of [pages.about, pages.privacy]) {
+  writePage(
+    page.slug,
+    shell
+      .replace(HEAD_PATTERN, () =>
+        head(page, [breadcrumbs([['BillFlow', pageUrl('')], [page.h1, pageUrl(page.slug)]])], { app: false }),
+      )
+      .replace(
+        BODY_MARKER,
+        () => `<div class="bf-seo" style="max-width:960px;margin:0 auto;padding:32px 16px;font-family:system-ui,sans-serif">
+      <p><a href="${pageUrl('')}">BillFlow</a></p>
+      <h1>${escapeHtml(page.h1)}</h1>
+      <p>${escapeHtml(page.intro)}</p>
+      ${sectionsHtml(page.sections)}
+    </div>`,
+      ),
+  )
+}
+
+const guidePages = guides.map((guide) => ({ ...guide, slug: guideUrlSlug(guide) }))
+const sitemapPages = [landing, gallery, ...data.templates, hub, ...guidePages, pages.about, pages.privacy]
+const priority = (page) =>
+    page === landing ? '1.0' : page === gallery || page === generator ? '0.9' : page === pages.about || page === pages.privacy ? '0.3' : '0.8'
 const today = new Date().toISOString().slice(0, 10)
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -244,4 +378,6 @@ ${sitemapPages
 `
 writeFileSync(join(dist, 'sitemap.xml'), sitemap)
 
-console.log(`prerender: wrote landing + ${data.templates.length} template pages + templates gallery + sitemap.xml`)
+console.log(
+  `prerender: wrote landing + ${data.templates.length} template pages + gallery + ${guides.length} guides + hub + about + privacy + sitemap.xml (${sitemapPages.length} URLs)`,
+)

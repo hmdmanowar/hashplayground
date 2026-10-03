@@ -1,0 +1,97 @@
+{
+  "hub": {
+    "slug": "guides",
+    "metaTitle": "Invoicing Guides for Freelancers & Small Businesses | BillFlow",
+    "metaDescription": "Plain-English invoicing guides: what to put on an invoice, payment terms, invoice numbering, reminder emails, proforma vs tax invoices and more.",
+    "h1": "Invoicing guides",
+    "intro": "Short, practical answers to the questions every freelancer and small business runs into when billing clients, with examples you can copy and templates to start from."
+  },
+  "about": {
+    "slug": "about",
+    "metaTitle": "About BillFlow – Free Invoice Generator by Hash Playground",
+    "metaDescription": "BillFlow is a free, private invoice generator from Hash Playground. Learn why it exists, how it works and what’s coming next.",
+    "h1": "About BillFlow",
+    "intro": "BillFlow is a free invoice generator for freelancers and small businesses, made by Hash Playground. It turns a few details into a clean, correct PDF invoice in about a minute, without an account.",
+    "sections": [
+      {
+        "h": "Why BillFlow exists",
+        "p": [
+          "Most invoicing tools ask you to sign up, connect a bank or start a trial before you can send a single invoice. For a freelancer billing a few clients a month, that’s a lot of friction for something that should take a minute.",
+          "BillFlow does one job well: it helps you make a professional invoice with the right tax, payment details and wording for where you work, then gets out of the way."
+        ]
+      },
+      {
+        "h": "How it works",
+        "p": [
+          "Everything happens in your browser. The invoice, its totals and the PDF are all created on your own device, and your business details are remembered there for next time. Nothing you type into an invoice is uploaded to us."
+        ],
+        "list": [
+          "Pick one of 17 templates or start from a blank invoice",
+          "Your currency and usual tax (VAT, GST or sales tax) are suggested from your location",
+          "Add bank details, a payment link or a UPI ID and a scan-to-pay QR code is printed on the invoice",
+          "Download an A4 or US Letter PDF in one of 11 styles"
+        ]
+      },
+      {
+        "h": "Who makes it",
+        "p": [
+          "BillFlow is built and run by Hash Playground, an independent web platform for building and shipping projects."
+        ]
+      },
+      {
+        "h": "What’s next",
+        "p": [
+          "BillFlow will always have a free invoice generator. We’re also exploring BillFlow Pro, with automatic payment reminders, a paid/unpaid dashboard and saved clients. You can join the early access list from the banner below any invoice preview."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "slug": "privacy",
+    "metaTitle": "Privacy at BillFlow – Your Invoices Stay on Your Device",
+    "metaDescription": "How BillFlow handles data: invoices are made in your browser and never uploaded. We keep only anonymous usage counts and early-access signups.",
+    "h1": "Privacy",
+    "intro": "BillFlow is designed so that your invoices never leave your device. This page explains exactly what is stored, where, and why.",
+    "sections": [
+      {
+        "h": "Your invoices stay in your browser",
+        "p": [
+          "Invoices, totals and PDFs are created entirely in your browser. Your draft invoice, business details, payment details and logo are saved in your browser’s local storage on this device so the next invoice is quicker. They are not sent to our servers.",
+          "You can remove them at any time by clearing this site’s data in your browser settings."
+        ]
+      },
+      {
+        "h": "Anonymous usage counts",
+        "p": [
+          "To understand whether BillFlow is useful, we count a few anonymous events: a page being viewed, a PDF being downloaded, and a click on the BillFlow Pro early-access button. Each count records only the event, the page and an approximate country."
+        ],
+        "list": [
+          "No names, emails or invoice contents are included",
+          "The country comes from our hosting provider’s location lookup or your browser’s timezone and language",
+          "We don’t use advertising or third-party analytics trackers, and we don’t sell data"
+        ]
+      },
+      {
+        "h": "Early access signups",
+        "p": [
+          "If you join the BillFlow Pro early access list, we store the email address you enter, the monthly price you chose, the page you joined from and an approximate country. We use it only to tell you about BillFlow Pro, and you can ask us to delete it at any time."
+        ]
+      },
+      {
+        "h": "Services we rely on",
+        "list": [
+          "When you type an Indian IFSC code, it is sent to Razorpay’s public IFSC lookup to fill in the bank name and branch",
+          "The site is hosted on Render and served through Cloudflare, which process standard request data such as IP addresses to deliver and protect the site",
+          "If you’re signed in to Hash Playground, your existing session cookie is sent with usage counts only so that site administrators’ own visits can be left out"
+        ],
+        "p": []
+      },
+      {
+        "h": "Contact",
+        "p": [
+          "Questions or deletion requests about BillFlow data can be sent through the Feedback option in your Hash Playground account."
+        ]
+      }
+    ]
+  }
+}

@@ -5,6 +5,7 @@ import InvoiceForm from '../components/InvoiceForm'
 import InvoicePreview from '../components/InvoicePreview'
 import StylePicker from '../components/StylePicker'
 import TemplateGuide from '../components/TemplateGuide'
+import { guidesForTemplate } from '../lib/guides'
 import UpgradeBanner from '../components/UpgradeBanner'
 import WaitlistDialog from '../components/WaitlistDialog'
 import { CheckIcon, DownloadIcon, PrinterIcon } from '../components/Icons'
@@ -199,6 +200,27 @@ function GeneratorPage({ template }: { template: InvoiceTemplate }) {
           ))}
         </ul>
       </section>
+
+      {guidesForTemplate(template.slug).length > 0 && (
+        <section className="mt-12 print:hidden" aria-labelledby="helpful-guides">
+          <h2 id="helpful-guides" className="text-xl font-semibold">
+            Helpful guides
+          </h2>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {guidesForTemplate(template.slug).map((guide) => (
+              <li key={guide.slug}>
+                <Link
+                  to={`/guides/${guide.slug}/`}
+                  className="bf-card block h-full transition-colors hover:border-[var(--color-primary)]"
+                >
+                  <span className="block text-sm font-semibold">{guide.h1}</span>
+                  <span className="mt-1 line-clamp-2 block text-xs text-[var(--color-muted)]">{guide.intro}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <WaitlistDialog open={waitlistOpen} source={template.slug} defaultEmail={draft.from.email} onClose={closeWaitlist} />
     </div>

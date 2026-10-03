@@ -97,6 +97,36 @@ function Bullets({ items, kind }: { items: string[]; kind: 'warn' | 'check' }) {
   )
 }
 
+// A ready-to-copy sample (email, numbering scheme, line format).
+function Example({ title, lines }: { title?: string; lines: string[] }) {
+  const [copied, setCopied] = useState(false)
+  const text = lines.join('\n')
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard can be blocked (e.g. insecure context); the text is still selectable.
+    }
+  }
+  return (
+    <figure className="mt-5 overflow-hidden rounded-xl border border-[var(--border-panel)] bg-[var(--bg-app)]">
+      <figcaption className="flex items-center justify-between gap-2 border-b border-[var(--border-panel)] px-4 py-2">
+        <span className="text-xs font-semibold text-[var(--color-muted)]">{title ?? 'Example'}</span>
+        <button
+          type="button"
+          onClick={copy}
+          className="cursor-pointer rounded-full px-2.5 py-1 text-xs font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-primary-soft)]"
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </figcaption>
+      <pre className="overflow-x-auto px-4 py-3 font-sans text-sm leading-relaxed whitespace-pre-wrap">{text}</pre>
+    </figure>
+  )
+}
+
 function GuideCard({ section, index }: { section: GuideSection; index: number }) {
   const Icon = iconFor(section.h)
   const kind = listKind(section.h)
@@ -133,6 +163,7 @@ function GuideCard({ section, index }: { section: GuideSection; index: number })
       ))}
       {section.list &&
         (kind === 'steps' ? <Steps items={section.list} /> : <Bullets items={section.list} kind={kind} />)}
+      {section.example && <Example title={section.example.title} lines={section.example.lines} />}
     </section>
   )
 }
@@ -160,13 +191,15 @@ function useActiveSection(count: number): number {
   return active
 }
 
-function TemplateGuide({ guide, label }: { guide: GuideSection[]; label: string }) {
-  const active = useActiveSection(guide.length)
-  const words = guide
-    .flatMap((section) => [section.h, ...section.p, ...(section.list ?? [])])
+export function readingMinutes(sections: GuideSection[], extra = ''): number {
+  const words = [extra, ...sections.flatMap((section) => [section.h, ...section.p, ...(section.list ?? []), ...(section.example?.lines ?? [])])]
     .join(' ')
     .split(/\s+/).length
-  const minutes = Math.max(1, Math.round(words / 200))
+  return Math.max(1, Math.round(words / 200))
+}
+
+function TemplateGuide({ guide, label }: { guide: GuideSection[]; label: string }) {
+  const minutes = readingMinutes(guide)
 
   return (
     <section className="mt-20 print:hidden" aria-labelledby="guide-title">
@@ -179,7 +212,16 @@ function TemplateGuide({ guide, label }: { guide: GuideSection[]; label: string 
         </h2>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <GuideBody guide={guide} className="mt-8" />
+    </section>
+  )
+}
+
+// Contents + section cards. Used under every template and on guide articles.
+export function GuideBody({ guide, className = '' }: { guide: GuideSection[]; className?: string }) {
+  const active = useActiveSection(guide.length)
+  return (
+      <div className={`grid grid-cols-1 gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] ${className}`}>
         {/* Contents: sticky list on desktop, scrollable chips on phones */}
         <nav aria-label="Guide contents" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <ol className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
@@ -210,7 +252,6 @@ function TemplateGuide({ guide, label }: { guide: GuideSection[]; label: string 
           ))}
         </div>
       </div>
-    </section>
   )
 }
 
